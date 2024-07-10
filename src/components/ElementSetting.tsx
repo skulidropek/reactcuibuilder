@@ -27,7 +27,6 @@ const ElementSetting: React.FC<ElementSettingProps> = ({ element, onChange }) =>
           onChange={(key: keyof CuiRectTransformModel, value: any) => {
             const updatedElement = updateComponent<CuiRectTransformModel>(
               element,
-              'RectTransform',
               { [key]: value } as Partial<CuiRectTransformModel>
             );
             onChange('components', updatedElement.components);

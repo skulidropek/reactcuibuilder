@@ -115,7 +115,6 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
        
         const updatedElement = updateComponent<CuiRectTransformModel>(
           shape,
-          'RectTransform',
           {
             anchorMin: `${newAnchorMin.x} ${newAnchorMin.y}`,
             anchorMax: `${newAnchorMax.x} ${newAnchorMax.y}`,

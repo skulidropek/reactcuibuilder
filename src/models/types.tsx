@@ -31,19 +31,17 @@ export const findComponentByType = <T extends ICuiComponent>(
 
 export const updateComponent = <T extends ICuiComponent>(
   element: CuiElement,
-  componentType: T['type'],
   updatedValues: Partial<T>
 ): CuiElement => {
-  const updatedComponents = element.components.map(component => {
-    if (component.type === componentType) {
-      return { ...component, ...updatedValues } as T;
-    }
-    return component;
-  });
+  const component = findComponentByType<T>(element);
 
-  if (JSON.stringify(element.components) !== JSON.stringify(updatedComponents)) {
-    return { ...element, components: updatedComponents };
-  }
+  if(component == null)
+    return element;
 
-  return element;
+  const updatedComponent = { ...component, ...updatedValues };
+  const updatedComponents = element.components.map(c => 
+    c.type === component.type ? updatedComponent : c
+  );
+  
+  return { ...element, components: updatedComponents };
 };
