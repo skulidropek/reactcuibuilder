@@ -1,5 +1,5 @@
 import React, { useEffect, useCallback, useRef, useState } from 'react';
-import { CuiElement, CuiRectTransformModel, findComponentByType } from '../models/types';
+import { CuiElement, CuiRectTransformModel, findComponentByType, updateComponent } from '../models/types';
 import { toInvertedY, fromInvertedY } from '../utils/coordinateUtils';
 
 interface EditorCanvasProps {
@@ -112,20 +112,19 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
           y: ((anchorMax.y * editorSize.height + dy) / editorSize.height).toFixed(3)
         };
 
-        const updatedComponents = shape.components.map(component => {
-          if (component.type === 'RectTransform') {
-            return {
-              ...component,
-              anchorMin: `${newAnchorMin.x} ${newAnchorMin.y}`,
-              anchorMax: `${newAnchorMax.x} ${newAnchorMax.y}`,
-              offsetMin: rectTransform.offsetMin,
-              offsetMax: rectTransform.offsetMax,
-            };
+       
+        const updatedElement = updateComponent<CuiRectTransformModel>(
+          shape,
+          'RectTransform',
+          {
+            anchorMin: `${newAnchorMin.x} ${newAnchorMin.y}`,
+            anchorMax: `${newAnchorMax.x} ${newAnchorMax.y}`,
+            offsetMin: rectTransform.offsetMin,
+            offsetMax: rectTransform.offsetMax,
           }
-          return component;
-        });
+        );
 
-        return { ...shape, components: updatedComponents };
+        return { ...shape, components: updatedElement.components };
       }
       return shape;
     });
