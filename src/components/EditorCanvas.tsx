@@ -1,5 +1,6 @@
 import React, { useEffect, useCallback, useRef, useState } from 'react';
-import { CuiElement, CuiRectTransformModel, findComponentByType } from '../models/types';
+import { CuiElement, CuiRectTransformModel, findComponentByType, updateComponent } from '../models/types';
+import { toInvertedY, fromInvertedY } from '../utils/coordinateUtils';
 
 interface EditorCanvasProps {
   editorSize: { width: number; height: number };
@@ -7,6 +8,13 @@ interface EditorCanvasProps {
   selectedShape: number | null;
   onShapesChange: (updatedShapes: CuiElement[]) => void;
   setSelectedShape: (selectedShape: number | null) => void;
+}
+
+interface TransformValues {
+  anchorMin: { x: number; y: number };
+  anchorMax: { x: number; y: number };
+  offsetMin: { x: number; y: number };
+  offsetMax: { x: number; y: number };
 }
 
 const EditorCanvas: React.FC<EditorCanvasProps> = ({
@@ -20,22 +28,40 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
-  const drawShapes = useCallback((context: CanvasRenderingContext2D, shapes: CuiElement[], parentWidth: number, parentHeight: number) => {
-    context.clearRect(0, 0, parentWidth, parentHeight);
+  const extractTransformValues = useCallback((rectTransform: CuiRectTransformModel): TransformValues => {
+    const [anchorMinX, anchorMinY] = rectTransform.anchorMin.split(' ').map(Number);
+    const [anchorMaxX, anchorMaxY] = rectTransform.anchorMax.split(' ').map(Number);
+    const [offsetMinX, offsetMinY] = rectTransform.offsetMin.split(' ').map(Number);
+    const [offsetMaxX, offsetMaxY] = rectTransform.offsetMax.split(' ').map(Number);
+
+    return {
+      anchorMin: { x: anchorMinX, y: anchorMinY },
+      anchorMax: { x: anchorMaxX, y: anchorMaxY },
+      offsetMin: { x: offsetMinX, y: offsetMinY },
+      offsetMax: { x: offsetMaxX, y: offsetMaxY },
+    };
+  }, []);
+
+  const calculatePositionAndSize = useCallback((parentSize: { width: number; height: number }, rectTransform: CuiRectTransformModel, invertedY: boolean = false) => {
+    const { anchorMin, anchorMax, offsetMin, offsetMax } = extractTransformValues(rectTransform);
+
+    const x = anchorMin.x * parentSize.width + offsetMin.x;
+    const y = invertedY 
+      ? fromInvertedY(anchorMax.y * parentSize.height + offsetMin.y, parentSize.height) 
+      : anchorMax.y * parentSize.height + offsetMin.y;
+    const width = (anchorMax.x - anchorMin.x) * parentSize.width + (offsetMax.x - offsetMin.x);
+    const height = (anchorMax.y - anchorMin.y) * parentSize.height + (offsetMax.y - offsetMin.y);
+
+    return { x, y, width, height };
+  }, [extractTransformValues]);
+
+  const drawShapes = useCallback((context: CanvasRenderingContext2D, shapes: CuiElement[], parentSize: { width: number; height: number }) => {
+    context.clearRect(0, 0, parentSize.width, parentSize.height);
     shapes.forEach(shape => {
       const rectTransform = findComponentByType<CuiRectTransformModel>(shape);
-
       if (!rectTransform) return;
 
-      const [anchorMinX, anchorMinY] = rectTransform.anchorMin.split(' ').map(Number);
-      const [anchorMaxX, anchorMaxY] = rectTransform.anchorMax.split(' ').map(Number);
-      const [offsetMinX, offsetMinY] = rectTransform.offsetMin.split(' ').map(Number);
-      const [offsetMaxX, offsetMaxY] = rectTransform.offsetMax.split(' ').map(Number);
-
-      const x = anchorMinX * parentWidth + offsetMinX;
-      const y = anchorMinY * parentHeight + offsetMinY;
-      const width = (anchorMaxX - anchorMinX) * parentWidth + (offsetMaxX - offsetMinX);
-      const height = (anchorMaxY - anchorMinY) * parentHeight + (offsetMaxY - offsetMinY);
+      const { x, y, width, height } = calculatePositionAndSize(parentSize, rectTransform, true);
 
       context.fillStyle = shape.id === selectedShape ? 'green' : (shape.type === 'rect' ? 'blue' : 'red');
       context.globalAlpha = 0.7;
@@ -48,134 +74,101 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
         context.fill();
       }
     });
-  }, [selectedShape]);
+  }, [selectedShape, calculatePositionAndSize]);
 
   const getShapeAtCoordinates = useCallback((x: number, y: number): CuiElement | null => {
+    const invertedY = toInvertedY(y, editorSize.height);
     for (let i = shapes.length - 1; i >= 0; i--) {
       const shape = shapes[i];
       const rectTransform = findComponentByType<CuiRectTransformModel>(shape);
-
       if (!rectTransform) continue;
 
-      const [anchorMinX, anchorMinY] = rectTransform.anchorMin.split(' ').map(Number);
-      const [anchorMaxX, anchorMaxY] = rectTransform.anchorMax.split(' ').map(Number);
-      const [offsetMinX, offsetMinY] = rectTransform.offsetMin.split(' ').map(Number);
-      const [offsetMaxX, offsetMaxY] = rectTransform.offsetMax.split(' ').map(Number);
+      const { x: shapeX, y: shapeY, width: shapeWidth, height: shapeHeight } = calculatePositionAndSize(editorSize, rectTransform);
 
-      const shapeX = anchorMinX * editorSize.width + offsetMinX;
-      const shapeY = anchorMinY * editorSize.height + offsetMinY;
-      const shapeWidth = (anchorMaxX - anchorMinX) * editorSize.width + (offsetMaxX - offsetMinX);
-      const shapeHeight = (anchorMaxY - anchorMinY) * editorSize.height + (offsetMaxY - offsetMinY);
-
-      if (x >= shapeX && x <= shapeX + shapeWidth && y >= shapeY && y <= shapeY + shapeHeight) {
+      if (x >= shapeX && x <= shapeX + shapeWidth && invertedY >= shapeY - shapeHeight && invertedY <= shapeY) {
         return shape;
       }
     }
     return null;
-  }, [shapes, editorSize]);
+  }, [shapes, editorSize, calculatePositionAndSize]);
 
-  const handleMouseMove = useCallback(
-    (e: MouseEvent) => {
-      if (!isDragging || selectedShape === null) return;
+  const updateShapePosition = useCallback((shapes: CuiElement[], id: number, clientX: number, clientY: number): CuiElement[] => {
+    return shapes.map((shape) => {
+      if (shape.id === id) {
+        const rectTransform = findComponentByType<CuiRectTransformModel>(shape);
+        if (!rectTransform) return shape;
 
-      const canvasBounds = canvasRef.current?.getBoundingClientRect();
-      if (!canvasBounds) return;
+        const { anchorMin, anchorMax } = extractTransformValues(rectTransform);
 
-      const dx = e.clientX - dragStart.x;
-      const dy = e.clientY - dragStart.y;
+        const dx = clientX - dragStart.x;
+        const dy = dragStart.y - clientY;
 
-      const updatedShapes = updateShapePosition(
-        shapes,
-        selectedShape,
-        dx,
-        dy,
-        editorSize.width,
-        editorSize.height
-      );
+        const newAnchorMin = {
+          x: ((anchorMin.x * editorSize.width + dx) / editorSize.width).toFixed(3),
+          y: ((anchorMin.y * editorSize.height + dy) / editorSize.height).toFixed(3)
+        };
+        const newAnchorMax = {
+          x: ((anchorMax.x * editorSize.width + dx) / editorSize.width).toFixed(3),
+          y: ((anchorMax.y * editorSize.height + dy) / editorSize.height).toFixed(3)
+        };
 
-      onShapesChange(updatedShapes);
-      setDragStart({ x: e.clientX, y: e.clientY });
-    },
-    [isDragging, selectedShape, dragStart, editorSize, shapes, onShapesChange]
-  );
+       
+        const updatedElement = updateComponent<CuiRectTransformModel>(
+          shape,
+          'RectTransform',
+          {
+            anchorMin: `${newAnchorMin.x} ${newAnchorMin.y}`,
+            anchorMax: `${newAnchorMax.x} ${newAnchorMax.y}`,
+            offsetMin: rectTransform.offsetMin,
+            offsetMax: rectTransform.offsetMax,
+          }
+        );
 
-  const handleMouseDown = useCallback(
-    (e: React.MouseEvent<HTMLCanvasElement>) => {
-      const canvasBounds = canvasRef.current?.getBoundingClientRect();
-      if (!canvasBounds) return;
-
-      const mouseX = e.clientX - canvasBounds.left;
-      const mouseY = e.clientY - canvasBounds.top;
-      const shape = getShapeAtCoordinates(mouseX, mouseY);
-
-      if (shape) {
-        setSelectedShape(shape.id);
-        setIsDragging(true);
-        setDragStart({ x: e.clientX, y: e.clientY });
-      } else {
-        setSelectedShape(null);
+        return updatedElement;
       }
-    },
-    [getShapeAtCoordinates, setSelectedShape]
-  );
+      return shape;
+    });
+  }, [dragStart, extractTransformValues, editorSize]);
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!isDragging || selectedShape === null) return;
+
+    const canvasBounds = canvasRef.current?.getBoundingClientRect();
+    if (!canvasBounds) return;
+
+    const updatedShapes = updateShapePosition(shapes, selectedShape, e.clientX, e.clientY);
+
+    onShapesChange(updatedShapes);
+    setDragStart({ x: e.clientX, y: e.clientY });
+  }, [isDragging, selectedShape, shapes, onShapesChange, updateShapePosition]);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    const canvasBounds = canvasRef.current?.getBoundingClientRect();
+    if (!canvasBounds) return;
+
+    const mouseX = e.clientX - canvasBounds.left;
+    const mouseY = e.clientY - canvasBounds.top;
+    const shape = getShapeAtCoordinates(mouseX, mouseY);
+
+    if (shape) {
+      setSelectedShape(shape.id);
+      setIsDragging(true);
+      setDragStart({ x: e.clientX, y: e.clientY });
+    } else {
+      setSelectedShape(null);
+    }
+  }, [getShapeAtCoordinates, setSelectedShape]);
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
   }, []);
-
-  const updateShapePosition = useCallback(
-    (
-      shapes: CuiElement[],
-      id: number,
-      dx: number,
-      dy: number,
-      parentWidth: number,
-      parentHeight: number
-    ): CuiElement[] => {
-      return shapes.map((shape) => {
-        if (shape.id === id) {
-          const rectTransform = findComponentByType<CuiRectTransformModel>(shape);
-
-          if (!rectTransform) return shape;
-
-          const [anchorMinX, anchorMinY] = rectTransform.anchorMin.split(' ').map(Number);
-          const [anchorMaxX, anchorMaxY] = rectTransform.anchorMax.split(' ').map(Number);
-
-          const newAnchorMinX = ((anchorMinX * parentWidth + dx) / parentWidth).toFixed(3);
-          const newAnchorMinY = ((anchorMinY * parentHeight + dy) / parentHeight).toFixed(3);
-          const newAnchorMaxX = ((anchorMaxX * parentWidth + dx) / parentWidth).toFixed(3);
-          const newAnchorMaxY = ((anchorMaxY * parentHeight + dy) / parentHeight).toFixed(3);
-
-          const updatedComponents = shape.components.map(component => {
-            if (component.type === 'RectTransform') {
-              return {
-                ...component,
-                anchorMin: `${newAnchorMinX} ${newAnchorMinY}`,
-                anchorMax: `${newAnchorMaxX} ${newAnchorMaxY}`,
-                offsetMin: rectTransform.offsetMin,
-                offsetMax: rectTransform.offsetMax,
-              };
-            }
-            return component;
-          });
-
-          return {
-            ...shape,
-            components: updatedComponents,
-          };
-        }
-        return shape;
-      });
-    },
-    []
-  );
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (canvas) {
       const context = canvas.getContext('2d');
       if (context) {
-        drawShapes(context, shapes, editorSize.width, editorSize.height);
+        drawShapes(context, shapes, editorSize);
       }
     }
   }, [shapes, editorSize, drawShapes]);
