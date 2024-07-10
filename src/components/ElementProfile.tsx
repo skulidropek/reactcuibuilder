@@ -2,7 +2,7 @@ import React, { useState, forwardRef } from 'react';
 import { Button, Collapse, Card } from 'react-bootstrap';
 import { FaPlus, FaArrowsAlt } from 'react-icons/fa';
 import ElementSetting from './ElementSetting';
-import { CuiElement } from '@/models/types';
+import { CuiElement } from '../models/types';
 
 interface ComponentSetting {
   name: string;

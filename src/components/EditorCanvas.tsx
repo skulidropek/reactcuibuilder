@@ -1,6 +1,6 @@
 import React, { useEffect, useCallback, useRef, useState } from 'react';
-import { CuiElement, CuiRectTransformModel, findComponentByType, updateComponent } from '../models/types';
-import { toInvertedY, fromInvertedY } from '../utils/coordinateUtils';
+import { CuiElement, CuiRectTransformModel } from '../models/types';
+import { toInvertedY, fromInvertedY, findComponentByType, updateComponent } from '../utils/coordinateUtils';
 
 interface EditorCanvasProps {
   editorSize: { width: number; height: number };
@@ -115,7 +115,6 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
        
         const updatedElement = updateComponent<CuiRectTransformModel>(
           shape,
-          'RectTransform',
           {
             anchorMin: `${newAnchorMin.x} ${newAnchorMin.y}`,
             anchorMax: `${newAnchorMax.x} ${newAnchorMax.y}`,
