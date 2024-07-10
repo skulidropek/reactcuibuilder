@@ -3,13 +3,14 @@ import CuiRectTransform from './cui/CuiRectTransform';
 import { 
   CuiElement, 
   CuiRectTransformModel, 
-  findComponentByType, 
-  updateComponent 
+  ICuiComponent
 } from '../models/types';
+import { findComponentByType, updateComponent } from '../utils/coordinateUtils';
 
 interface ElementSettingProps {
   element: CuiElement;
   onChange: (key: keyof CuiElement, value: any) => void;
+  // onChange: (updatedElement: CuiElement) => void;
 }
 
 const ElementSetting: React.FC<ElementSettingProps> = ({ element, onChange }) => {
@@ -27,7 +28,7 @@ const ElementSetting: React.FC<ElementSettingProps> = ({ element, onChange }) =>
           onChange={(key: keyof CuiRectTransformModel, value: any) => {
             const updatedElement = updateComponent<CuiRectTransformModel>(
               element,
-              { [key]: value } as Partial<CuiRectTransformModel>
+              { [key]: value }
             );
             onChange('components', updatedElement.components);
           }}

@@ -1,6 +1,6 @@
 import React, { useEffect, useCallback, useRef, useState } from 'react';
-import { CuiElement, CuiRectTransformModel, findComponentByType, updateComponent } from '../models/types';
-import { toInvertedY, fromInvertedY } from '../utils/coordinateUtils';
+import { CuiElement, CuiRectTransformModel } from '../models/types';
+import { toInvertedY, fromInvertedY, findComponentByType, updateComponent } from '../utils/coordinateUtils';
 
 interface EditorCanvasProps {
   editorSize: { width: number; height: number };
