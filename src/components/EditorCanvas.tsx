@@ -1,5 +1,6 @@
 import React, { useEffect, useCallback, useRef, useState } from 'react';
 import { CuiElement, CuiRectTransformModel, findComponentByType } from '../models/types';
+import { toInvertedY, fromInvertedY } from '../utils/coordinateUtils';  // Импортируем утилиты
 
 interface EditorCanvasProps {
   editorSize: { width: number; height: number };
@@ -24,24 +25,25 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
     context.clearRect(0, 0, parentWidth, parentHeight);
     shapes.forEach(shape => {
       const rectTransform = findComponentByType<CuiRectTransformModel>(shape);
-
+  
       if (!rectTransform) return;
-
+  
       const [anchorMinX, anchorMinY] = rectTransform.anchorMin.split(' ').map(Number);
       const [anchorMaxX, anchorMaxY] = rectTransform.anchorMax.split(' ').map(Number);
       const [offsetMinX, offsetMinY] = rectTransform.offsetMin.split(' ').map(Number);
       const [offsetMaxX, offsetMaxY] = rectTransform.offsetMax.split(' ').map(Number);
-
+  
+      // Преобразование координат и размеров
       const x = anchorMinX * parentWidth + offsetMinX;
-      const y = anchorMinY * parentHeight + offsetMinY;
+      const y =  fromInvertedY(anchorMaxY * parentHeight + offsetMinY, parentHeight); // Инвертируем координату Y
       const width = (anchorMaxX - anchorMinX) * parentWidth + (offsetMaxX - offsetMinX);
       const height = (anchorMaxY - anchorMinY) * parentHeight + (offsetMaxY - offsetMinY);
-
+  
       context.fillStyle = shape.id === selectedShape ? 'green' : (shape.type === 'rect' ? 'blue' : 'red');
       context.globalAlpha = 0.7;
-
+  
       if (shape.type === 'rect') {
-        context.fillRect(x, y, width, height);
+        context.fillRect(x, y, width, height); // Используем инвертированную координату Y
       } else if (shape.type === 'circle') {
         context.beginPath();
         context.arc(x + width / 2, y + height / 2, Math.min(width, height) / 2, 0, 2 * Math.PI);
@@ -51,28 +53,33 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
   }, [selectedShape]);
 
   const getShapeAtCoordinates = useCallback((x: number, y: number): CuiElement | null => {
+    const invertedY = toInvertedY(y, editorSize.height);
     for (let i = shapes.length - 1; i >= 0; i--) {
       const shape = shapes[i];
       const rectTransform = findComponentByType<CuiRectTransformModel>(shape);
-
+  
       if (!rectTransform) continue;
-
+  
       const [anchorMinX, anchorMinY] = rectTransform.anchorMin.split(' ').map(Number);
       const [anchorMaxX, anchorMaxY] = rectTransform.anchorMax.split(' ').map(Number);
       const [offsetMinX, offsetMinY] = rectTransform.offsetMin.split(' ').map(Number);
       const [offsetMaxX, offsetMaxY] = rectTransform.offsetMax.split(' ').map(Number);
+  
+      console.log(`shapeY = ${anchorMinY} * ${editorSize.height} + ${offsetMinY} = ${anchorMinY * editorSize.height + offsetMinY}`)
 
       const shapeX = anchorMinX * editorSize.width + offsetMinX;
-      const shapeY = anchorMinY * editorSize.height + offsetMinY;
+      const shapeY = anchorMaxY * editorSize.height + offsetMinY;
       const shapeWidth = (anchorMaxX - anchorMinX) * editorSize.width + (offsetMaxX - offsetMinX);
       const shapeHeight = (anchorMaxY - anchorMinY) * editorSize.height + (offsetMaxY - offsetMinY);
+  
+      console.log(`${x} >= ${shapeX} && ${x} <= ${shapeX + shapeWidth} && ${invertedY} >= ${shapeY - shapeHeight} && ${invertedY} <= ${shapeY}`)
 
-      if (x >= shapeX && x <= shapeX + shapeWidth && y >= shapeY && y <= shapeY + shapeHeight) {
+      if (x >= shapeX && x <= shapeX + shapeWidth && invertedY >= shapeY - shapeHeight && invertedY <= shapeY) {
         return shape;
       }
     }
     return null;
-  }, [shapes, editorSize]);
+  }, [shapes, editorSize]);  
 
   const handleMouseMove = useCallback(
     (e: MouseEvent) => {
@@ -81,14 +88,11 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
       const canvasBounds = canvasRef.current?.getBoundingClientRect();
       if (!canvasBounds) return;
 
-      const dx = e.clientX - dragStart.x;
-      const dy = e.clientY - dragStart.y;
-
       const updatedShapes = updateShapePosition(
         shapes,
         selectedShape,
-        dx,
-        dy,
+        e.clientX,
+        e.clientY,
         editorSize.width,
         editorSize.height
       );
@@ -107,6 +111,8 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
       const mouseX = e.clientX - canvasBounds.left;
       const mouseY = e.clientY - canvasBounds.top;
       const shape = getShapeAtCoordinates(mouseX, mouseY);
+
+      console.log(mouseX, mouseY, shape)
 
       if (shape) {
         setSelectedShape(shape.id);
@@ -127,8 +133,8 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
     (
       shapes: CuiElement[],
       id: number,
-      dx: number,
-      dy: number,
+      clientX: number,
+      clientY: number,
       parentWidth: number,
       parentHeight: number
     ): CuiElement[] => {
@@ -140,6 +146,9 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
 
           const [anchorMinX, anchorMinY] = rectTransform.anchorMin.split(' ').map(Number);
           const [anchorMaxX, anchorMaxY] = rectTransform.anchorMax.split(' ').map(Number);
+
+          const dx = clientX - dragStart.x;
+          const dy = dragStart.y - clientY; // Invert dy to match the canvas coordinates
 
           const newAnchorMinX = ((anchorMinX * parentWidth + dx) / parentWidth).toFixed(3);
           const newAnchorMinY = ((anchorMinY * parentHeight + dy) / parentHeight).toFixed(3);
@@ -167,7 +176,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
         return shape;
       });
     },
-    []
+    [dragStart]
   );
 
   useEffect(() => {
