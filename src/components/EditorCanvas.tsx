@@ -124,7 +124,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
           }
         );
 
-        return { ...shape, components: updatedElement.components };
+        return updatedElement;
       }
       return shape;
     });
