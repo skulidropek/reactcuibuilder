@@ -19,9 +19,9 @@ export interface CuiRectTransformModel extends ICuiComponent {
   offsetMax: string;
 }
 
-export function findComponentByType<T extends ICuiComponent>(
+export const findComponentByType = <T extends ICuiComponent>(
   element: CuiElement
-): T | undefined {
+): T | undefined => {
   // Здесь мы используем утверждение типа (type assertion),
   // так как TypeScript не может вывести конкретный тип во время выполнения
   return element.components.find(
