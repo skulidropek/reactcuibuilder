@@ -13,21 +13,21 @@ const GraphicEditor = () => {
   const [draggingItem, setDraggingItem] = useState<number | null>(null);
 
   const addShape = useCallback((type: 'rect' | 'circle') => {
-    const newShape: CuiElement = {
-      id: Date.now(),
-      type,
-      visible: true,
-      children: [],
-      components: [  {
-        type: 'RectTransform',
-        anchorMin: '0 0',
-        anchorMax: '0.1 0.1',
-        offsetMin: '0 0',
-        offsetMax: '0 0',
-      } as CuiRectTransformModel
-      ],
-      collapsed: false,
-    };
+    const newShape = new CuiElement(
+      Date.now(), // id
+      type, // type
+      true, // visible
+      [], // children
+      [
+        new CuiRectTransformModel(
+          '0 0', // anchorMin
+          '0.1 0.1', // anchorMax
+          '0 0', // offsetMin
+          '0 0' // offsetMax
+        )
+      ], // components
+      false // collapsed
+    );
     setShapes((prevShapes) => [...prevShapes, newShape]);
   }, []);
 
@@ -38,32 +38,84 @@ const GraphicEditor = () => {
   const handleProfileChange = useCallback((shapeId: number, key: keyof CuiElement, value: any) => {
     setShapes((prevShapes) => 
       prevShapes.map(shape => 
-        shape.id === shapeId ? { ...shape, [key]: value } : shape
+        shape.id === shapeId ? new CuiElement(
+          shape.id,
+          shape.type,
+          key === 'visible' ? value : shape.visible,
+          shape.children,
+          key === 'components' ? value : shape.components,
+          key === 'collapsed' ? value : shape.collapsed
+        ) : shape
       )
     );
   }, []);
+  
 
   const toggleVisibility = useCallback((shapeId: number) => {
-    setShapes((prevShapes) => {
-      return prevShapes.map((shape) => {
-        if (shape.id === shapeId) {
-          return { ...shape, visible: !shape.visible };
+    const toggleShapeVisibility = (shapes: CuiElement[], id: number): CuiElement[] => {
+      return shapes.map((shape) => {
+        if (shape.id === id) {
+          return new CuiElement(
+            shape.id,
+            shape.type,
+            !shape.visible,
+            shape.children.map(child => new CuiElement(child.id, child.type, child.visible, child.children, child.components, child.collapsed)),
+            shape.components,
+            shape.collapsed
+          );
         } else if (shape.children.length > 0) {
-          return { ...shape, children: toggleShapeVisibility(shape.children, shapeId) };
+          return new CuiElement(
+            shape.id,
+            shape.type,
+            shape.visible,
+            toggleShapeVisibility(shape.children, id),
+            shape.components,
+            shape.collapsed
+          );
         }
-        return shape;
+        return new CuiElement(
+          shape.id,
+          shape.type,
+          shape.visible,
+          shape.children.map(child => new CuiElement(child.id, child.type, child.visible, child.children, child.components, child.collapsed)),
+          shape.components,
+          shape.collapsed
+        );
       });
-    });
+    };
+  
+    setShapes((prevShapes) => toggleShapeVisibility(prevShapes, shapeId));
   }, []);
 
   const toggleShapeVisibility = useCallback((shapes: CuiElement[], id: number): CuiElement[] => {
     return shapes.map((shape) => {
       if (shape.id === id) {
-        return { ...shape, visible: !shape.visible };
+        return new CuiElement(
+          shape.id,
+          shape.type,
+          !shape.visible,
+          shape.children.map(child => new CuiElement(child.id, child.type, child.visible, child.children, child.components, child.collapsed)),
+          shape.components,
+          shape.collapsed
+        );
       } else if (shape.children.length > 0) {
-        return { ...shape, children: toggleShapeVisibility(shape.children, id) };
+        return new CuiElement(
+          shape.id,
+          shape.type,
+          shape.visible,
+          toggleShapeVisibility(shape.children, id),
+          shape.components,
+          shape.collapsed
+        );
       }
-      return shape;
+      return new CuiElement(
+        shape.id,
+        shape.type,
+        shape.visible,
+        shape.children.map(child => new CuiElement(child.id, child.type, child.visible, child.children, child.components, child.collapsed)),
+        shape.components,
+        shape.collapsed
+      );
     });
   }, []);
 
@@ -71,11 +123,32 @@ const GraphicEditor = () => {
     setShapes((prevShapes) => {
       return prevShapes.map((shape) => {
         if (shape.id === shapeId) {
-          return { ...shape, collapsed: !shape.collapsed };
+          return new CuiElement(
+            shape.id,
+            shape.type,
+            shape.visible,
+            shape.children.map(child => new CuiElement(child.id, child.type, child.visible, child.children, child.components, child.collapsed)),
+            shape.components,
+            !shape.collapsed
+          );
         } else if (shape.children.length > 0) {
-          return { ...shape, children: toggleShapeCollapse(shape.children, shapeId) };
+          return new CuiElement(
+            shape.id,
+            shape.type,
+            shape.visible,
+            toggleShapeCollapse(shape.children, shapeId),
+            shape.components,
+            shape.collapsed
+          );
         }
-        return shape;
+        return new CuiElement(
+          shape.id,
+          shape.type,
+          shape.visible,
+          shape.children.map(child => new CuiElement(child.id, child.type, child.visible, child.children, child.components, child.collapsed)),
+          shape.components,
+          shape.collapsed
+        );
       });
     });
   }, []);
@@ -83,11 +156,32 @@ const GraphicEditor = () => {
   const toggleShapeCollapse = useCallback((shapes: CuiElement[], id: number): CuiElement[] => {
     return shapes.map((shape) => {
       if (shape.id === id) {
-        return { ...shape, collapsed: !shape.collapsed };
+        return new CuiElement(
+          shape.id,
+          shape.type,
+          shape.visible,
+          shape.children.map(child => new CuiElement(child.id, child.type, child.visible, child.children, child.components, child.collapsed)),
+          shape.components,
+          !shape.collapsed
+        );
       } else if (shape.children.length > 0) {
-        return { ...shape, children: toggleShapeCollapse(shape.children, id) };
+        return new CuiElement(
+          shape.id,
+          shape.type,
+          shape.visible,
+          toggleShapeCollapse(shape.children, id),
+          shape.components,
+          shape.collapsed
+        );
       }
-      return shape;
+      return new CuiElement(
+        shape.id,
+        shape.type,
+        shape.visible,
+        shape.children.map(child => new CuiElement(child.id, child.type, child.visible, child.children, child.components, child.collapsed)),
+        shape.components,
+        shape.collapsed
+      );
     });
   }, []);
 
@@ -131,11 +225,18 @@ const GraphicEditor = () => {
     const removeShape = (shapes: CuiElement[], parent: CuiElement | null = null): CuiElement[] => {
       return shapes.reduce((acc, shape) => {
         if (shape.id === sourceId) {
-          sourceShape = { ...shape };
+          sourceShape = new CuiElement(shape.id, shape.type, shape.visible, shape.children, shape.components, shape.collapsed);
           sourceParent = parent;
           return acc;
         }
-        const newShape = { ...shape, children: removeShape(shape.children, shape) };
+        const newShape = new CuiElement(
+          shape.id,
+          shape.type,
+          shape.visible,
+          removeShape(shape.children, shape),
+          shape.components,
+          shape.collapsed
+        );
         return shape.id === sourceId ? acc : [...acc, newShape];
       }, [] as CuiElement[]);
     };
@@ -149,9 +250,23 @@ const GraphicEditor = () => {
     const addShape = (shapes: CuiElement[]): CuiElement[] => {
       return shapes.map((shape) => {
         if (shape.id === targetId) {
-          return { ...shape, children: [...shape.children, sourceShape!] };
+          return new CuiElement(
+            shape.id,
+            shape.type,
+            shape.visible,
+            [...shape.children, sourceShape!],
+            shape.components,
+            shape.collapsed
+          );
         }
-        return { ...shape, children: addShape(shape.children) };
+        return new CuiElement(
+          shape.id,
+          shape.type,
+          shape.visible,
+          addShape(shape.children),
+          shape.components,
+          shape.collapsed
+        );
       });
     };
 
@@ -191,8 +306,6 @@ const GraphicEditor = () => {
             shapes={shapes}
             selectedShape={selectedShape}
             onShapesChange={handleShapeChange}
-            // setIsDragging={setIsDragging}
-            // setDragStart={setDragStart}
             setSelectedShape={setSelectedShape}
           />
         </Col>

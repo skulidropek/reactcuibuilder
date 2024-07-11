@@ -2,7 +2,7 @@ import React, { useEffect, useCallback, useRef, useState } from 'react';
 // import { CuiElement, CuiRectTransformModel } from '../models/types';
 import CuiElement from '../models/CuiElement';
 import CuiRectTransformModel from '../models/CuiRectTransformModel';  
-import { toInvertedY, fromInvertedY, findComponentByType, updateComponent } from '../utils/coordinateUtils';
+import { toInvertedY, fromInvertedY } from '../utils/coordinateUtils';
 
 interface EditorCanvasProps {
   editorSize: { width: number; height: number };
@@ -60,7 +60,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
   const drawShapes = useCallback((context: CanvasRenderingContext2D, shapes: CuiElement[], parentSize: { width: number; height: number }) => {
     context.clearRect(0, 0, parentSize.width, parentSize.height);
     shapes.forEach(shape => {
-      const rectTransform = findComponentByType<CuiRectTransformModel>(shape);
+      const rectTransform = shape.findComponentByType<CuiRectTransformModel>();
       if (!rectTransform) return;
 
       const { x, y, width, height } = calculatePositionAndSize(parentSize, rectTransform, true);
@@ -82,7 +82,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
     const invertedY = toInvertedY(y, editorSize.height);
     for (let i = shapes.length - 1; i >= 0; i--) {
       const shape = shapes[i];
-      const rectTransform = findComponentByType<CuiRectTransformModel>(shape);
+      const rectTransform = shape.findComponentByType<CuiRectTransformModel>();
       if (!rectTransform) continue;
 
       const { x: shapeX, y: shapeY, width: shapeWidth, height: shapeHeight } = calculatePositionAndSize(editorSize, rectTransform);
@@ -97,7 +97,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
   const updateShapePosition = useCallback((shapes: CuiElement[], id: number, clientX: number, clientY: number): CuiElement[] => {
     return shapes.map((shape) => {
       if (shape.id === id) {
-        const rectTransform = findComponentByType<CuiRectTransformModel>(shape);
+        const rectTransform = shape.findComponentByType<CuiRectTransformModel>();
         if (!rectTransform) return shape;
 
         const { anchorMin, anchorMax } = extractTransformValues(rectTransform);
@@ -115,8 +115,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
         };
 
        
-        const updatedElement = updateComponent<CuiRectTransformModel>(
-          shape,
+        const updatedElement = shape.updateComponent<CuiRectTransformModel>(
           {
             anchorMin: `${newAnchorMin.x} ${newAnchorMin.y}`,
             anchorMax: `${newAnchorMax.x} ${newAnchorMax.y}`,

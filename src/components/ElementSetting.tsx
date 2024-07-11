@@ -8,7 +8,6 @@ import CuiRectTransform from './cui/CuiRectTransform';
 import CuiElement from '../models/CuiElement';
 import CuiRectTransformModel from '../models/CuiRectTransformModel';
 import ICuiComponent from '../models/ICuiComponent';
-import { findComponentByType, updateComponent } from '../utils/coordinateUtils';
 
 interface ElementSettingProps {
   element: CuiElement;
@@ -19,7 +18,7 @@ interface ElementSettingProps {
 const ElementSetting: React.FC<ElementSettingProps> = ({ element, onChange }) => {
   switch (element.type) {
     case 'rect': {
-      const cuiRectTransformModel = findComponentByType<CuiRectTransformModel>(element);
+      const cuiRectTransformModel = element.findComponentByType<CuiRectTransformModel>();
 
       if (cuiRectTransformModel == null) {
         return null;
@@ -29,8 +28,7 @@ const ElementSetting: React.FC<ElementSettingProps> = ({ element, onChange }) =>
         <CuiRectTransform
           element={cuiRectTransformModel}
           onChange={(key: keyof CuiRectTransformModel, value: any) => {
-            const updatedElement = updateComponent<CuiRectTransformModel>(
-              element,
+            const updatedElement = element.updateComponent<CuiRectTransformModel>(
               { [key]: value }
             );
             onChange('components', updatedElement.components);

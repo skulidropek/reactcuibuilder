@@ -1,4 +1,4 @@
-import { fromInvertedY } from "@/utils/coordinateUtils";
+import { fromInvertedY } from "../utils/coordinateUtils";
 import ICuiComponent from "./ICuiComponent";
 import TransformValues from "./TransformValues";
 
