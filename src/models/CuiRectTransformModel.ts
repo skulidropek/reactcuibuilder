@@ -63,5 +63,4 @@ export default class CuiRectTransformModel implements ICuiComponent {
       this.anchorMin = `${newAnchorMin.x} ${newAnchorMin.y}`;
       this.anchorMax = `${newAnchorMax.x} ${newAnchorMax.y}`;
     }
-  }
-  
+}

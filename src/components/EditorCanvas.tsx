@@ -1,7 +1,6 @@
 import React, { useEffect, useCallback, useRef, useState } from 'react';
-// import { CuiElement, CuiRectTransformModel } from '../models/types';
 import CuiElement from '../models/CuiElement';
-import CuiRectTransformModel from '../models/CuiRectTransformModel';  
+import CuiRectTransformModel from '../models/CuiRectTransformModel';
 import { toInvertedY, fromInvertedY } from '../utils/coordinateUtils';
 
 interface EditorCanvasProps {
@@ -10,13 +9,6 @@ interface EditorCanvasProps {
   selectedShape: number | null;
   onShapesChange: (updatedShapes: CuiElement[]) => void;
   setSelectedShape: (selectedShape: number | null) => void;
-}
-
-interface TransformValues {
-  anchorMin: { x: number; y: number };
-  anchorMax: { x: number; y: number };
-  offsetMin: { x: number; y: number };
-  offsetMax: { x: number; y: number };
 }
 
 const EditorCanvas: React.FC<EditorCanvasProps> = ({
@@ -30,40 +22,13 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
-  const extractTransformValues = useCallback((rectTransform: CuiRectTransformModel): TransformValues => {
-    const [anchorMinX, anchorMinY] = rectTransform.anchorMin.split(' ').map(Number);
-    const [anchorMaxX, anchorMaxY] = rectTransform.anchorMax.split(' ').map(Number);
-    const [offsetMinX, offsetMinY] = rectTransform.offsetMin.split(' ').map(Number);
-    const [offsetMaxX, offsetMaxY] = rectTransform.offsetMax.split(' ').map(Number);
-
-    return {
-      anchorMin: { x: anchorMinX, y: anchorMinY },
-      anchorMax: { x: anchorMaxX, y: anchorMaxY },
-      offsetMin: { x: offsetMinX, y: offsetMinY },
-      offsetMax: { x: offsetMaxX, y: offsetMaxY },
-    };
-  }, []);
-
-  const calculatePositionAndSize = useCallback((parentSize: { width: number; height: number }, rectTransform: CuiRectTransformModel, invertedY: boolean = false) => {
-    const { anchorMin, anchorMax, offsetMin, offsetMax } = extractTransformValues(rectTransform);
-
-    const x = anchorMin.x * parentSize.width + offsetMin.x;
-    const y = invertedY 
-      ? fromInvertedY(anchorMax.y * parentSize.height + offsetMin.y, parentSize.height) 
-      : anchorMax.y * parentSize.height + offsetMin.y;
-    const width = (anchorMax.x - anchorMin.x) * parentSize.width + (offsetMax.x - offsetMin.x);
-    const height = (anchorMax.y - anchorMin.y) * parentSize.height + (offsetMax.y - offsetMin.y);
-
-    return { x, y, width, height };
-  }, [extractTransformValues]);
-
   const drawShapes = useCallback((context: CanvasRenderingContext2D, shapes: CuiElement[], parentSize: { width: number; height: number }) => {
     context.clearRect(0, 0, parentSize.width, parentSize.height);
     shapes.forEach(shape => {
       const rectTransform = shape.findComponentByType<CuiRectTransformModel>();
       if (!rectTransform) return;
 
-      const { x, y, width, height } = calculatePositionAndSize(parentSize, rectTransform, true);
+      const { x, y, width, height } = rectTransform.calculatePositionAndSize(parentSize, true);
 
       context.fillStyle = shape.id === selectedShape ? 'green' : (shape.type === 'rect' ? 'blue' : 'red');
       context.globalAlpha = 0.7;
@@ -76,7 +41,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
         context.fill();
       }
     });
-  }, [selectedShape, calculatePositionAndSize]);
+  }, [selectedShape]);
 
   const getShapeAtCoordinates = useCallback((x: number, y: number): CuiElement | null => {
     const invertedY = toInvertedY(y, editorSize.height);
@@ -85,14 +50,14 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
       const rectTransform = shape.findComponentByType<CuiRectTransformModel>();
       if (!rectTransform) continue;
 
-      const { x: shapeX, y: shapeY, width: shapeWidth, height: shapeHeight } = calculatePositionAndSize(editorSize, rectTransform);
+      const { x: shapeX, y: shapeY, width: shapeWidth, height: shapeHeight } = rectTransform.calculatePositionAndSize(editorSize);
 
       if (x >= shapeX && x <= shapeX + shapeWidth && invertedY >= shapeY - shapeHeight && invertedY <= shapeY) {
         return shape;
       }
     }
     return null;
-  }, [shapes, editorSize, calculatePositionAndSize]);
+  }, [shapes, editorSize]);
 
   const updateShapePosition = useCallback((shapes: CuiElement[], id: number, clientX: number, clientY: number): CuiElement[] => {
     return shapes.map((shape) => {
@@ -100,35 +65,16 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
         const rectTransform = shape.findComponentByType<CuiRectTransformModel>();
         if (!rectTransform) return shape;
 
-        const { anchorMin, anchorMax } = extractTransformValues(rectTransform);
-
         const dx = clientX - dragStart.x;
         const dy = dragStart.y - clientY;
 
-        const newAnchorMin = {
-          x: ((anchorMin.x * editorSize.width + dx) / editorSize.width).toFixed(3),
-          y: ((anchorMin.y * editorSize.height + dy) / editorSize.height).toFixed(3)
-        };
-        const newAnchorMax = {
-          x: ((anchorMax.x * editorSize.width + dx) / editorSize.width).toFixed(3),
-          y: ((anchorMax.y * editorSize.height + dy) / editorSize.height).toFixed(3)
-        };
+        rectTransform.updatePosition(dx, dy, editorSize);
 
-       
-        const updatedElement = shape.updateComponent<CuiRectTransformModel>(
-          {
-            anchorMin: `${newAnchorMin.x} ${newAnchorMin.y}`,
-            anchorMax: `${newAnchorMax.x} ${newAnchorMax.y}`,
-            offsetMin: rectTransform.offsetMin,
-            offsetMax: rectTransform.offsetMax,
-          }
-        );
-
-        return updatedElement;
+        return shape;
       }
       return shape;
     });
-  }, [dragStart, extractTransformValues, editorSize]);
+  }, [dragStart, editorSize]);
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!isDragging || selectedShape === null) return;
