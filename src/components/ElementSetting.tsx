@@ -1,10 +1,13 @@
 import React from 'react';
 import CuiRectTransform from './cui/CuiRectTransform';
-import { 
-  CuiElement, 
-  CuiRectTransformModel, 
-  ICuiComponent
-} from '../models/types';
+// import { 
+//   CuiElement, 
+//   CuiRectTransformModel, 
+//   ICuiComponent
+// } from '../models/types';
+import CuiElement from '../models/CuiElement';
+import CuiRectTransformModel from '../models/CuiRectTransformModel';
+import ICuiComponent from '../models/ICuiComponent';
 import { findComponentByType, updateComponent } from '../utils/coordinateUtils';
 
 interface ElementSettingProps {

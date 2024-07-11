@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronRight, ChevronDown, Eye, EyeOff, ArrowUp } from 'lucide-react';
-import { CuiElement } from '../models/types';
+import CuiElement from '../models/CuiElement';
 import { Button, Card, ListGroup, ListGroupItem, Collapse } from 'react-bootstrap';
 import ElementProfile from './ElementProfile';
 

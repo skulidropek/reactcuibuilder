@@ -2,7 +2,8 @@ import React, { useState, useCallback } from 'react';
 import EditorControls from './EditorControls';
 import ShapeHierarchy from './ShapeHierarchy';
 import EditorCanvas from './EditorCanvas';
-import { CuiElement, CuiRectTransformModel } from '../models/types';
+import CuiElement from '../models/CuiElement';
+import CuiRectTransformModel from '../models/CuiRectTransformModel';
 import { Container, Row, Col } from 'react-bootstrap';
 
 const GraphicEditor = () => {
