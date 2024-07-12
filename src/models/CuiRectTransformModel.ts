@@ -1,6 +1,12 @@
 import { fromInvertedY } from "../utils/coordinateUtils";
 import ICuiComponent from "./ICuiComponent";
-import TransformValues from "./TransformValues";
+
+export interface TransformValues {
+  anchorMin: { x: number; y: number };
+  anchorMax: { x: number; y: number };
+  offsetMin: { x: number; y: number };
+  offsetMax: { x: number; y: number };
+}
 
 export default class CuiRectTransformModel implements ICuiComponent {
     type: string = 'RectTransform';
