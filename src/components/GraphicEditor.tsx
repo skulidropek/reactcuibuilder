@@ -5,6 +5,7 @@ import EditorCanvas from './EditorCanvas';
 import CuiElement from '../models/CuiElement';
 import CuiRectTransformModel from '../models/CuiRectTransformModel';
 import { Container, Row, Col } from 'react-bootstrap';
+import CanvasResizableShape from './CanvasResizableShape';
 
 const GraphicEditor = () => {
   const [shapes, setShapes] = useState<CuiElement[]>([]);
@@ -20,10 +21,14 @@ const GraphicEditor = () => {
       [], // children
       [
         new CuiRectTransformModel(
-          '0 0', // anchorMin
-          '0.1 0.1', // anchorMax
-          '0 0', // offsetMin
-          '0 0' // offsetMax
+          "0.1 0.1",
+          "0.2 0.2",
+          "10 10",
+          "-10 -10"
+          // '0 0', // anchorMin
+          // '0.1 0.1', // anchorMax
+          // '0 0', // offsetMin
+          // '0 0' // offsetMax
         )
       ], // components
       false // collapsed
