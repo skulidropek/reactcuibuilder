@@ -5,7 +5,6 @@ import EditorCanvas from './EditorCanvas';
 import CuiElement from '../models/CuiElement';
 import CuiRectTransformModel from '../models/CuiRectTransformModel';
 import { Container, Row, Col } from 'react-bootstrap';
-import CanvasResizableShape from './CanvasResizableShape';
 
 const GraphicEditor = () => {
   const [shapes, setShapes] = useState<CuiElement[]>([]);
