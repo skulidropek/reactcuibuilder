@@ -1,4 +1,6 @@
-import { CuiElement, CuiRectTransformModel } from '@/models/types';
+// import { CuiElement, CuiRectTransformModel } from '@/models/types';
+import CuiElement from '@/models/CuiElement';
+import CuiRectTransformModel from '@/models/CuiRectTransformModel';
 import React from 'react';
 import { Form } from 'react-bootstrap';
 
