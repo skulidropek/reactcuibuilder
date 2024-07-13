@@ -1,18 +1,11 @@
 import React from 'react';
 import CuiRectTransform from './cui/CuiRectTransform';
-// import { 
-//   CuiElement, 
-//   CuiRectTransformModel, 
-//   ICuiComponent
-// } from '../models/types';
 import CuiElement from '../models/CuiElement';
 import CuiRectTransformModel from '../models/CuiRectTransformModel';
-import ICuiComponent from '../models/ICuiComponent';
 
 interface ElementSettingProps {
   element: CuiElement;
   onChange: (key: keyof CuiElement, value: any) => void;
-  // onChange: (updatedElement: CuiElement) => void;
 }
 
 const ElementSetting: React.FC<ElementSettingProps> = ({ element, onChange }) => {
@@ -31,7 +24,7 @@ const ElementSetting: React.FC<ElementSettingProps> = ({ element, onChange }) =>
             const updatedElement = element.updateComponent<CuiRectTransformModel>(
               { [key]: value }
             );
-            onChange('components', updatedElement.components);
+            onChange('components' as keyof CuiElement, updatedElement.components);
           }}
         />
       );

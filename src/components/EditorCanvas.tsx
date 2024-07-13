@@ -40,6 +40,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
 
     shapes.forEach(shape => {
       const rectTransform = shape.findComponentByType<CuiRectTransformModel>();
+
       if (!rectTransform) return;
 
       const { x, y, width, height } = rectTransform.calculatePositionAndSize(parentSize);
@@ -140,7 +141,6 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
   }, [dragStart, editorSize]);
 
   const getMarkerUnderMouse = useCallback((x: number, y: number): Marker | null => {
-    const handles: Marker['handle'][] = ['topLeft', 'topRight', 'bottomLeft', 'bottomRight', 'top', 'right', 'bottom', 'left'];
     const transformedY = editorSize.height - y;
 
     for (let i = shapes.length - 1; i >= 0; i--) {
