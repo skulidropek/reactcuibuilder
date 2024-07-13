@@ -29,19 +29,21 @@ export default class CuiElement {
         (component): component is T => true
       ) as T | undefined;
     }
-  
+
     updateComponent<T extends ICuiComponent>(updatedValues: Partial<T>): CuiElement {
       const component = this.findComponentByType<T>();
-  
+    
       if (component == null) {
         return this;
       }
-  
-      const updatedComponent = { ...component, ...updatedValues };
+    
+      const updatedComponent = new (component.constructor as { new (): T })();
+      Object.assign(updatedComponent, component, updatedValues);
+    
       const updatedComponents = this.components.map(c => 
         c.type === component.type ? updatedComponent : c
       );
-  
+    
       return new CuiElement(
         this.id,
         this.type,
