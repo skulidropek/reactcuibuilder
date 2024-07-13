@@ -50,6 +50,7 @@ const GraphicEditor = () => {
     );
   }, []);
   
+
   const toggleVisibility = useCallback((shapeId: number) => {
     const toggleShapeVisibility = (shapes: CuiElement[], id: number): CuiElement[] => {
       return shapes.map((shape) => {
@@ -184,13 +185,48 @@ const GraphicEditor = () => {
     });
   }, [toggleShapeCollapse]);
 
+  const handleDragStart = useCallback((e: React.DragEvent, shapeId: number) => {
+    setDraggingItem(shapeId);
+    e.dataTransfer.setData('text/plain', shapeId.toString());
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent, targetId: number | 'root') => {
+    e.preventDefault();
+    const sourceId = parseInt(e.dataTransfer.getData('text/plain'), 10);
+    setShapes((prevShapes) => {
+      return moveShape(prevShapes, sourceId, targetId);
+    });
+    setDraggingItem(null);
+  }, []);
+
+  const isDescendant = useCallback((parent: CuiElement, childId: number): boolean => {
+    return parent.children.some((child) => child.id === childId || isDescendant(child, childId));
+  }, []);
+
+  const findShapeById = useCallback((shapes: CuiElement[], id: number): CuiElement | null => {
+    for (let shape of shapes) {
+      if (shape.id === id) return shape;
+      if (shape.children.length > 0) {
+        const found = findShapeById(shape.children, id);
+        if (found) return found;
+      }
+    }
+    return null;
+  }, []);
+
   const moveShape = useCallback((shapes: CuiElement[], sourceId: number, targetId: number | 'root'): CuiElement[] => {
     let sourceShape: CuiElement | undefined;
+    let sourceParent: CuiElement | null = null;
 
     const removeShape = (shapes: CuiElement[], parent: CuiElement | null = null): CuiElement[] => {
       return shapes.reduce((acc, shape) => {
         if (shape.id === sourceId) {
           sourceShape = new CuiElement(shape.id, shape.type, shape.visible, shape.children, shape.components, shape.collapsed);
+          sourceParent = parent;
           return acc;
         }
         const newShape = new CuiElement(
@@ -237,39 +273,6 @@ const GraphicEditor = () => {
     return addShape(updatedShapes);
   }, []);
 
-  const handleDragStart = useCallback((e: React.DragEvent, shapeId: number) => {
-    setDraggingItem(shapeId);
-    e.dataTransfer.setData('text/plain', shapeId.toString());
-  }, []);
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-  }, []);
-
-  const handleDrop = useCallback((e: React.DragEvent, targetId: number | 'root') => {
-    e.preventDefault();
-    const sourceId = parseInt(e.dataTransfer.getData('text/plain'), 10);
-    setShapes((prevShapes) => {
-      return moveShape(prevShapes, sourceId, targetId);
-    });
-    setDraggingItem(null);
-  }, [moveShape]);
-
-  const isDescendant = useCallback((parent: CuiElement, childId: number): boolean => {
-    return parent.children.some((child) => child.id === childId || isDescendant(child, childId));
-  }, []);
-
-  const findShapeById = useCallback((shapes: CuiElement[], id: number): CuiElement | null => {
-    for (let shape of shapes) {
-      if (shape.id === id) return shape;
-      if (shape.children.length > 0) {
-        const found = findShapeById(shape.children, id);
-        if (found) return found;
-      }
-    }
-    return null;
-  }, []);
-
   const moveToRoot = useCallback((shapeId: number) => {
     setShapes((prevShapes) => moveShape(prevShapes, shapeId, 'root'));
   }, [moveShape]);
@@ -294,6 +297,8 @@ const GraphicEditor = () => {
               handleProfileChange={handleProfileChange}
               moveToRoot={moveToRoot}
               draggingItem={draggingItem}
+              selectedShape={selectedShape}
+              setSelectedShape={setSelectedShape}
             />
           </div>
         </Col>

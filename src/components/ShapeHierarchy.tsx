@@ -14,6 +14,8 @@ interface ShapeHierarchyProps {
   moveToRoot: (shapeId: number) => void;
   draggingItem: number | null;
   handleProfileChange: (shapeId: number, key: keyof CuiElement, value: any) => void;
+  selectedShape: number | null;
+  setSelectedShape: (shapeId: number | null) => void;
 }
 
 const ShapeHierarchy: React.FC<ShapeHierarchyProps> = ({
@@ -26,9 +28,9 @@ const ShapeHierarchy: React.FC<ShapeHierarchyProps> = ({
   moveToRoot,
   handleProfileChange,
   draggingItem,
+  selectedShape,
+  setSelectedShape,
 }) => {
-  const [selectedShape, setSelectedShape] = useState<number | null>(null);
-
   const handleSelectShape = (shapeId: number) => {
     setSelectedShape(selectedShape === shapeId ? null : shapeId);
   };
@@ -45,7 +47,7 @@ const ShapeHierarchy: React.FC<ShapeHierarchyProps> = ({
     return shapes.map(shape => (
       <li key={shape.id} style={{ listStyleType: 'none' }}>
         <ListGroupItem 
-          style={{ paddingLeft: `${level * 20}px`, border: '1px solid #ddd', marginBottom: '5px' }} 
+          style={{ paddingLeft: `${level * 20}px`, border: '1px solid #ddd', marginBottom: '5px', backgroundColor: selectedShape === shape.id ? 'lightblue' : 'white' }} 
           className={`d-flex align-items-center p-1 ${draggingItem === shape.id ? 'bg-light' : ''}`}
           draggable
           onDragStart={(e) => handleDragStart(e, shape.id)}
