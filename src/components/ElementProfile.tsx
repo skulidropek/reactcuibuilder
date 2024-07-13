@@ -4,12 +4,6 @@ import { FaPlus, FaArrowsAlt } from 'react-icons/fa';
 import ElementSetting from './ElementSetting';
 import CuiElement from '../models/CuiElement';
 
-interface ComponentSetting {
-  name: string;
-  type: string;
-  value: any;
-}
-
 interface ElementProfileProps {
   element: any;
   onChange: (key: keyof CuiElement, value: any) => void;
