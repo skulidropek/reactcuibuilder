@@ -1,29 +1,26 @@
 import ICuiComponent from "./ICuiComponent";
 
 export default class CuiElement {
-    id: number;
-    type: 'rect' | 'circle';
-    visible: boolean;
-    children: CuiElement[];
-    components: ICuiComponent[];
-    collapsed: boolean;
   
-    constructor(
-      id: number,
-      type: 'rect' | 'circle',
-      visible: boolean,
-      children: CuiElement[],
-      components: ICuiComponent[],
-      collapsed: boolean
-    ) {
-      this.id = id;
-      this.type = type;
-      this.visible = visible;
-      this.children = children;
-      this.components = components;
-      this.collapsed = collapsed;
+  constructor(
+    public id: number,
+    public type: 'rect' | 'circle',
+    public visible: boolean,
+    public children: CuiElement[],
+    public components: ICuiComponent[],
+    public collapsed: boolean,
+    public parent: CuiElement | null = null // добавлен аргумент parent
+  ) {
+    this.setParentForChildren();
+  }
+
+    setParentForChildren() {
+      this.children.forEach(child => {
+        child.parent = this;
+        child.setParentForChildren(); // рекурсивно устанавливаем родителей для всех потомков
+      });
     }
-  
+
     findComponentByType<T extends ICuiComponent>(): T | undefined {
       return this.components.find(
         (component): component is T => true
@@ -50,7 +47,8 @@ export default class CuiElement {
         this.visible,
         this.children,
         updatedComponents,
-        this.collapsed
+        this.collapsed,
+        this.parent,
       );
     }
-  }
+}
