@@ -32,21 +32,34 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
 
   const drawShapes = useCallback((context: CanvasRenderingContext2D, shapes: CuiElement[], parentSize: Size) => {
     context.clearRect(0, 0, parentSize.width, parentSize.height);
-
-    // Применение трансформации
     context.save();
     context.translate(0, parentSize.height);
     context.scale(1, -1);
 
-    shapes.forEach(shape => {
-      const rectTransform = shape.findComponentByType<CuiRectTransformModel>();
+    const drawShape = (shape: CuiElement, parentSize: Size, offsetX: number = 0, offsetY: number = 0) => {
 
+      const rectTransform = shape.findComponentByType<CuiRectTransformModel>();
       if (!rectTransform) return;
 
-      const { x, y, width, height } = rectTransform.calculatePositionAndSize(parentSize);
+      const { x, y, width, height } = rectTransform.calculatePositionAndSize(parentSize, offsetX, offsetY);
 
       context.fillStyle = shape.id === selectedShape ? 'green' : (shape.type === 'rect' ? 'blue' : 'red');
-      context.globalAlpha = 0.7;
+      context.globalAlpha = 1;
+
+      if(shape.id === selectedShape) {
+        context.fillStyle = 'green'
+      }
+      else if (shape.type === 'rect') {
+        if(shape.parent != null) {
+          context.fillStyle = 'blue';
+        }
+        else {
+          context.fillStyle = 'yellow';
+        }
+      }
+      else {
+        context.fillStyle = 'red'
+      }
 
       if (shape.type === 'rect') {
         context.fillRect(x, y, width, height);
@@ -93,36 +106,55 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
         drawMarker(x + width / 2, y + height, 'yellow');
         drawMarker(x, y + height / 2, 'yellow');
       }
+
+      // Draw children
+      shape.children.forEach(child => {
+        drawShape(child, { width, height }, x, y);
+      });
+    };
+
+    shapes.forEach(shape => {
+      drawShape(shape, parentSize);
     });
 
-    // Восстановление состояния контекста
     context.restore();
   }, [selectedShape]);
 
-  const getShapeAtCoordinates = useCallback((x: number, y: number): CuiElement | null => {
-    // Применение обратной трансформации
-    const transformedY = editorSize.height - y;
+  const getShapeAtCoordinates = useCallback(
+    (x: number, y: number, shapes: CuiElement[], parentSize: Size): CuiElement | null => {
+      const findShape = (shape: CuiElement, parentSize: Size, offsetX: number = 0, offsetY: number = 0): CuiElement | null => {
+        const rectTransform = shape.findComponentByType<CuiRectTransformModel>();
+        if (!rectTransform) return null;
+  
+        const { x: shapeX, y: shapeY, width, height } = rectTransform.calculatePositionAndSize(parentSize, offsetX, offsetY);
+  
+        // Check if the coordinates are within this shape
+        const withinX = x >= shapeX && x <= shapeX + width;
+        const withinY = y >= shapeY && y <= shapeY + height;
+  
+        // If not, recursively check children
+        for (const child of shape.children) {
+          const foundChild = findShape(child, { width, height }, shapeX, shapeY);
+          if (foundChild) return foundChild;
+        }
 
-    for (let i = shapes.length - 1; i >= 0; i--) {
-      const shape = shapes[i];
-      const rectTransform = shape.findComponentByType<CuiRectTransformModel>();
-      if (!rectTransform) continue;
-
-      const { x: shapeX, y: shapeY, width: shapeWidth, height: shapeHeight } = rectTransform.calculatePositionAndSize(editorSize);
-
-      // Correct the selection logic for inverted coordinates
-      const startX = Math.min(shapeX, shapeX + shapeWidth);
-      const endX = Math.max(shapeX, shapeX + shapeWidth);
-      const startY = Math.min(shapeY, shapeY + shapeHeight);
-      const endY = Math.max(shapeY, shapeY + shapeHeight);
-
-      if (x >= startX && x <= endX && transformedY >= startY && transformedY <= endY) {
-        return shape;
+        if (withinX && withinY) {
+          return shape;
+        }
+  
+        return null;
+      };
+  
+      for (const shape of shapes) {
+        const foundShape = findShape(shape, parentSize);
+        if (foundShape) return foundShape;
       }
-    }
-    return null;
-  }, [shapes, editorSize]);
-
+  
+      return null;
+    },
+    []
+  );  
+  
   const updateShapePosition = useCallback((shapes: CuiElement[], id: number, clientX: number, clientY: number): CuiElement[] => {
     return shapes.map((shape) => {
       if (shape.id === id) {
@@ -136,24 +168,25 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
 
         return shape;
       }
+      shape.children = updateShapePosition(shape.children, id, clientX, clientY);
       return shape;
     });
   }, [dragStart, editorSize]);
 
-  const getMarkerUnderMouse = useCallback((x: number, y: number): Marker | null => {
-    const transformedY = editorSize.height - y;
+  const getMarkerUnderMouse = useCallback((x: number, y: number, shapes: CuiElement[], parentSize: Size, offsetX = 0, offsetY = 0): Marker | null => {
+    const transformedY = parentSize.height - y;
 
     for (let i = shapes.length - 1; i >= 0; i--) {
       const shape = shapes[i];
       const rectTransform = shape.findComponentByType<CuiRectTransformModel>();
       if (!rectTransform) continue;
 
-      const { x: shapeX, y: shapeY, width: shapeWidth, height: shapeHeight } = rectTransform.calculatePositionAndSize(editorSize);
+      const { x: shapeX, y: shapeY, width: shapeWidth, height: shapeHeight } = rectTransform.calculatePositionAndSize(parentSize);
       const transformValues = rectTransform.extractTransformValues();
-      const anchorX = transformValues.anchorMin.x * editorSize.width;
-      const anchorY = transformValues.anchorMin.y * editorSize.height;
-      const anchorWidth = (transformValues.anchorMax.x - transformValues.anchorMin.x) * editorSize.width;
-      const anchorHeight = (transformValues.anchorMax.y - transformValues.anchorMin.y) * editorSize.height;
+      const anchorX = transformValues.anchorMin.x * parentSize.width + offsetX;
+      const anchorY = transformValues.anchorMin.y * parentSize.height + offsetY;
+      const anchorWidth = (transformValues.anchorMax.x - transformValues.anchorMin.x) * parentSize.width;
+      const anchorHeight = (transformValues.anchorMax.y - transformValues.anchorMin.y) * parentSize.height;
 
       const isClose = (x1: number, y1: number, x2: number, y2: number) => Math.abs(x1 - x2) < 10 && Math.abs(y1 - y2) < 10;
 
@@ -187,8 +220,9 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
 
     const mouseX = e.clientX - canvasBounds.left;
     const mouseY = e.clientY - canvasBounds.top;
-    const shape = getShapeAtCoordinates(mouseX, mouseY);
-    const marker = getMarkerUnderMouse(mouseX, mouseY);
+    console.log(mouseX, mouseY);
+    const shape = getShapeAtCoordinates(mouseX, editorSize.height - mouseY, shapes, editorSize);
+    const marker = getMarkerUnderMouse(mouseX, editorSize.height - mouseY, shapes, editorSize);
 
     if (marker) {
       setResizing(marker);

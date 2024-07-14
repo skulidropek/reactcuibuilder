@@ -45,12 +45,15 @@ export default class CuiRectTransformModel implements ICuiComponent {
     };
   }
 
-  calculatePositionAndSize(parentSize: Size): { x: number; y: number; width: number; height: number } {
+  calculatePositionAndSize(parentSize: Size, offsetX: number = 0, offsetY: number = 0): { x: number; y: number; width: number; height: number } {
     const { anchorMin, anchorMax, offsetMin, offsetMax } = this.extractTransformValues();
-    const x = anchorMin.x * parentSize.width + offsetMin.x;
-    const y = anchorMin.y * parentSize.height + offsetMin.y;
+    
+    const x = anchorMin.x * parentSize.width + offsetMin.x + offsetX;
+    const y = anchorMin.y * parentSize.height + offsetMin.y + offsetX;
+    
     const width = (anchorMax.x - anchorMin.x) * parentSize.width + (offsetMax.x - offsetMin.x);
     const height = (anchorMax.y - anchorMin.y) * parentSize.height + (offsetMax.y - offsetMin.y);
+  
     return { x, y, width, height };
   }
 
