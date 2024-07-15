@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import CuiElement from '../models/CuiElement';
+import CuiElement, { ShapePosition } from '../models/CuiElement';
 import CuiRectTransformModel, { Size } from '../models/CuiRectTransformModel';
 
 interface EditorCanvasProps {
@@ -30,108 +30,61 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [resizing, setResizing] = useState<Marker | null>(null);
 
-  const drawShapes = useCallback((context: CanvasRenderingContext2D, shapes: CuiElement[], parentSize: Size) => {
-    context.clearRect(0, 0, parentSize.width, parentSize.height);
+  const drawShapes = useCallback((context: CanvasRenderingContext2D, shapes: ShapePosition[]) => {
+    context.clearRect(0, 0, editorSize.width, editorSize.height);
     context.save();
-    context.translate(0, parentSize.height);
+    context.translate(0, editorSize.height);
     context.scale(1, -1);
 
-    const drawShape = (shape: CuiElement, parentSize: Size, offsetX: number = 0, offsetY: number = 0) => {
-
-      const rectTransform = shape.findComponentByType<CuiRectTransformModel>();
-      if (!rectTransform) return;
-
-      const { x, y, width, height } = rectTransform.calculatePositionAndSize(parentSize, offsetX, offsetY);
-
-      context.fillStyle = shape.id === selectedShape ? 'green' : (shape.type === 'rect' ? 'blue' : 'red');
+    const drawShape = (shape: ShapePosition) => {
+      context.fillStyle = shape.selected ? 'green' : (shape.type === 'rect' ? 'blue' : 'red');
       context.globalAlpha = 1;
 
-      if(shape.id === selectedShape) {
-        context.fillStyle = 'green'
-      }
-      else if (shape.type === 'rect') {
-        if(shape.parent != null) {
-          context.fillStyle = 'blue';
-        }
-        else {
-          context.fillStyle = 'yellow';
-        }
-      }
-      else {
-        context.fillStyle = 'red'
-      }
-
       if (shape.type === 'rect') {
-        context.fillRect(x, y, width, height);
+        context.fillRect(shape.x, shape.y, shape.width, shape.height);
       } else if (shape.type === 'circle') {
         context.beginPath();
-        context.arc(x + width / 2, y + height / 2, Math.min(width, height) / 2, 0, 2 * Math.PI);
+        context.arc(shape.x + shape.width / 2, shape.y + shape.height / 2, Math.min(shape.width, shape.height) / 2, 0, 2 * Math.PI);
         context.fill();
       }
 
-      if (shape.id === selectedShape) {
-        const transformValues = rectTransform.extractTransformValues();
-        const anchorX = transformValues.anchorMin.x * parentSize.width;
-        const anchorY = transformValues.anchorMin.y * parentSize.height;
-        const anchorWidth = (transformValues.anchorMax.x - transformValues.anchorMin.x) * parentSize.width;
-        const anchorHeight = (transformValues.anchorMax.y - transformValues.anchorMin.y) * parentSize.height;
-
+      if (shape.selected && shape.anchor && shape.markers) {
         context.strokeStyle = 'blue';
         context.setLineDash([5, 5]);
-        context.strokeRect(anchorX, anchorY, anchorWidth, anchorHeight);
+        context.strokeRect(shape.anchor.x, shape.anchor.y, shape.anchor.width, shape.anchor.height);
         context.setLineDash([]);
 
-        const drawMarker = (x: number, y: number, color: string) => {
-          context.fillStyle = color;
-          context.fillRect(x - 5, y - 5, 10, 10);
-        };
-
-        drawMarker(anchorX, anchorY, 'blue');
-        drawMarker(anchorX + anchorWidth, anchorY, 'blue');
-        drawMarker(anchorX, anchorY + anchorHeight, 'blue');
-        drawMarker(anchorX + anchorWidth, anchorY + anchorHeight, 'blue');
-
-        drawMarker(x, y, 'red');
-        drawMarker(x + width, y, 'red');
-        drawMarker(x, y + height, 'red');
-        drawMarker(x + width, y + height, 'red');
-
-        drawMarker(anchorX + anchorWidth / 2, anchorY, 'green');
-        drawMarker(anchorX + anchorWidth, anchorY + anchorHeight / 2, 'green');
-        drawMarker(anchorX + anchorWidth / 2, anchorY + anchorHeight, 'green');
-        drawMarker(anchorX, anchorY + anchorHeight / 2, 'green');
-
-        drawMarker(x + width / 2, y, 'yellow');
-        drawMarker(x + width, y + height / 2, 'yellow');
-        drawMarker(x + width / 2, y + height, 'yellow');
-        drawMarker(x, y + height / 2, 'yellow');
+        shape.markers.blue.forEach(marker => drawMarker(marker.x, marker.y, 'blue'));
+        shape.markers.red.forEach(marker => drawMarker(marker.x, marker.y, 'red'));
+        shape.markers.green.forEach(marker => drawMarker(marker.x, marker.y, 'green'));
+        shape.markers.yellow.forEach(marker => drawMarker(marker.x, marker.y, 'yellow'));
       }
 
-      // Draw children
-      shape.children.forEach(child => {
-        drawShape(child, { width, height }, x, y);
-      });
+      shape.children.forEach(drawShape);
     };
 
-    shapes.forEach(shape => {
-      drawShape(shape, parentSize);
-    });
+    const drawMarker = (x: number, y: number, color: string) => {
+      context.fillStyle = color;
+      context.fillRect(x - 5, y - 5, 10, 10);
+    };
+
+    shapes.forEach(drawShape);
 
     context.restore();
-  }, [selectedShape]);
+  }, [editorSize]);
 
   const getShapeAtCoordinates = useCallback(
     (x: number, y: number, shapes: CuiElement[], parentSize: Size): CuiElement | null => {
       const findShape = (shape: CuiElement, parentSize: Size, offsetX: number = 0, offsetY: number = 0): CuiElement | null => {
         const rectTransform = shape.findComponentByType<CuiRectTransformModel>();
         if (!rectTransform) return null;
-  
+
         const { x: shapeX, y: shapeY, width, height } = rectTransform.calculatePositionAndSize(parentSize, offsetX, offsetY);
-  
+
         // Check if the coordinates are within this shape
         const withinX = x >= shapeX && x <= shapeX + width;
         const withinY = y >= shapeY && y <= shapeY + height;
-  
+
         // If not, recursively check children
         for (const child of shape.children) {
           const foundChild = findShape(child, { width, height }, shapeX, shapeY);
@@ -141,20 +94,20 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
         if (withinX && withinY) {
           return shape;
         }
-  
+
         return null;
       };
-  
+
       for (const shape of shapes) {
         const foundShape = findShape(shape, parentSize);
         if (foundShape) return foundShape;
       }
-  
+
       return null;
     },
     []
-  );  
-  
+  );
+
   const updateShapePosition = useCallback((shapes: CuiElement[], id: number, clientX: number, clientY: number): CuiElement[] => {
     return shapes.map((shape) => {
       if (shape.id === id) {
@@ -219,20 +172,36 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
 
     const mouseX = e.clientX - canvasBounds.left;
     const mouseY = e.clientY - canvasBounds.top;
-    console.log(mouseX, mouseY);
     const shape = getShapeAtCoordinates(mouseX, editorSize.height - mouseY, shapes, editorSize);
     const marker = getMarkerUnderMouse(mouseX, editorSize.height - mouseY, shapes, editorSize);
 
     if (marker) {
       setResizing(marker);
     } else if (shape) {
+      shape.selected = true;
+      const updatedShapes = shapes.map(s => {
+        if (s.id === shape.id) {
+          return shape;
+        } else {
+          s.selected = false;
+          return s;
+        }
+      });
+
       setSelectedShape(shape.id);
+      onShapesChange(updatedShapes);
       setIsDragging(true);
       setDragStart({ x: e.clientX, y: e.clientY });
     } else {
+      const updatedShapes = shapes.map(s => {
+        s.selected = false;
+        return s;
+      });
+
       setSelectedShape(null);
+      onShapesChange(updatedShapes);
     }
-  }, [getShapeAtCoordinates, getMarkerUnderMouse, setSelectedShape]);
+  }, [getShapeAtCoordinates, getMarkerUnderMouse, setSelectedShape, onShapesChange, shapes]);
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (resizing) {
@@ -275,10 +244,11 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
     if (canvas) {
       const context = canvas.getContext('2d');
       if (context) {
-        drawShapes(context, shapes, editorSize);
+        const shapePositions = shapes.map(shape => shape.generateShapePositions(editorSize)).filter((position): position is ShapePosition => position !== null);
+        drawShapes(context, shapePositions);
       }
     }
-  }, [shapes, editorSize, drawShapes]);
+  }, [shapes, editorSize, selectedShape, drawShapes]);
 
   useEffect(() => {
     const canvas = canvasRef.current;

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { ChevronRight, ChevronDown, Eye, EyeOff, ArrowUp } from 'lucide-react';
 import CuiElement from '../models/CuiElement';
 import { Button, Card, ListGroup, ListGroupItem, Collapse } from 'react-bootstrap';
@@ -12,8 +12,8 @@ interface ShapeHierarchyProps {
   toggleVisibility: (shapeId: number) => void;
   toggleCollapse: (shapeId: number) => void;
   moveToRoot: (shapeId: number) => void;
-  draggingItem: number | null;
   handleProfileChange: (shapeId: number, key: keyof CuiElement, value: any) => void;
+  draggingItem: number | null;
   selectedShape: number | null;
   setSelectedShape: (shapeId: number | null) => void;
 }
@@ -31,8 +31,35 @@ const ShapeHierarchy: React.FC<ShapeHierarchyProps> = ({
   selectedShape,
   setSelectedShape,
 }) => {
-  const handleSelectShape = (shapeId: number) => {
-    setSelectedShape(selectedShape === shapeId ? null : shapeId);
+  const handleSelectShape = (shape: CuiElement) => {
+    setSelectedShape(shape.id);
+
+    const updatedShapes = shapes.map(s => {
+      if (s.id === shape.id) {
+        return new CuiElement(
+          s.id,
+          s.type,
+          s.visible,
+          s.children,
+          s.components,
+          s.collapsed,
+          s.parent,
+          true // выбранный элемент
+        );
+      }
+      return new CuiElement(
+        s.id,
+        s.type,
+        s.visible,
+        s.children,
+        s.components,
+        s.collapsed,
+        s.parent,
+        false // не выбранный элемент
+      );
+    });
+
+    handleProfileChange(shape.id, 'selected', true);
   };
 
   const handleAddChild = () => {
@@ -53,7 +80,7 @@ const ShapeHierarchy: React.FC<ShapeHierarchyProps> = ({
           onDragStart={(e) => handleDragStart(e, shape.id)}
           onDragOver={handleDragOver}
           onDrop={(e) => handleDrop(e, shape.id)}
-          onClick={() => handleSelectShape(shape.id)}
+          onClick={() => handleSelectShape(shape)}
         >
           {shape.children.length > 0 && (
             <Button variant="link" size="sm" onClick={(e) => { e.stopPropagation(); toggleCollapse(shape.id); }} className="mr-2 p-0">

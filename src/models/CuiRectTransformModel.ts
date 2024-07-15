@@ -49,7 +49,7 @@ export default class CuiRectTransformModel implements ICuiComponent {
     const { anchorMin, anchorMax, offsetMin, offsetMax } = this.extractTransformValues();
     
     const x = anchorMin.x * parentSize.width + offsetMin.x + offsetX;
-    const y = anchorMin.y * parentSize.height + offsetMin.y + offsetX;
+    const y = anchorMin.y * parentSize.height + offsetMin.y + offsetY;
     
     const width = (anchorMax.x - anchorMin.x) * parentSize.width + (offsetMax.x - offsetMin.x);
     const height = (anchorMax.y - anchorMin.y) * parentSize.height + (offsetMax.y - offsetMin.y);
