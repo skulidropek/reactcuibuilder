@@ -15,6 +15,7 @@ interface Marker {
   isEdge: boolean;
   startX: number;
   startY: number;
+  element: CuiElement;
 }
 
 const EditorCanvas: React.FC<EditorCanvasProps> = ({
@@ -28,7 +29,10 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [resizing, setResizing] = useState<Marker | null>(null);
 
-  const drawShapes = useCallback((context: CanvasRenderingContext2D, shapes: ShapePosition[]) => {
+  const drawShapes = useCallback((context: CanvasRenderingContext2D, shapes: CuiElement[]) => {
+
+    const shapePositions = shapes.map(shape => shape.generateShapePositions(editorSize)).filter((position): position is ShapePosition => position !== null);
+
     context.clearRect(0, 0, editorSize.width, editorSize.height);
     context.save();
     context.translate(0, editorSize.height);
@@ -66,41 +70,42 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
       context.fillRect(x - 5, y - 5, 10, 10);
     };
 
-    shapes.forEach(drawShape);
+    shapePositions.forEach(drawShape);
 
     context.restore();
   }, [editorSize]);
 
   const getShapeAtCoordinates = useCallback(
     (x: number, y: number, shapes: CuiElement[], parentSize: Size): CuiElement | null => {
-      const findShape = (shape: CuiElement, parentSize: Size, offsetX: number = 0, offsetY: number = 0): CuiElement | null => {
-        const rectTransform = shape.findComponentByType<CuiRectTransformModel>();
-        if (!rectTransform) return null;
-
-        const { x: shapeX, y: shapeY, width, height } = rectTransform.calculatePositionAndSize(parentSize, offsetX, offsetY);
-
+      const findShape = (shapePosition: ShapePosition, shape: CuiElement): CuiElement | null => {
+        const { x: shapeX, y: shapeY, width, height, children } = shapePosition;
+  
         // Check if the coordinates are within this shape
-        const withinX = x >= shapeX && x <= shapeX + width;
+        const withinX = x >= shapeX  && x <= shapeX + width;
         const withinY = y >= shapeY && y <= shapeY + height;
-
-        // If not, recursively check children
-        for (const child of shape.children) {
-          const foundChild = findShape(child, { width, height }, shapeX, shapeY);
+  
+        // Recursively check children
+        for (const child of children) {
+          const foundChild = findShape(child, shape.children.find(c => c.id === child.id)!);
           if (foundChild) return foundChild;
         }
 
         if (withinX && withinY) {
           return shape;
         }
-
+  
         return null;
       };
-
+  
       for (const shape of shapes) {
-        const foundShape = findShape(shape, parentSize);
+        const shapePosition = shape.generateShapePositions(parentSize);
+
+        if (!shapePosition) continue;
+
+        const foundShape = findShape(shapePosition, shape);
         if (foundShape) return foundShape;
       }
-
+  
       return null;
     },
     []
@@ -124,45 +129,67 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
     });
   }, [dragStart, editorSize]);
 
-  const getMarkerUnderMouse = useCallback((x: number, y: number, shapes: CuiElement[], parentSize: Size, offsetX = 0, offsetY = 0): Marker | null => {
-
-    for (let i = shapes.length - 1; i >= 0; i--) {
-      const shape = shapes[i];
-      const rectTransform = shape.findComponentByType<CuiRectTransformModel>();
-      if (!rectTransform) continue;
-
-      const { x: shapeX, y: shapeY, width: shapeWidth, height: shapeHeight } = rectTransform.calculatePositionAndSize(parentSize);
-      const transformValues = rectTransform.extractTransformValues();
-      const anchorX = transformValues.anchorMin.x * parentSize.width + offsetX;
-      const anchorY = transformValues.anchorMin.y * parentSize.height + offsetY;
-      const anchorWidth = (transformValues.anchorMax.x - transformValues.anchorMin.x) * parentSize.width;
-      const anchorHeight = (transformValues.anchorMax.y - transformValues.anchorMin.y) * parentSize.height;
-
+  const getMarkerUnderMouse = useCallback(
+    (x: number, y: number, shapes: CuiElement[], parentSize: Size): Marker | null => {
       const isClose = (x1: number, y1: number, x2: number, y2: number) => Math.abs(x1 - x2) < 10 && Math.abs(y1 - y2) < 10;
-
-      if (isClose(x, y, anchorX, anchorY)) return { handle: 'topLeft', isOffset: false, isEdge: false, startX: x, startY: y };
-      if (isClose(x, y, anchorX + anchorWidth, anchorY)) return { handle: 'topRight', isOffset: false, isEdge: false, startX: x, startY: y };
-      if (isClose(x, y, anchorX, anchorY + anchorHeight)) return { handle: 'bottomLeft', isOffset: false, isEdge: false, startX: x, startY: y };
-      if (isClose(x, y, anchorX + anchorWidth, anchorY + anchorHeight)) return { handle: 'bottomRight', isOffset: false, isEdge: false, startX: x, startY: y };
-
-      if (isClose(x, y, shapeX, shapeY)) return { handle: 'topLeft', isOffset: true, isEdge: false, startX: x, startY: y };
-      if (isClose(x, y, shapeX + shapeWidth, shapeY)) return { handle: 'topRight', isOffset: true, isEdge: false, startX: x, startY: y };
-      if (isClose(x, y, shapeX, shapeY + shapeHeight)) return { handle: 'bottomLeft', isOffset: true, isEdge: false, startX: x, startY: y };
-      if (isClose(x, y, shapeX + shapeWidth, shapeY + shapeHeight)) return { handle: 'bottomRight', isOffset: true, isEdge: false, startX: x, startY: y };
-
-      if (isClose(x, y, anchorX + anchorWidth / 2, anchorY)) return { handle: 'top', isOffset: false, isEdge: true, startX: x, startY: y };
-      if (isClose(x, y, anchorX + anchorWidth, anchorY + anchorHeight / 2)) return { handle: 'right', isOffset: false, isEdge: true, startX: x, startY: y };
-      if (isClose(x, y, anchorX + anchorWidth / 2, anchorY + anchorHeight)) return { handle: 'bottom', isOffset: false, isEdge: true, startX: x, startY: y };
-      if (isClose(x, y, anchorX, anchorY + anchorHeight / 2)) return { handle: 'left', isOffset: false, isEdge: true, startX: x, startY: y };
-
-      if (isClose(x, y, shapeX + shapeWidth / 2, shapeY)) return { handle: 'top', isOffset: true, isEdge: true, startX: x, startY: y };
-      if (isClose(x, y, shapeX + shapeWidth, shapeY + shapeHeight / 2)) return { handle: 'right', isOffset: true, isEdge: true, startX: x, startY: y };
-      if (isClose(x, y, shapeX + shapeWidth / 2, shapeY + shapeHeight)) return { handle: 'bottom', isOffset: true, isEdge: true, startX: x, startY: y };
-      if (isClose(x, y, shapeX, shapeY + shapeHeight / 2)) return { handle: 'left', isOffset: true, isEdge: true, startX: x, startY: y };
-    }
-
-    return null;
-  }, [shapes, editorSize]);
+  
+      const findMarker = (shape: ShapePosition): Marker | null => {
+        const { x: shapeX, y: shapeY, width: shapeWidth, height: shapeHeight, anchor, markers } = shape;
+  
+        if (anchor) {
+          const { x: anchorX, y: anchorY, width: anchorWidth, height: anchorHeight } = anchor;
+  
+          if (isClose(x, y, anchorX, anchorY)) return { handle: 'topLeft', isOffset: false, isEdge: false, startX: x, startY: y, element: shape.element };
+          if (isClose(x, y, anchorX + anchorWidth, anchorY)) return { handle: 'topRight', isOffset: false, isEdge: false, startX: x, startY: y, element: shape.element };
+          if (isClose(x, y, anchorX, anchorY + anchorHeight)) return { handle: 'bottomLeft', isOffset: false, isEdge: false, startX: x, startY: y, element: shape.element };
+          if (isClose(x, y, anchorX + anchorWidth, anchorY + anchorHeight)) return { handle: 'bottomRight', isOffset: false, isEdge: false, startX: x, startY: y, element: shape.element };
+  
+          if (isClose(x, y, anchorX + anchorWidth / 2, anchorY)) return { handle: 'top', isOffset: false, isEdge: true, startX: x, startY: y, element: shape.element };
+          if (isClose(x, y, anchorX + anchorWidth, anchorY + anchorHeight / 2)) return { handle: 'right', isOffset: false, isEdge: true, startX: x, startY: y, element: shape.element };
+          if (isClose(x, y, anchorX + anchorWidth / 2, anchorY + anchorHeight)) return { handle: 'bottom', isOffset: false, isEdge: true, startX: x, startY: y, element: shape.element };
+          if (isClose(x, y, anchorX, anchorY + anchorHeight / 2)) return { handle: 'left', isOffset: false, isEdge: true, startX: x, startY: y, element: shape.element };
+        }
+  
+        if (isClose(x, y, shapeX, shapeY)) return { handle: 'topLeft', isOffset: true, isEdge: false, startX: x, startY: y, element: shape.element };
+        if (isClose(x, y, shapeX + shapeWidth, shapeY)) return { handle: 'topRight', isOffset: true, isEdge: false, startX: x, startY: y, element: shape.element };
+        if (isClose(x, y, shapeX, shapeY + shapeHeight)) return { handle: 'bottomLeft', isOffset: true, isEdge: false, startX: x, startY: y, element: shape.element };
+        if (isClose(x, y, shapeX + shapeWidth, shapeY + shapeHeight)) return { handle: 'bottomRight', isOffset: true, isEdge: false, startX: x, startY: y, element: shape.element };
+  
+        if (isClose(x, y, shapeX + shapeWidth / 2, shapeY)) return { handle: 'top', isOffset: true, isEdge: true, startX: x, startY: y, element: shape.element };
+        if (isClose(x, y, shapeX + shapeWidth, shapeY + shapeHeight / 2)) return { handle: 'right', isOffset: true, isEdge: true, startX: x, startY: y, element: shape.element };
+        if (isClose(x, y, shapeX + shapeWidth / 2, shapeY + shapeHeight)) return { handle: 'bottom', isOffset: true, isEdge: true, startX: x, startY: y, element: shape.element };
+        if (isClose(x, y, shapeX, shapeY + shapeHeight / 2)) return { handle: 'left', isOffset: true, isEdge: true, startX: x, startY: y, element: shape.element };
+  
+        if (markers) {
+          for (const markerType of ['blue', 'red', 'green', 'yellow'] as const) {
+            for (const marker of markers[markerType]) {
+              if (isClose(x, y, marker.x, marker.y)) {
+                // Для маркеров используем тип handle, который обозначает цвет
+                return { handle: markerType as 'topLeft' | 'topRight' | 'bottomLeft' | 'bottomRight' | 'top' | 'right' | 'bottom' | 'left', isOffset: false, isEdge: false, startX: x, startY: y, element: shape.element };
+              }
+            }
+          }
+        }
+  
+        for (const child of shape.children) {
+          const marker = findMarker(child);
+          if (marker) return marker;
+        }
+  
+        return null;
+      };
+  
+      const shapePositions = shapes.map(shape => shape.generateShapePositions(parentSize)).filter((position): position is ShapePosition => position !== null);
+  
+      for (let i = shapePositions.length - 1; i >= 0; i--) {
+        const marker = findMarker(shapePositions[i]);
+        if (marker) return marker;
+      }
+  
+      return null;
+    },
+    [shapes]
+  );
 
   const handleMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvasBounds = canvasRef.current?.getBoundingClientRect();
@@ -205,34 +232,37 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
     if (resizing) {
       const canvasBounds = canvasRef.current?.getBoundingClientRect();
       if (!canvasBounds) return;
-
+  
       const currentX = e.clientX - canvasBounds.left;
-      const currentY = e.clientY - canvasBounds.top;
-
-      const updatedShapes = shapes.map((shape) => {
-        if (shape.selected) {
-          const rectTransform = shape.findComponentByType<CuiRectTransformModel>();
-          if (!rectTransform) return shape;
-
-          rectTransform.resize(resizing.handle, resizing.isOffset, resizing.isEdge, currentX, editorSize.height - currentY, editorSize);
-
+      const currentY =  editorSize.height - (e.clientY - canvasBounds.top);
+  
+      const rectTransform = resizing.element.findComponentByType<CuiRectTransformModel>();
+      if (rectTransform) {
+        console.log('editorSize', editorSize);
+        rectTransform.resize(resizing.handle, resizing.isOffset, resizing.isEdge,  currentX, currentY,  editorSize);
+  
+        const updatedShapes = shapes.map(shape => {
+          if (shape.id === resizing.element.id) {
+            return shape.updateComponent(rectTransform);
+          }
           return shape;
-        }
-        return shape;
-      });
-      onShapesChange(updatedShapes);
+        });
+  
+        onShapesChange(updatedShapes);
+      }
     } else if (isDragging) {
       const canvasBounds = canvasRef.current?.getBoundingClientRect();
       if (!canvasBounds) return;
-
+  
       const updatedShapes = updateShapePosition(shapes, e.clientX, e.clientY);
-
+  
       if(!updatedShapes) return;
-
+  
       onShapesChange(updatedShapes);
       setDragStart({ x: e.clientX, y: e.clientY });
     }
   }, [resizing, isDragging, shapes, onShapesChange, updateShapePosition, editorSize]);
+
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
@@ -244,9 +274,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
     if (canvas) {
       const context = canvas.getContext('2d');
       if (context) {
-        const shapePositions = shapes.map(shape => shape.generateShapePositions(editorSize)).filter((position): position is ShapePosition => position !== null);
-        console.log(shapePositions)
-        drawShapes(context, shapePositions);
+        drawShapes(context, shapes);
       }
     }
   }, [shapes, editorSize, drawShapes]);

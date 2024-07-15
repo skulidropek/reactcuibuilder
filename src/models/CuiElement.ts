@@ -22,6 +22,7 @@ export interface ShapePosition {
     green: { x: number; y: number }[];
     yellow: { x: number; y: number }[];
   };
+  element: CuiElement; // добавляем это свойство
 }
 
 export default class CuiElement {
@@ -91,7 +92,8 @@ export default class CuiElement {
       width,
       height,
       children: [],
-      selected: this.selected
+      selected: this.selected,
+      element: this
     };
 
     if (this.selected) {

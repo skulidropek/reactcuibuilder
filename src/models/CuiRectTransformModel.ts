@@ -59,17 +59,23 @@ export default class CuiRectTransformModel implements ICuiComponent {
 
   resize(handle: string, isOffset: boolean, isEdge: boolean, currentX: number, currentY: number, parentSize: Size) {
     const transformValues = this.extractTransformValues();
+    
+    const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
+    
     if (isEdge) {
       if (isOffset) {
+        const offsetX = currentX - transformValues.anchorMax.x * parentSize.width;
+        const offsetY = currentY - transformValues.anchorMax.y * parentSize.height;
+  
         switch (handle) {
           case 'top':
             this.offsetMin = `${transformValues.offsetMin.x} ${currentY - transformValues.anchorMin.y * parentSize.height}`;
             break;
           case 'right':
-            this.offsetMax = `${currentX - transformValues.anchorMax.x * parentSize.width} ${transformValues.offsetMax.y}`;
+            this.offsetMax = `${offsetX} ${transformValues.offsetMax.y}`;
             break;
           case 'bottom':
-            this.offsetMax = `${transformValues.offsetMax.x} ${currentY - transformValues.anchorMax.y * parentSize.height}`;
+            this.offsetMax = `${transformValues.offsetMax.x} ${offsetY}`;
             break;
           case 'left':
             this.offsetMin = `${currentX - transformValues.anchorMin.x * parentSize.width} ${transformValues.offsetMin.y}`;
@@ -80,16 +86,16 @@ export default class CuiRectTransformModel implements ICuiComponent {
         const currentYRel = currentY / parentSize.height;
         switch (handle) {
           case 'top':
-            this.anchorMin = `${transformValues.anchorMin.x} ${Math.max(0, Math.min(currentYRel, transformValues.anchorMax.y - 0.01))}`;
+            this.anchorMin = `${transformValues.anchorMin.x} ${clamp(currentYRel, 0, transformValues.anchorMax.y - 0.01)}`;
             break;
           case 'right':
-            this.anchorMax = `${Math.min(1, Math.max(currentXRel, transformValues.anchorMin.x + 0.01))} ${transformValues.anchorMax.y}`;
+            this.anchorMax = `${clamp(currentXRel, transformValues.anchorMin.x + 0.01, 1)} ${transformValues.anchorMax.y}`;
             break;
           case 'bottom':
-            this.anchorMax = `${transformValues.anchorMax.x} ${Math.min(1, Math.max(currentYRel, transformValues.anchorMin.y + 0.01))}`;
+            this.anchorMax = `${transformValues.anchorMax.x} ${clamp(currentYRel, transformValues.anchorMin.y + 0.01, 1)}`;
             break;
           case 'left':
-            this.anchorMin = `${Math.max(0, Math.min(currentXRel, transformValues.anchorMax.x - 0.01))} ${transformValues.anchorMin.y}`;
+            this.anchorMin = `${clamp(currentXRel, 0, transformValues.anchorMax.x - 0.01)} ${transformValues.anchorMin.y}`;
             break;
         }
       }
@@ -98,7 +104,7 @@ export default class CuiRectTransformModel implements ICuiComponent {
       const anchorMinY = transformValues.anchorMin.y * parentSize.height;
       const anchorMaxX = transformValues.anchorMax.x * parentSize.width;
       const anchorMaxY = transformValues.anchorMax.y * parentSize.height;
-
+  
       switch (handle) {
         case 'topLeft':
           this.offsetMin = `${currentX - anchorMinX} ${currentY - anchorMinY}`;
@@ -118,21 +124,21 @@ export default class CuiRectTransformModel implements ICuiComponent {
     } else {
       const currentXRel = currentX / parentSize.width;
       const currentYRel = currentY / parentSize.height;
-
+  
       switch (handle) {
         case 'topLeft':
-          this.anchorMin = `${Math.max(0, Math.min(currentXRel, transformValues.anchorMax.x - 0.01))} ${Math.max(0, Math.min(currentYRel, transformValues.anchorMax.y - 0.01))}`;
+          this.anchorMin = `${clamp(currentXRel, 0, transformValues.anchorMax.x - 0.01)} ${clamp(currentYRel, 0, transformValues.anchorMax.y - 0.01)}`;
           break;
         case 'topRight':
-          this.anchorMax = `${Math.min(1, Math.max(currentXRel, transformValues.anchorMin.x + 0.01))} ${transformValues.anchorMax.y}`;
-          this.anchorMin = `${transformValues.anchorMin.x} ${Math.max(0, Math.min(currentYRel, transformValues.anchorMax.y - 0.01))}`;
+          this.anchorMax = `${clamp(currentXRel, transformValues.anchorMin.x + 0.01, 1)} ${transformValues.anchorMax.y}`;
+          this.anchorMin = `${transformValues.anchorMin.x} ${clamp(currentYRel, 0, transformValues.anchorMax.y - 0.01)}`;
           break;
         case 'bottomLeft':
-          this.anchorMin = `${Math.max(0, Math.min(currentXRel, transformValues.anchorMax.x - 0.01))} ${transformValues.anchorMin.y}`;
-          this.anchorMax = `${transformValues.anchorMax.x} ${Math.min(1, Math.max(currentYRel, transformValues.anchorMin.y + 0.01))}`;
+          this.anchorMin = `${clamp(currentXRel, 0, transformValues.anchorMax.x - 0.01)} ${transformValues.anchorMin.y}`;
+          this.anchorMax = `${transformValues.anchorMax.x} ${clamp(currentYRel, transformValues.anchorMin.y + 0.01, 1)}`;
           break;
         case 'bottomRight':
-          this.anchorMax = `${Math.min(1, Math.max(currentXRel, transformValues.anchorMin.x + 0.01))} ${Math.min(1, Math.max(currentYRel, transformValues.anchorMin.y + 0.01))}`;
+          this.anchorMax = `${clamp(currentXRel, transformValues.anchorMin.x + 0.01, 1)} ${clamp(currentYRel, transformValues.anchorMin.y + 0.01, 1)}`;
           break;
       }
     }
