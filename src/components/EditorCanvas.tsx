@@ -5,7 +5,6 @@ import CuiRectTransformModel, { Size } from '../models/CuiRectTransformModel';
 interface EditorCanvasProps {
   editorSize: { width: number; height: number };
   shapes: CuiElement[];
-  selectedShape: number | null;
   onShapesChange: (updatedShapes: CuiElement[]) => void;
   setSelectedShape: (selectedShape: number | null) => void;
 }
@@ -21,7 +20,6 @@ interface Marker {
 const EditorCanvas: React.FC<EditorCanvasProps> = ({
   editorSize,
   shapes,
-  selectedShape,
   onShapesChange,
   setSelectedShape,
 }) => {
@@ -108,9 +106,9 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
     []
   );
 
-  const updateShapePosition = useCallback((shapes: CuiElement[], id: number, clientX: number, clientY: number): CuiElement[] => {
+  const updateShapePosition = useCallback((shapes: CuiElement[], clientX: number, clientY: number): CuiElement[] => {
     return shapes.map((shape) => {
-      if (shape.id === id) {
+      if (shape.selected) {
         const rectTransform = shape.findComponentByType<CuiRectTransformModel>();
         if (!rectTransform) return shape;
 
@@ -121,7 +119,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
 
         return shape;
       }
-      shape.children = updateShapePosition(shape.children, id, clientX, clientY);
+      shape.children = updateShapePosition(shape.children, clientX, clientY);
       return shape;
     });
   }, [dragStart, editorSize]);
@@ -212,7 +210,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
       const currentY = e.clientY - canvasBounds.top;
 
       const updatedShapes = shapes.map((shape) => {
-        if (shape.id === selectedShape) {
+        if (shape.selected) {
           const rectTransform = shape.findComponentByType<CuiRectTransformModel>();
           if (!rectTransform) return shape;
 
@@ -223,16 +221,18 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
         return shape;
       });
       onShapesChange(updatedShapes);
-    } else if (isDragging && selectedShape !== null) {
+    } else if (isDragging) {
       const canvasBounds = canvasRef.current?.getBoundingClientRect();
       if (!canvasBounds) return;
 
-      const updatedShapes = updateShapePosition(shapes, selectedShape, e.clientX, e.clientY);
+      const updatedShapes = updateShapePosition(shapes, e.clientX, e.clientY);
+
+      if(!updatedShapes) return;
 
       onShapesChange(updatedShapes);
       setDragStart({ x: e.clientX, y: e.clientY });
     }
-  }, [resizing, isDragging, selectedShape, shapes, onShapesChange, updateShapePosition, editorSize]);
+  }, [resizing, isDragging, shapes, onShapesChange, updateShapePosition, editorSize]);
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
@@ -245,10 +245,11 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
       const context = canvas.getContext('2d');
       if (context) {
         const shapePositions = shapes.map(shape => shape.generateShapePositions(editorSize)).filter((position): position is ShapePosition => position !== null);
+        console.log(shapePositions)
         drawShapes(context, shapePositions);
       }
     }
-  }, [shapes, editorSize, selectedShape, drawShapes]);
+  }, [shapes, editorSize, drawShapes]);
 
   useEffect(() => {
     const canvas = canvasRef.current;

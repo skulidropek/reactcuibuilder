@@ -8,7 +8,6 @@ import { Container, Row, Col } from 'react-bootstrap';
 
 const GraphicEditor = () => {
   const [shapes, setShapes] = useState<CuiElement[]>([]);
-  const [selectedShape, setSelectedShape] = useState<number | null>(null);
   const [editorSize, setEditorSize] = useState({ width: 1282, height: 722 });
   const [draggingItem, setDraggingItem] = useState<number | null>(null);
 
@@ -316,6 +315,31 @@ const GraphicEditor = () => {
     setShapes((prevShapes) => moveShape(prevShapes, shapeId, 'root'));
   }, [moveShape]);
 
+  const setSelectedShape = (shapeId: number | null) => {
+
+    console.log('shapeId', shapeId)
+
+    const updateSelection = (shapes: CuiElement[], selected: boolean, id: number | null = null): CuiElement[] => {
+      const updateSelected = (elements: CuiElement[]): CuiElement[] => {
+        return elements.map(element => {
+          if (id === null || element.id === id) {
+            element.selected = selected;
+          }
+          if (element.children.length > 0) {
+            element.children = updateSelected(element.children);
+          }
+          return element;
+        });
+      };
+      return updateSelected(shapes);
+    };
+    
+    let shapesChache = updateSelection(shapes, false)
+    if(shapeId != null)
+      shapesChache = updateSelection(shapesChache, true, shapeId);
+    setShapes([...shapesChache]);
+  };
+
   return (
     <Container fluid className="bg-light p-4">
       <Row>
@@ -336,7 +360,6 @@ const GraphicEditor = () => {
               handleProfileChange={handleProfileChange}
               moveToRoot={moveToRoot}
               draggingItem={draggingItem}
-              selectedShape={selectedShape}
               setSelectedShape={setSelectedShape}
             />
           </div>
@@ -345,7 +368,6 @@ const GraphicEditor = () => {
           <EditorCanvas
             editorSize={editorSize}
             shapes={shapes}
-            selectedShape={selectedShape}
             onShapesChange={handleShapeChange}
             setSelectedShape={setSelectedShape}
           />

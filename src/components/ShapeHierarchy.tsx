@@ -14,7 +14,6 @@ interface ShapeHierarchyProps {
   moveToRoot: (shapeId: number) => void;
   handleProfileChange: (shapeId: number, key: keyof CuiElement, value: any) => void;
   draggingItem: number | null;
-  selectedShape: number | null;
   setSelectedShape: (shapeId: number | null) => void;
 }
 
@@ -28,38 +27,10 @@ const ShapeHierarchy: React.FC<ShapeHierarchyProps> = ({
   moveToRoot,
   handleProfileChange,
   draggingItem,
-  selectedShape,
   setSelectedShape,
 }) => {
   const handleSelectShape = (shape: CuiElement) => {
     setSelectedShape(shape.id);
-
-    const updatedShapes = shapes.map(s => {
-      if (s.id === shape.id) {
-        return new CuiElement(
-          s.id,
-          s.type,
-          s.visible,
-          s.children,
-          s.components,
-          s.collapsed,
-          s.parent,
-          true // выбранный элемент
-        );
-      }
-      return new CuiElement(
-        s.id,
-        s.type,
-        s.visible,
-        s.children,
-        s.components,
-        s.collapsed,
-        s.parent,
-        false // не выбранный элемент
-      );
-    });
-
-    handleProfileChange(shape.id, 'selected', true);
   };
 
   const handleAddChild = () => {
@@ -74,7 +45,7 @@ const ShapeHierarchy: React.FC<ShapeHierarchyProps> = ({
     return shapes.map(shape => (
       <li key={shape.id} style={{ listStyleType: 'none' }}>
         <ListGroupItem 
-          style={{ paddingLeft: `${level * 20}px`, border: '1px solid #ddd', marginBottom: '5px', backgroundColor: selectedShape === shape.id ? 'lightblue' : 'white' }} 
+          style={{ paddingLeft: `${level * 20}px`, border: '1px solid #ddd', marginBottom: '5px', backgroundColor: shape.selected ? 'lightblue' : 'white' }} 
           className={`d-flex align-items-center p-1 ${draggingItem === shape.id ? 'bg-light' : ''}`}
           draggable
           onDragStart={(e) => handleDragStart(e, shape.id)}
@@ -100,8 +71,8 @@ const ShapeHierarchy: React.FC<ShapeHierarchyProps> = ({
             {renderHierarchy(shape.children, level + 1)}
           </ul>
         )}
-        {selectedShape === shape.id && (
-          <Collapse in={selectedShape === shape.id}>
+        {shape.selected && (
+          <Collapse in={shape.selected}>
             <ElementProfile
               key={shape.id}
               element={shape}
