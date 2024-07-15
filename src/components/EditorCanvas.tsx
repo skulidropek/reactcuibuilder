@@ -240,13 +240,22 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
       const canvasBounds = canvasRef.current?.getBoundingClientRect();
       if (!canvasBounds) return;
   
-      const currentX = e.clientX - canvasBounds.left;
-      const currentY =  editorSize.height - (e.clientY - canvasBounds.top);
-  
       const rectTransform = resizing.element.findComponentByType<CuiRectTransformModel>();
       if (rectTransform) {
+        const parentRectTransform = resizing.element.parent?.findComponentByType<CuiRectTransformModel>();
+        const parentSize = parentRectTransform
+          ? parentRectTransform.calculatePositionAndSize(editorSize)
+          : editorSize;
+  
+        const { x, y, width, height } = rectTransform.calculatePositionAndSize(parentSize);
+  
         console.log('editorSize', editorSize);
-        rectTransform.resize(resizing.handle, resizing.isOffset, resizing.isEdge,  currentX, currentY,  editorSize);
+        console.log('parentSize', parentSize);
+        
+      const currentX = e.clientX - canvasBounds.left;
+      const currentY = parentSize.height - e.clientY - canvasBounds.top;
+  
+        rectTransform.resize(resizing.handle, resizing.isOffset, resizing.isEdge, currentX, currentY, parentSize);
   
         const updatedShapes = shapes.map(shape => {
           if (shape.id === resizing.element.id) {
@@ -262,15 +271,14 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
       if (!canvasBounds) return;
   
       const updatedShapes = updateShapePosition(shapes, e.clientX, e.clientY);
-  
-      if(!updatedShapes) return;
+      if (!updatedShapes) return;
   
       onShapesChange(updatedShapes);
       setDragStart({ x: e.clientX, y: e.clientY });
     }
   }, [resizing, isDragging, shapes, onShapesChange, updateShapePosition, editorSize]);
-
-
+  
+  
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
     setResizing(null);
