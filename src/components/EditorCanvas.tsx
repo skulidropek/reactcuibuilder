@@ -38,10 +38,17 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
     context.translate(0, editorSize.height);
     context.scale(1, -1);
 
+    const getColorById = (id: number): string => {
+      // Генерация цвета на основе хеширования id
+      const hue = id * 137.508; // 137.508 - произвольное число, для равномерного распределения цветов
+      return `hsl(${hue % 360}, 50%, 50%)`; // Преобразование в цветовую модель HSL
+    };
+    
     const drawShape = (shape: ShapePosition) => {
-      context.fillStyle = shape.selected ? 'green' : (shape.type === 'rect' ? 'blue' : 'red');
+      const shapeColor = getColorById(shape.id); // получение цвета по id
+      context.fillStyle = shape.selected ? 'green' : shapeColor;
       context.globalAlpha = 1;
-
+    
       if (shape.type === 'rect') {
         context.fillRect(shape.x, shape.y, shape.width, shape.height);
       } else if (shape.type === 'circle') {
@@ -49,22 +56,22 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
         context.arc(shape.x + shape.width / 2, shape.y + shape.height / 2, Math.min(shape.width, shape.height) / 2, 0, 2 * Math.PI);
         context.fill();
       }
-
+    
       if (shape.selected && shape.anchor && shape.markers) {
         context.strokeStyle = 'blue';
         context.setLineDash([5, 5]);
         context.strokeRect(shape.anchor.x, shape.anchor.y, shape.anchor.width, shape.anchor.height);
         context.setLineDash([]);
-
+    
         shape.markers.blue.forEach(marker => drawMarker(marker.x, marker.y, 'blue'));
         shape.markers.red.forEach(marker => drawMarker(marker.x, marker.y, 'red'));
         shape.markers.green.forEach(marker => drawMarker(marker.x, marker.y, 'green'));
         shape.markers.yellow.forEach(marker => drawMarker(marker.x, marker.y, 'yellow'));
       }
-
+    
       shape.children.forEach(drawShape);
     };
-
+    
     const drawMarker = (x: number, y: number, color: string) => {
       context.fillStyle = color;
       context.fillRect(x - 5, y - 5, 10, 10);
