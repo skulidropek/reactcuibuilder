@@ -238,13 +238,8 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
           ? parentRectTransform.calculatePositionAndSize(editorSize)
           : editorSize;
   
-        const { x, y, width, height } = rectTransform.calculatePositionAndSize(parentSize);
-  
-        console.log('editorSize', editorSize);
-        console.log('parentSize', parentSize);
-        
-      const currentX = e.clientX - canvasBounds.left;
-      const currentY = parentSize.height - e.clientY - canvasBounds.top;
+        const currentX = e.clientX - canvasBounds.left;
+        const currentY = parentSize.height - e.clientY - canvasBounds.top;
   
         rectTransform.resize(resizing.handle, resizing.isOffset, resizing.isEdge, currentX, currentY, parentSize);
   
