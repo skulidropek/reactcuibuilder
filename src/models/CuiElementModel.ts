@@ -49,6 +49,10 @@ export default class CuiElementModel {
     this.setParentForChildren();
   }
 
+  public rectTransform(): CuiRectTransformModel {
+    return this.findComponentByType<CuiRectTransformModel>()!;
+  }
+
   setParentForChildren() {
     this.children.forEach(child => {
       child.parent = this;
@@ -89,7 +93,7 @@ export default class CuiElementModel {
   }
 
   generateShapePositions(parentSize: Size, offsetX: number = 0, offsetY: number = 0): ShapePosition | null {
-    const rectTransform = this.findComponentByType<CuiRectTransformModel>();
+    const rectTransform = this.rectTransform();
     if (!rectTransform) return null;
 
     const { x, y, width, height } = rectTransform.calculatePositionAndSize(parentSize, offsetX, offsetY);
