@@ -2,11 +2,11 @@ import React, { forwardRef } from 'react';
 import { Button, Card } from 'react-bootstrap';
 import { FaPlus, FaArrowsAlt } from 'react-icons/fa';
 import ElementSetting from './ElementSetting';
-import CuiElement from '../models/CuiElement';
+import CuiElementModel from '../models/CuiElementModel';
 
 interface ElementProfileProps {
   element: any;
-  onChange: (key: keyof CuiElement, value: any) => void;
+  onChange: (key: keyof CuiElementModel, value: any) => void;
   onAddChild: () => void;
   onToggleFill: () => void;
 }

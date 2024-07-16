@@ -1,18 +1,18 @@
 import React from 'react';
 import { ChevronRight, ChevronDown, Eye, EyeOff, ArrowUp } from 'lucide-react';
-import CuiElement from '../models/CuiElement';
+import CuiElementModel from '../models/CuiElementModel';
 import { Button, Card, ListGroup, ListGroupItem, Collapse } from 'react-bootstrap';
 import ElementProfile from './ElementProfile';
 
 interface ShapeHierarchyProps {
-  shapes: CuiElement[];
+  shapes: CuiElementModel[];
   handleDragOver: (e: React.DragEvent) => void;
   handleDrop: (e: React.DragEvent, targetId: number | 'root') => void;
   handleDragStart: (e: React.DragEvent, shapeId: number) => void;
   toggleVisibility: (shapeId: number) => void;
   toggleCollapse: (shapeId: number) => void;
   moveToRoot: (shapeId: number) => void;
-  handleProfileChange: (shapeId: number, key: keyof CuiElement, value: any) => void;
+  handleProfileChange: (shapeId: number, key: keyof CuiElementModel, value: any) => void;
   draggingItem: number | null;
   setSelectedShape: (shapeId: number | null) => void;
 }
@@ -29,7 +29,7 @@ const ShapeHierarchy: React.FC<ShapeHierarchyProps> = ({
   draggingItem,
   setSelectedShape,
 }) => {
-  const handleSelectShape = (shape: CuiElement) => {
+  const handleSelectShape = (shape: CuiElementModel) => {
     setSelectedShape(shape.id);
   };
 
@@ -41,7 +41,7 @@ const ShapeHierarchy: React.FC<ShapeHierarchyProps> = ({
     // Логика для переключения fill режима
   };
 
-  const renderHierarchy = (shapes: CuiElement[], level = 0) => {
+  const renderHierarchy = (shapes: CuiElementModel[], level = 0) => {
     return shapes.map(shape => (
       <li key={shape.id} style={{ listStyleType: 'none' }}>
         <ListGroupItem 
@@ -76,7 +76,7 @@ const ShapeHierarchy: React.FC<ShapeHierarchyProps> = ({
             <ElementProfile
               key={shape.id}
               element={shape}
-              onChange={(key: keyof CuiElement, value: any) => handleProfileChange(shape.id, key, value)}
+              onChange={(key: keyof CuiElementModel, value: any) => handleProfileChange(shape.id, key, value)}
               onAddChild={handleAddChild}
               onToggleFill={handleToggleFill}
             />

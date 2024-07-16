@@ -1,21 +1,12 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import CuiElement, { ShapePosition } from '../models/CuiElement';
+import CuiElementModel, { Marker, ShapePosition } from '../models/CuiElementModel';
 import CuiRectTransformModel, { Size } from '../models/CuiRectTransformModel';
 
 interface EditorCanvasProps {
   editorSize: { width: number; height: number };
-  shapes: CuiElement[];
-  onShapesChange: (updatedShapes: CuiElement[]) => void;
+  shapes: CuiElementModel[];
+  onShapesChange: (updatedShapes: CuiElementModel[]) => void;
   setSelectedShape: (selectedShape: number | null) => void;
-}
-
-interface Marker {
-  handle: 'topLeft' | 'topRight' | 'bottomLeft' | 'bottomRight' | 'top' | 'right' | 'bottom' | 'left';
-  isOffset: boolean;
-  isEdge: boolean;
-  startX: number;
-  startY: number;
-  element: CuiElement;
 }
 
 const EditorCanvas: React.FC<EditorCanvasProps> = ({
@@ -29,7 +20,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [resizing, setResizing] = useState<Marker | null>(null);
 
-  const drawShapes = useCallback((context: CanvasRenderingContext2D, shapes: CuiElement[]) => {
+  const drawShapes = useCallback((context: CanvasRenderingContext2D, shapes: CuiElementModel[]) => {
 
     const shapePositions = shapes.map(shape => shape.generateShapePositions(editorSize)).filter((position): position is ShapePosition => position !== null);
 
@@ -83,8 +74,8 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
   }, [editorSize]);
 
   const getShapeAtCoordinates = useCallback(
-    (x: number, y: number, shapes: CuiElement[], parentSize: Size): CuiElement | null => {
-      const findShape = (shapePosition: ShapePosition, shape: CuiElement): CuiElement | null => {
+    (x: number, y: number, shapes: CuiElementModel[], parentSize: Size): CuiElementModel | null => {
+      const findShape = (shapePosition: ShapePosition, shape: CuiElementModel): CuiElementModel | null => {
         const { x: shapeX, y: shapeY, width, height, children } = shapePosition;
   
         // Check if the coordinates are within this shape
@@ -118,7 +109,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
     []
   );
 
-  const updateShapePosition = useCallback((shapes: CuiElement[], clientX: number, clientY: number): CuiElement[] => {
+  const updateShapePosition = useCallback((shapes: CuiElementModel[], clientX: number, clientY: number): CuiElementModel[] => {
     return shapes.map((shape) => {
       if (shape.selected) {
         const rectTransform = shape.findComponentByType<CuiRectTransformModel>();
@@ -137,7 +128,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
   }, [dragStart, editorSize]);
 
   const getMarkerUnderMouse = useCallback(
-    (x: number, y: number, shapes: CuiElement[], parentSize: Size): Marker | null => {
+    (x: number, y: number, shapes: CuiElementModel[], parentSize: Size): Marker | null => {
       const isClose = (x1: number, y1: number, x2: number, y2: number) => Math.abs(x1 - x2) < 10 && Math.abs(y1 - y2) < 10;
   
       const findMarker = (shape: ShapePosition): Marker | null => {

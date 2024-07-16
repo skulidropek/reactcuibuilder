@@ -1,6 +1,16 @@
 import ICuiComponent from "./ICuiComponent";
 import CuiRectTransformModel, { Size, TransformValues } from "./CuiRectTransformModel";
 
+
+export interface Marker {
+  handle: 'topLeft' | 'topRight' | 'bottomLeft' | 'bottomRight' | 'top' | 'right' | 'bottom' | 'left';
+  isOffset: boolean;
+  isEdge: boolean;
+  startX: number;
+  startY: number;
+  element: CuiElementModel;
+}
+
 export interface ShapePosition {
   id: number;
   type: string;
@@ -22,18 +32,18 @@ export interface ShapePosition {
     green: { x: number; y: number }[];
     yellow: { x: number; y: number }[];
   };
-  element: CuiElement; // добавляем это свойство
+  element: CuiElementModel; // добавляем это свойство
 }
 
-export default class CuiElement {
+export default class CuiElementModel {
   constructor(
     public id: number,
     public type: 'rect' | 'circle',
     public visible: boolean,
-    public children: CuiElement[],
+    public children: CuiElementModel[],
     public components: ICuiComponent[],
     public collapsed: boolean,
-    public parent: CuiElement | null = null, // добавлен аргумент parent
+    public parent: CuiElementModel | null = null, // добавлен аргумент parent
     public selected: boolean
   ) {
     this.setParentForChildren();
@@ -52,7 +62,7 @@ export default class CuiElement {
     ) as T | undefined;
   }
 
-  updateComponent<T extends ICuiComponent>(updatedValues: Partial<T>): CuiElement {
+  updateComponent<T extends ICuiComponent>(updatedValues: Partial<T>): CuiElementModel {
     const component = this.findComponentByType<T>();
 
     if (component == null) {
@@ -66,7 +76,7 @@ export default class CuiElement {
       c.type === component.type ? updatedComponent : c
     );
 
-    return new CuiElement(
+    return new CuiElementModel(
       this.id,
       this.type,
       this.visible,
@@ -137,7 +147,7 @@ export default class CuiElement {
       };
     }
 
-    this.children.forEach((child: CuiElement) => {
+    this.children.forEach((child: CuiElementModel) => {
       const childData = child.generateShapePositions({ width, height }, x, y);
       if (childData) {
         shapeData.children.push(childData);
