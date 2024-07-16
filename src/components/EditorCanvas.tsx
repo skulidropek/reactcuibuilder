@@ -239,8 +239,8 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
           : editorSize;
   
         const currentX = e.clientX - canvasBounds.left;
-        const currentY = parentSize.height - e.clientY - canvasBounds.top;
-  
+        const currentY = parentSize.height - (e.clientY - canvasBounds.top);
+        
         rectTransform.resize(resizing.handle, resizing.isOffset, resizing.isEdge, currentX, currentY, parentSize);
   
         const updatedShapes = shapes.map(shape => {
