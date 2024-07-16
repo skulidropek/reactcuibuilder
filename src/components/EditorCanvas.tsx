@@ -95,15 +95,15 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
         return null;
       };
   
-      for (const shape of shapes) {
-        const shapePosition = shape.generateShapePositions(parentSize);
+      for (let i = shapes.length - 1; i >= 0; i--) {
+        const shapePosition = shapes[i].generateShapePositions(parentSize);
 
         if (!shapePosition) continue;
 
-        const foundShape = findShape(shapePosition, shape);
+        const foundShape = findShape(shapePosition, shapes[i]);
         if (foundShape) return foundShape;
       }
-  
+      
       return null;
     },
     []
@@ -181,7 +181,8 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
   
       for (let i = shapePositions.length - 1; i >= 0; i--) {
         const marker = findMarker(shapePositions[i]);
-        if (marker) return marker;
+
+        if (marker?.element.selected && marker) return marker;
       }
   
       return null;
