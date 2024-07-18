@@ -1,5 +1,6 @@
 import ICuiComponent from "./ICuiComponent";
 import CuiRectTransformModel, { Size, TransformValues } from "./CuiRectTransformModel";
+import TreeNodeModel, { Rect } from "./TreeNodeModel";
 
 
 export interface Marker {
@@ -35,29 +36,35 @@ export interface ShapePosition {
   element: CuiElementModel; // добавляем это свойство
 }
 
-export default class CuiElementModel {
+export default class CuiElementModel extends TreeNodeModel {
+
   constructor(
-    public id: number,
     public type: 'rect' | 'circle',
     public visible: boolean,
-    public children: CuiElementModel[],
+    children: CuiElementModel[],
     public components: ICuiComponent[],
     public collapsed: boolean,
-    public parent: CuiElementModel | null = null, // добавлен аргумент parent
-    public selected: boolean
+    public selected: boolean,
+    parent?: TreeNodeModel, // добавлен аргумент parent
   ) {
-    this.setParentForChildren();
+    super(children, parent); // Add the super() call here
   }
 
   public rectTransform(): CuiRectTransformModel {
     return this.findComponentByType<CuiRectTransformModel>()!;
   }
 
-  setParentForChildren() {
-    this.children.forEach(child => {
-      child.parent = this;
-      child.setParentForChildren(); // рекурсивно устанавливаем родителей для всех потомков
-    });
+  calculateParentPositionAndSize(): Rect {
+    return this.parent?.calculatePositionAndSize()!;
+  }
+
+  calculatePositionAndSize(): Rect {
+    return this.rectTransform().calculatePositionAndSize();
+  }
+
+  public updateProperty<K extends keyof this>(key: K, value: this[K]): void {
+    (this as any)[key] = value;
+    this.notifySubscribers();
   }
 
   findComponentByType<T extends ICuiComponent>(): T | undefined {
@@ -68,36 +75,38 @@ export default class CuiElementModel {
 
   updateComponent<T extends ICuiComponent>(updatedValues: Partial<T>): CuiElementModel {
     const component = this.findComponentByType<T>();
-
+  
     if (component == null) {
       return this;
     }
-
+  
     const updatedComponent = new (component.constructor as { new (): T })();
     Object.assign(updatedComponent, component, updatedValues);
-
-    const updatedComponents = this.components.map(c =>
+  
+    this.components = this.components.map(c =>
       c.type === component.type ? updatedComponent : c
     );
-
-    return new CuiElementModel(
-      this.id,
-      this.type,
-      this.visible,
-      this.children,  
-      updatedComponents,
-      this.collapsed,
-      this.parent,
-      this.selected
-    );
+  
+    return this;
   }
 
-  generateShapePositions(parentSize: Size, offsetX: number = 0, offsetY: number = 0): ShapePosition | null {
+  addComponent<T extends ICuiComponent>(componentClass : T): CuiElementModel {
+  
+    this.components.push(componentClass); 
+  
+    return this;
+  }
+
+  // parentSize: Size, offsetX: number = 0, offsetY: number = 0
+  generateShapePositions(): ShapePosition | null {
+
     const rectTransform = this.rectTransform();
     if (!rectTransform) return null;
 
-    const { x, y, width, height } = rectTransform.calculatePositionAndSize(parentSize, offsetX, offsetY);
+    const parrentSize = this.calculateParentPositionAndSize();
 
+    const { x, y, width, height } = rectTransform.calculatePositionAndSize();
+    
     const shapeData: ShapePosition = {
       id: this.id,
       type: this.type,
@@ -112,10 +121,10 @@ export default class CuiElementModel {
 
     if (this.selected) {
       const transformValues = rectTransform.extractTransformValues();
-      const anchorX = transformValues.anchorMin.x * parentSize.width + offsetX;
-      const anchorY = transformValues.anchorMin.y * parentSize.height + offsetY;
-      const anchorWidth = (transformValues.anchorMax.x - transformValues.anchorMin.x) * parentSize.width;
-      const anchorHeight = (transformValues.anchorMax.y - transformValues.anchorMin.y) * parentSize.height;
+      const anchorX = transformValues.anchorMin.x * parrentSize.width + parrentSize.x;
+      const anchorY = transformValues.anchorMin.y * parrentSize.height + parrentSize.y;
+      const anchorWidth = (transformValues.anchorMax.x - transformValues.anchorMin.x) * parrentSize.width;
+      const anchorHeight = (transformValues.anchorMax.y - transformValues.anchorMin.y) * parrentSize.height;
 
       shapeData.anchor = {
         x: anchorX,
@@ -152,7 +161,7 @@ export default class CuiElementModel {
     }
 
     this.children.forEach((child: CuiElementModel) => {
-      const childData = child.generateShapePositions({ width, height }, x, y);
+      const childData = child.generateShapePositions();
       if (childData) {
         shapeData.children.push(childData);
       }

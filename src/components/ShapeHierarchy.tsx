@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useEffect, useReducer } from 'react';
 import { ChevronRight, ChevronDown, Eye, EyeOff, ArrowUp } from 'lucide-react';
 import CuiElementModel from '../models/CuiElementModel';
 import { Button, Card, ListGroup, ListGroupItem, Collapse } from 'react-bootstrap';
 import ElementProfile from './ElementProfile';
+import GraphicEditorModel from '@/models/GraphicEditorModel';
 
 interface ShapeHierarchyProps {
-  shapes: CuiElementModel[];
+  graphicEditor: GraphicEditorModel;
   handleDragOver: (e: React.DragEvent) => void;
   handleDrop: (e: React.DragEvent, targetId: number | 'root') => void;
   handleDragStart: (e: React.DragEvent, shapeId: number) => void;
@@ -17,8 +18,20 @@ interface ShapeHierarchyProps {
   setSelectedShape: (shapeId: number | null) => void;
 }
 
+type State = CuiElementModel[];
+type Action = { type: 'UPDATE_CHILDREN'; payload: CuiElementModel[] };
+
+const childrenReducer = (state: State, action: Action): State => {
+  switch (action.type) {
+    case 'UPDATE_CHILDREN':
+      return action.payload;
+    default:
+      return state;
+  }
+};
+
 const ShapeHierarchy: React.FC<ShapeHierarchyProps> = ({
-  shapes,
+  graphicEditor,
   handleDragOver,
   handleDrop,
   handleDragStart,
@@ -29,6 +42,20 @@ const ShapeHierarchy: React.FC<ShapeHierarchyProps> = ({
   draggingItem,
   setSelectedShape,
 }) => {
+  const [, dispatch] = useReducer(childrenReducer, graphicEditor.children);
+
+  useEffect(() => {
+    const updateChildren = () => {
+      console.log('Children updated');
+      dispatch({ type: 'UPDATE_CHILDREN', payload: graphicEditor.children });
+    };
+
+    graphicEditor.subscribe(updateChildren);
+    return () => {
+      graphicEditor.unsubscribe(updateChildren);
+    };
+  }, [graphicEditor]);
+
   const handleSelectShape = (shape: CuiElementModel) => {
     setSelectedShape(shape.id);
   };
@@ -41,8 +68,8 @@ const ShapeHierarchy: React.FC<ShapeHierarchyProps> = ({
     // Логика для переключения fill режима
   };
 
-  const renderHierarchy = (shapes: CuiElementModel[], level = 0) => {
-    return shapes.map(shape => (
+  const renderHierarchy = (items: CuiElementModel[], level = 0) => {
+    return items.map(shape => (
       <li key={shape.id} style={{ listStyleType: 'none' }}>
         <ListGroupItem 
           style={{ paddingLeft: `${level * 20}px`, border: '1px solid #ddd', marginBottom: '5px', backgroundColor: shape.selected ? 'lightblue' : 'white' }} 
@@ -102,7 +129,7 @@ const ShapeHierarchy: React.FC<ShapeHierarchyProps> = ({
         </div>
         <ListGroup>
           <ul style={{ paddingLeft: '0' }}>
-            {renderHierarchy(shapes)}
+            {renderHierarchy(graphicEditor.children)}
           </ul>
         </ListGroup>
       </Card.Body>

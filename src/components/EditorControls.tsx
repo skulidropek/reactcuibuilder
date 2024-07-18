@@ -1,10 +1,11 @@
 import React from 'react';
 import { FaPlus } from 'react-icons/fa';
 import { Button, Form } from 'react-bootstrap';
+import { Size } from '@/models/CuiRectTransformModel';
 
 interface EditorControlsProps {
-  editorSize: { width: number; height: number };
-  setEditorSize: React.Dispatch<React.SetStateAction<{ width: number; height: number }>>;
+  editorSize: Size;
+  setEditorSize: (size: Size) => void;
   addShape: (type: 'rect' | 'circle') => void;
 }
 
