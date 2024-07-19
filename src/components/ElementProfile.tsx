@@ -11,7 +11,16 @@ interface ElementProfileProps {
 
 const ElementProfile = forwardRef<HTMLDivElement, ElementProfileProps>(({ element }, ref) => {
   const handleAddChild = () => {
-    const newChild = new CuiElementModel('rect', true, [], [], false, false, element);
+    const newChild = new CuiElementModel(
+      'rect', 
+      undefined,  // visible
+      undefined,  // children
+      undefined,  // components
+      undefined,  // collapsed
+      undefined,  // selected
+      undefined,  // dragging
+      element        // parent
+    );
     element.pushChild(newChild);
   };
 

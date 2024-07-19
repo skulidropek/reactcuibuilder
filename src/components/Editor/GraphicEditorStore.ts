@@ -6,13 +6,15 @@ import TreeNodeModel, { Rect } from "../../models/TreeNodeModel";
 export default class GraphicEditorStore extends TreeNodeModel {
 
   public draggingItem: CuiElementModel | null = null;
+  public selectedItem: CuiElementModel | null = null;
 
   constructor(public size: Size, children: CuiElementModel[], parent?: TreeNodeModel) {
     super(children, parent);
     makeObservable(this, {
       size: observable,
-      draggingItem: observable,
       pushNewElement: action,
+      draggingItem: observable,
+      selectedItem: observable,
     });
   }
 
@@ -27,14 +29,15 @@ export default class GraphicEditorStore extends TreeNodeModel {
   pushNewElement = (type: 'rect' | 'circle'): CuiElementModel => {
     const element = new CuiElementModel(
       type,
-      true,
-      [],
-      [],
-      false,
-      false,
-      this
+      undefined,  // visible
+      undefined,  // children
+      undefined,  // components
+      undefined,  // collapsed
+      undefined,  // selected
+      undefined,  // dragging
+      this        // parent
     );
-
+  
     element.addComponent(new CuiRectTransformModel("0.1 0.1", "0.2 0.2", "10 10", "-10 -10", element));
     this.pushChild(element);
     return element;

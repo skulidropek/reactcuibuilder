@@ -41,11 +41,12 @@ export default class CuiElementModel extends TreeNodeModel {
 
   constructor(
     public type: 'rect' | 'circle',
-    public visible: boolean,
-    children: CuiElementModel[],
-    public components: ICuiComponent[],
-    public collapsed: boolean,
-    public selected: boolean,
+    public visible: boolean = true,
+    children: CuiElementModel[] = [],
+    public components: ICuiComponent[] = [],
+    public collapsed: boolean = false,
+    public selected: boolean = false,
+    public dragging: boolean = false,
     parent?: TreeNodeModel, // добавлен аргумент parent
   ) {
     super(children, parent); // Add the super() call here
@@ -54,6 +55,7 @@ export default class CuiElementModel extends TreeNodeModel {
       components: observable,
       collapsed: observable,
       selected: observable,
+      dragging: observable,
     });
   }
 

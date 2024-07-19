@@ -22,19 +22,19 @@ export default class GraphicEditorModel extends TreeNodeModel {
     return { x: 0, y: 0, width: 0, height: 0};
   }
 
-  pushNewElement = (type: 'rect' | 'circle'): CuiElementModel => {
-    const element = new CuiElementModel(
-      type,
-      true,
-      [],
-      [],
-      false,
-      false,
-      this
-    );
+  // pushNewElement = (type: 'rect' | 'circle'): CuiElementModel => {
+  //   // const element = new CuiElementModel(
+  //   //   type,
+  //   //   true,
+  //   //   [],
+  //   //   [],
+  //   //   false,
+  //   //   false,
+  //   //   this
+  //   // );
   
-    element.addComponent(new CuiRectTransformModel("0.1 0.1", "0.2 0.2", "10 10", "-10 -10", element));
-    this.pushChild(element);
-    return element;
-  };
+  //   // element.addComponent(new CuiRectTransformModel("0.1 0.1", "0.2 0.2", "10 10", "-10 -10", element));
+  //   // this.pushChild(element);
+  //   return new CuiElementModel( type, true, [], [], false, false, this );
+  // };
 }

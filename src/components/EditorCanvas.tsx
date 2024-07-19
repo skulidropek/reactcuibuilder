@@ -213,31 +213,29 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
   }, [getShapeAtCoordinates, getMarkerUnderMouse, store.children, store.size.height]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+
+    if(!store.draggingItem) return;
+
+    const canvasBounds = canvasRef.current?.getBoundingClientRect();
+    if (!canvasBounds) return;
+
+    const rectTransform = store.draggingItem.findComponentByType<CuiRectTransformModel>();
+    if (!rectTransform) return store.draggingItem;
+
     if (resizing) {
-      const canvasBounds = canvasRef.current?.getBoundingClientRect();
-      if (!canvasBounds) return;
-  
-      const rectTransform = resizing.element.findComponentByType<CuiRectTransformModel>();
-      if (rectTransform) {
-        const currentX = e.clientX - canvasBounds.left;
-        const currentY = store.size.height - (e.clientY - canvasBounds.top);
+      const currentX = e.clientX - canvasBounds.left;
+      const currentY = store.size.height - (e.clientY - canvasBounds.top);
 
-        rectTransform.resize(resizing.handle, resizing.isOffset, resizing.isEdge, currentX, currentY);
-      }
-    } else if (store.draggingItem) {
-      const canvasBounds = canvasRef.current?.getBoundingClientRect();
-      if (!canvasBounds) return;
-  
-      const rectTransform = store.draggingItem.findComponentByType<CuiRectTransformModel>();
-      if (!rectTransform) return store.draggingItem;
+      rectTransform.resize(resizing.handle, resizing.isOffset, resizing.isEdge, currentX, currentY);
+      return;
+    } 
 
-      const dx = e.clientX - dragStart.x;
-      const dy = dragStart.y - e.clientY;
+    const dx = e.clientX - dragStart.x;
+    const dy = dragStart.y - e.clientY;
 
-      rectTransform.updatePosition(dx, dy, store.size);
-  
-      setDragStart({ x: e.clientX, y: e.clientY });
-    }
+    rectTransform.updatePosition(dx, dy, store.size);
+
+    setDragStart({ x: e.clientX, y: e.clientY });
   }, [resizing, updateShapePosition]);
   
   const handleMouseUp = useCallback(() => {
