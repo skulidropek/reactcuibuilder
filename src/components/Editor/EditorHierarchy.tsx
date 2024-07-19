@@ -27,7 +27,7 @@ const ShapeHierarchy: React.FC<ShapeHierarchyProps> = ({
       }
     }
 
-    store.draggingItem = null;
+    store.desetDragging();
   }, [store]);
 
   const renderHierarchy = (items: CuiElementModel[], level = 0) => {
@@ -35,10 +35,10 @@ const ShapeHierarchy: React.FC<ShapeHierarchyProps> = ({
       <li key={shape.id} style={{ listStyleType: 'none' }}>
         <ListGroupItem 
           style={{ paddingLeft: `${level * 20}px`, border: '1px solid #ddd', marginBottom: '5px', backgroundColor: shape.selected ? 'lightblue' : 'white' }} 
-          className={`d-flex align-items-center p-1 ${store.draggingItem?.id === shape.id ? 'bg-light' : ''}`}
+          className={`d-flex align-items-center p-1 ${store.draggingItem?.element?.id === shape.id ? 'bg-light' : ''}`}
           draggable
           onDragStart={(e) => {
-            store.draggingItem = shape;
+            store.setDragging( { element: shape, startX: e.clientX, startY: e.clientY } );
             e.dataTransfer.setData("shapeId", shape.id.toString());
           }}
           onDragOver={(e) => e.preventDefault()}

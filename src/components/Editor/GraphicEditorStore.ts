@@ -3,9 +3,15 @@ import CuiElementModel from "../../models/CuiElementModel";
 import CuiRectTransformModel, { Size } from "../../models/CuiRectTransformModel";
 import TreeNodeModel, { Rect } from "../../models/TreeNodeModel";
 
+export interface DragingModel {
+  element: CuiElementModel;
+  startX: number;
+  startY: number;
+}
+
 export default class GraphicEditorStore extends TreeNodeModel {
 
-  public draggingItem: CuiElementModel | null = null;
+  public draggingItem: DragingModel | null = null;
   public selectedItem: CuiElementModel | null = null;
 
   constructor(public size: Size, children: CuiElementModel[], parent?: TreeNodeModel) {
@@ -55,6 +61,31 @@ export default class GraphicEditorStore extends TreeNodeModel {
     }
 
     this.selectedItem = element;
+  };
+
+  setDragging = (dragging: DragingModel | null) => {
+    this.forEach(el => {
+      if (el instanceof CuiElementModel) {
+        el.dragging = false;
+      }
+    });
+  
+    if (dragging?.element) {
+      dragging.element.dragging = true;
+    }
+
+    this.draggingItem = dragging;
+  };
+
+  
+  desetDragging = () => {
+    this.forEach(el => {
+      if (el instanceof CuiElementModel) {
+        el.dragging = false;
+      }
+    });
+
+    this.draggingItem = null;
   };
 
   desetSelected = () => {
