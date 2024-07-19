@@ -204,7 +204,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
       const dx = e.clientX - store.draggingItem.startX;
       const dy = store.draggingItem.startY - e.clientY;
 
-      rectTransform.updatePosition(dx, dy, store.size);
+      rectTransform.updatePosition(dx, dy);
 
       store.setDragging({ element: store.draggingItem.element, startX: e.clientX, startY: e.clientY });
       // setDragStart({ x: e.clientX, y: e.clientY });
