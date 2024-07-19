@@ -1,3 +1,4 @@
+import { observer } from 'mobx-react-lite';
 import CuiRectTransformModel from '../../models/CuiRectTransformModel';
 import React from 'react';
 import { Form } from 'react-bootstrap';
@@ -61,4 +62,4 @@ const CuiRectTransform: React.FC<CuiRectTransformProps> = ({ element, onChange }
     );
 };
 
-export default CuiRectTransform;
+export default observer(CuiRectTransform);

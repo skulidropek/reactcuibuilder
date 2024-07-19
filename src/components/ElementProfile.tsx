@@ -2,31 +2,47 @@ import React, { forwardRef } from 'react';
 import { Button, Card } from 'react-bootstrap';
 import { FaPlus, FaArrowsAlt } from 'react-icons/fa';
 import ElementSetting from './ElementSetting';
-import CuiElement from '../models/CuiElement';
+import CuiElementModel from '../models/CuiElementModel';
+import { observer } from 'mobx-react-lite';
 
 interface ElementProfileProps {
-  element: any;
-  onChange: (key: keyof CuiElement, value: any) => void;
-  onAddChild: () => void;
-  onToggleFill: () => void;
+  element: CuiElementModel;
 }
 
-const ElementProfile = forwardRef<HTMLDivElement, ElementProfileProps>(({ element, onChange, onAddChild, onToggleFill }, ref) => {
+const ElementProfile = forwardRef<HTMLDivElement, ElementProfileProps>(({ element }, ref) => {
+  const handleAddChild = () => {
+    const newChild = new CuiElementModel(
+      'rect', 
+      undefined,  // visible
+      undefined,  // children
+      undefined,  // components
+      undefined,  // collapsed
+      undefined,  // selected
+      undefined,  // dragging
+      element        // parent
+    );
+    element.pushChild(newChild);
+  };
+
+  const handleToggleFill = () => {
+    element.visible = !element.visible;
+  };
+
   return (
     <Card className="mb-2">
       <Card.Header className="d-flex justify-content-between align-items-center">
-        <span>{element.name}</span>
+        <span>{element.id}</span>
       </Card.Header>
       <Card.Body ref={ref}>
         <div className="d-flex mb-2">
-          <Button variant="success" size="sm" className="mr-2" onClick={onAddChild}>
+          <Button variant="success" size="sm" className="mr-2" onClick={handleAddChild}>
             <FaPlus />
           </Button>
-          <Button variant="primary" size="sm" onClick={onToggleFill}>
+          <Button variant="primary" size="sm" onClick={handleToggleFill}>
             <FaArrowsAlt />
           </Button>
         </div>
-        <ElementSetting element={element} onChange={onChange} />
+        <ElementSetting element={element} />
         <div className="mt-3">
           <b>Components</b>
           {element.components?.map((component: any, index: number) => (
@@ -38,7 +54,7 @@ const ElementProfile = forwardRef<HTMLDivElement, ElementProfileProps>(({ elemen
                 </Button>
               </Card.Header>
               <Card.Body>
-                <ElementSetting element={component} onChange={onChange} />
+                <ElementSetting element={component} />
               </Card.Body>
             </Card>
           ))}
@@ -48,4 +64,4 @@ const ElementProfile = forwardRef<HTMLDivElement, ElementProfileProps>(({ elemen
   );
 });
 
-export default ElementProfile;
+export default observer(ElementProfile);

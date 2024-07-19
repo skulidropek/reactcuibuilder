@@ -1,4 +1,7 @@
+import { makeObservable, observable } from "mobx";
+import CuiElementModel from "./CuiElementModel";
 import ICuiComponent from "./ICuiComponent";
+import { Rect } from "./TreeNodeModel";
 
 export interface TransformValues {
   anchorMin: { x: number; y: number };
@@ -18,17 +21,26 @@ export default class CuiRectTransformModel implements ICuiComponent {
   anchorMax: string;
   offsetMin: string;
   offsetMax: string;
+  element: CuiElementModel;
 
   constructor(
     anchorMin: string,
     anchorMax: string,
     offsetMin: string,
-    offsetMax: string
+    offsetMax: string,
+    element: CuiElementModel
   ) {
     this.anchorMin = anchorMin;
     this.anchorMax = anchorMax;
     this.offsetMin = offsetMin;
     this.offsetMax = offsetMax;
+    this.element = element;
+    makeObservable(this, {
+      anchorMin: observable,
+      anchorMax: observable,
+      offsetMin: observable,
+      offsetMax: observable,
+    });
   }
 
   extractTransformValues(): TransformValues {
@@ -45,11 +57,15 @@ export default class CuiRectTransformModel implements ICuiComponent {
     };
   }
 
-  calculatePositionAndSize(parentSize: Size, offsetX: number = 0, offsetY: number = 0): { x: number; y: number; width: number; height: number } {
+  //parentSize: Size, offsetX: number = 0, offsetY: number = 0
+  calculatePositionAndSize(): Rect {
+
+    const parentSize = this.element.calculateParentPositionAndSize();
+
     const { anchorMin, anchorMax, offsetMin, offsetMax } = this.extractTransformValues();
     
-    const x = anchorMin.x * parentSize.width + offsetMin.x + offsetX;
-    const y = anchorMin.y * parentSize.height + offsetMin.y + offsetY;
+    const x = anchorMin.x * parentSize.width + offsetMin.x + parentSize.x;
+    const y = anchorMin.y * parentSize.height + offsetMin.y + parentSize.y;
     
     const width = (anchorMax.x - anchorMin.x) * parentSize.width + (offsetMax.x - offsetMin.x);
     const height = (anchorMax.y - anchorMin.y) * parentSize.height + (offsetMax.y - offsetMin.y);
@@ -57,19 +73,28 @@ export default class CuiRectTransformModel implements ICuiComponent {
     return { x, y, width, height };
   }
 
-  resize(handle: string, isOffset: boolean, isEdge: boolean, currentX: number, currentY: number, parentSize: Size) {
+  resize(handle: string, isOffset: boolean, isEdge: boolean, currentX: number, currentY: number) {
     const transformValues = this.extractTransformValues();
     
+    const { x: parentX, y: parentY, width: parentWidth, height: parentHeight } = this.element.calculateParentPositionAndSize();
+
     const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
-    
+
+    // console.log(`resize currentX = ${currentX - parentX} = ${currentX} - ${parentX}`);
+    // console.log(`resize currentY = ${currentY - parentY} = ${currentY} - ${parentY}`);
+
+    currentX = currentX - parentX;
+    currentY = currentY - parentY;
+
+
     if (isEdge) {
       if (isOffset) {
-        const offsetX = currentX - transformValues.anchorMax.x * parentSize.width;
-        const offsetY = currentY - transformValues.anchorMax.y * parentSize.height;
+        const offsetX = currentX - transformValues.anchorMax.x * parentWidth;
+        const offsetY = currentY - transformValues.anchorMax.y * parentHeight;
   
         switch (handle) {
           case 'top':
-            this.offsetMin = `${transformValues.offsetMin.x} ${currentY - transformValues.anchorMin.y * parentSize.height}`;
+            this.offsetMin = `${transformValues.offsetMin.x} ${currentY - transformValues.anchorMin.y * parentHeight}`;
             break;
           case 'right':
             this.offsetMax = `${offsetX} ${transformValues.offsetMax.y}`;
@@ -78,12 +103,12 @@ export default class CuiRectTransformModel implements ICuiComponent {
             this.offsetMax = `${transformValues.offsetMax.x} ${offsetY}`;
             break;
           case 'left':
-            this.offsetMin = `${currentX - transformValues.anchorMin.x * parentSize.width} ${transformValues.offsetMin.y}`;
+            this.offsetMin = `${currentX - transformValues.anchorMin.x * parentWidth} ${transformValues.offsetMin.y}`;
             break;
         }
       } else {
-        const currentXRel = currentX / parentSize.width;
-        const currentYRel = currentY / parentSize.height;
+        const currentXRel = currentX / parentWidth;
+        const currentYRel = currentY / parentHeight;
         switch (handle) {
           case 'top':
             this.anchorMin = `${transformValues.anchorMin.x} ${clamp(currentYRel, 0, transformValues.anchorMax.y - 0.01)}`;
@@ -100,10 +125,10 @@ export default class CuiRectTransformModel implements ICuiComponent {
         }
       }
     } else if (isOffset) {
-      const anchorMinX = transformValues.anchorMin.x * parentSize.width;
-      const anchorMinY = transformValues.anchorMin.y * parentSize.height;
-      const anchorMaxX = transformValues.anchorMax.x * parentSize.width;
-      const anchorMaxY = transformValues.anchorMax.y * parentSize.height;
+      const anchorMinX = transformValues.anchorMin.x * parentWidth;
+      const anchorMinY = transformValues.anchorMin.y * parentHeight;
+      const anchorMaxX = transformValues.anchorMax.x * parentWidth;
+      const anchorMaxY = transformValues.anchorMax.y * parentHeight;
   
       switch (handle) {
         case 'topLeft':
@@ -122,8 +147,8 @@ export default class CuiRectTransformModel implements ICuiComponent {
           break;
       }
     } else {
-      const currentXRel = currentX / parentSize.width;
-      const currentYRel = currentY / parentSize.height;
+      const currentXRel = currentX / parentWidth;
+      const currentYRel = currentY / parentHeight;
   
       switch (handle) {
         case 'topLeft':

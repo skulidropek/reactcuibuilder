@@ -1,5 +1,5 @@
-// import { CuiElement, ICuiComponent } from "@/models/types";
-import CuiElement from "@/models/CuiElement";
+// import { CuiElementModel, ICuiComponent } from "@/models/types";
+import CuiElementModel from "@/models/CuiElementModel";
 import ICuiComponent from "@/models/ICuiComponent";
 
 export const toInvertedY = (y: number, height: number): number => {

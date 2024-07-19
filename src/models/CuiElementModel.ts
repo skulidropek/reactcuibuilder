@@ -1,5 +1,17 @@
 import ICuiComponent from "./ICuiComponent";
 import CuiRectTransformModel, { Size, TransformValues } from "./CuiRectTransformModel";
+import TreeNodeModel, { Rect } from "./TreeNodeModel";
+import { makeObservable, observable } from "mobx";
+
+
+export interface Marker {
+  handle: 'topLeft' | 'topRight' | 'bottomLeft' | 'bottomRight' | 'top' | 'right' | 'bottom' | 'left';
+  isOffset: boolean;
+  isEdge: boolean;
+  startX: number;
+  startY: number;
+  element: CuiElementModel;
+}
 
 export interface ShapePosition {
   id: number;
@@ -22,28 +34,45 @@ export interface ShapePosition {
     green: { x: number; y: number }[];
     yellow: { x: number; y: number }[];
   };
-  element: CuiElement; // добавляем это свойство
+  element: CuiElementModel; // добавляем это свойство
 }
 
-export default class CuiElement {
+export default class CuiElementModel extends TreeNodeModel {
+
   constructor(
-    public id: number,
     public type: 'rect' | 'circle',
-    public visible: boolean,
-    public children: CuiElement[],
-    public components: ICuiComponent[],
-    public collapsed: boolean,
-    public parent: CuiElement | null = null, // добавлен аргумент parent
-    public selected: boolean
+    public visible: boolean = true,
+    children: CuiElementModel[] = [],
+    public components: ICuiComponent[] = [],
+    public collapsed: boolean = false,
+    public selected: boolean = false,
+    public dragging: boolean = false,
+    parent?: TreeNodeModel, // добавлен аргумент parent
   ) {
-    this.setParentForChildren();
+    super(children, parent); // Add the super() call here
+    makeObservable(this, {
+      visible: observable,
+      components: observable,
+      collapsed: observable,
+      selected: observable,
+      dragging: observable,
+    });
   }
 
-  setParentForChildren() {
-    this.children.forEach(child => {
-      child.parent = this;
-      child.setParentForChildren(); // рекурсивно устанавливаем родителей для всех потомков
-    });
+  public rectTransform(): CuiRectTransformModel {
+    return this.findComponentByType<CuiRectTransformModel>()!;
+  }
+
+  calculateParentPositionAndSize(): Rect {
+    return this.parent?.calculatePositionAndSize()!;
+  }
+
+  calculatePositionAndSize(): Rect {
+    return this.rectTransform().calculatePositionAndSize();
+  }
+
+  public updateProperty<K extends keyof this>(key: K, value: this[K]): void {
+    (this as any)[key] = value;
   }
 
   findComponentByType<T extends ICuiComponent>(): T | undefined {
@@ -52,38 +81,40 @@ export default class CuiElement {
     ) as T | undefined;
   }
 
-  updateComponent<T extends ICuiComponent>(updatedValues: Partial<T>): CuiElement {
+  updateComponent<T extends ICuiComponent>(updatedValues: Partial<T>): CuiElementModel {
     const component = this.findComponentByType<T>();
-
+  
     if (component == null) {
       return this;
     }
-
+  
     const updatedComponent = new (component.constructor as { new (): T })();
     Object.assign(updatedComponent, component, updatedValues);
-
-    const updatedComponents = this.components.map(c =>
+  
+    this.components = this.components.map(c =>
       c.type === component.type ? updatedComponent : c
     );
-
-    return new CuiElement(
-      this.id,
-      this.type,
-      this.visible,
-      this.children,  
-      updatedComponents,
-      this.collapsed,
-      this.parent,
-      this.selected
-    );
+  
+    return this;
   }
 
-  generateShapePositions(parentSize: Size, offsetX: number = 0, offsetY: number = 0): ShapePosition | null {
-    const rectTransform = this.findComponentByType<CuiRectTransformModel>();
+  addComponent<T extends ICuiComponent>(componentClass : T): CuiElementModel {
+  
+    this.components.push(componentClass); 
+  
+    return this;
+  }
+
+  // parentSize: Size, offsetX: number = 0, offsetY: number = 0
+  generateShapePositions(): ShapePosition | null {
+
+    const rectTransform = this.rectTransform();
     if (!rectTransform) return null;
 
-    const { x, y, width, height } = rectTransform.calculatePositionAndSize(parentSize, offsetX, offsetY);
+    const parrentSize = this.calculateParentPositionAndSize();
 
+    const { x, y, width, height } = rectTransform.calculatePositionAndSize();
+    
     const shapeData: ShapePosition = {
       id: this.id,
       type: this.type,
@@ -98,10 +129,10 @@ export default class CuiElement {
 
     if (this.selected) {
       const transformValues = rectTransform.extractTransformValues();
-      const anchorX = transformValues.anchorMin.x * parentSize.width + offsetX;
-      const anchorY = transformValues.anchorMin.y * parentSize.height + offsetY;
-      const anchorWidth = (transformValues.anchorMax.x - transformValues.anchorMin.x) * parentSize.width;
-      const anchorHeight = (transformValues.anchorMax.y - transformValues.anchorMin.y) * parentSize.height;
+      const anchorX = transformValues.anchorMin.x * parrentSize.width + parrentSize.x;
+      const anchorY = transformValues.anchorMin.y * parrentSize.height + parrentSize.y;
+      const anchorWidth = (transformValues.anchorMax.x - transformValues.anchorMin.x) * parrentSize.width;
+      const anchorHeight = (transformValues.anchorMax.y - transformValues.anchorMin.y) * parrentSize.height;
 
       shapeData.anchor = {
         x: anchorX,
@@ -137,8 +168,8 @@ export default class CuiElement {
       };
     }
 
-    this.children.forEach((child: CuiElement) => {
-      const childData = child.generateShapePositions({ width, height }, x, y);
+    this.children.forEach((child: CuiElementModel) => {
+      const childData = child.generateShapePositions();
       if (childData) {
         shapeData.children.push(childData);
       }

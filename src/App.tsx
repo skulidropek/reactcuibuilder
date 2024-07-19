@@ -1,11 +1,12 @@
 import logo from './logo.svg';
 import './App.css';
-import GraphicEditor from './components/GraphicEditor';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import GraphicEditor from './components/Editor/GraphicEditor';
+import GraphicEditorStore from './components/Editor/GraphicEditorStore';
 
 function App() {
   return (
-    <GraphicEditor />
+    <GraphicEditor store={new GraphicEditorStore({ width: 1282, height: 722 }, [])} />
 
     // <div className="App">
     //   <header className="App-header">
