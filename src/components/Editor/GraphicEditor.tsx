@@ -40,8 +40,7 @@ const GraphicEditor: React.FC<GraphicEditorProps> = observer(({ store }) => {
         </Col>
         <Col xs={9}>
           <EditorCanvas
-            editorSize={store.size}
-            items={store.children}
+            store={store}
           />
         </Col>
       </Row>

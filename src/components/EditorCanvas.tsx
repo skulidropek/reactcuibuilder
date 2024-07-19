@@ -3,27 +3,25 @@ import { observer } from 'mobx-react-lite';
 import { autorun } from 'mobx';
 import CuiElementModel, { Marker, ShapePosition } from '../models/CuiElementModel';
 import CuiRectTransformModel, { Size } from '../models/CuiRectTransformModel';
+import GraphicEditorStore from './Editor/GraphicEditorStore';
 
 interface EditorCanvasProps {
-  editorSize: { width: number; height: number };
-  items: CuiElementModel[];
+  store: GraphicEditorStore;
 }
 
 const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
-  editorSize,
-  items,
+  store,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [resizing, setResizing] = useState<Marker | null>(null);
 
   const drawShapes = useCallback((context: CanvasRenderingContext2D, items: CuiElementModel[]) => {
     const shapePositions = items.map(shape => shape.generateShapePositions()).filter((position): position is ShapePosition => position !== null);
 
-    context.clearRect(0, 0, editorSize.width, editorSize.height);
+    context.clearRect(0, 0, store.size.width, store.size.height);
     context.save();
-    context.translate(0, editorSize.height);
+    context.translate(0, store.size.height);
     context.scale(1, -1);
 
     const getColorById = (id: number): string => {
@@ -67,10 +65,10 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
     shapePositions.forEach(drawShape);
 
     context.restore();
-  }, [editorSize]);
+  }, [store.size]);
 
   const getShapeAtCoordinates = useCallback(
-    (x: number, y: number, items: CuiElementModel[], parentSize: Size): CuiElementModel | null => {
+    (x: number, y: number, items: CuiElementModel[]): CuiElementModel | null => {
       const findShape = (shapePosition: ShapePosition, shape: CuiElementModel): CuiElementModel | null => {
         const { x: shapeX, y: shapeY, width, height, children } = shapePosition;
   
@@ -112,16 +110,16 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
         const dx = clientX - dragStart.x;
         const dy = dragStart.y - clientY;
 
-        rectTransform.updatePosition(dx, dy, editorSize);
+        rectTransform.updatePosition(dx, dy, store.size);
 
         return shape;
       }
       return shape;
     });
-  }, [dragStart, editorSize]);
+  }, [dragStart, store.size]);
 
   const getMarkerUnderMouse = useCallback(
-    (x: number, y: number, items: CuiElementModel[], parentSize: Size): Marker | null => {
+    (x: number, y: number, items: CuiElementModel[]): Marker | null => {
       const isClose = (x1: number, y1: number, x2: number, y2: number) => Math.abs(x1 - x2) < 10 && Math.abs(y1 - y2) < 10;
   
       const findMarker = (shape: ShapePosition): Marker | null => {
@@ -179,7 +177,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
   
       return null;
     },
-    [items]
+    [store.children]
   );
 
   const handleMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -188,14 +186,14 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
 
     const mouseX = e.clientX - canvasBounds.left;
     const mouseY = e.clientY - canvasBounds.top;
-    const shape = getShapeAtCoordinates(mouseX, editorSize.height - mouseY, items, editorSize);
-    const marker = getMarkerUnderMouse(mouseX, editorSize.height - mouseY, items, editorSize);
+    const shape = getShapeAtCoordinates(mouseX, store.size.height - mouseY, store.children);
+    const marker = getMarkerUnderMouse(mouseX, store.size.height - mouseY, store.children);
 
     if (marker) {
       setResizing(marker);
     } else if (shape) {
       shape.selected = true;
-      const updatedShapes = items.map(s => {
+      const updatedShapes = store.children.map(s => {
         if (s.id === shape.id) {
           return shape;
         } else {
@@ -203,16 +201,16 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
           return s;
         }
       });
-
-      setIsDragging(true);
+      
+      store.draggingItem = shape;
       setDragStart({ x: e.clientX, y: e.clientY });
     } else {
-      const updatedShapes = items.map(s => {
+      const updatedShapes = store.children.map(s => {
         s.selected = false;
         return s;
       });
     }
-  }, [getShapeAtCoordinates, getMarkerUnderMouse, items, editorSize.height]);
+  }, [getShapeAtCoordinates, getMarkerUnderMouse, store.children, store.size.height]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     if (resizing) {
@@ -222,23 +220,28 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
       const rectTransform = resizing.element.findComponentByType<CuiRectTransformModel>();
       if (rectTransform) {
         const currentX = e.clientX - canvasBounds.left;
-        const currentY = editorSize.height - (e.clientY - canvasBounds.top);
+        const currentY = store.size.height - (e.clientY - canvasBounds.top);
 
         rectTransform.resize(resizing.handle, resizing.isOffset, resizing.isEdge, currentX, currentY);
       }
-    } else if (isDragging) {
+    } else if (store.draggingItem) {
       const canvasBounds = canvasRef.current?.getBoundingClientRect();
       if (!canvasBounds) return;
   
-      const updatedShapes = updateShapePosition(items, e.clientX, e.clientY);
-      if (!updatedShapes) return;
+      const rectTransform = store.draggingItem.findComponentByType<CuiRectTransformModel>();
+      if (!rectTransform) return store.draggingItem;
+
+      const dx = e.clientX - dragStart.x;
+      const dy = dragStart.y - e.clientY;
+
+      rectTransform.updatePosition(dx, dy, store.size);
   
       setDragStart({ x: e.clientX, y: e.clientY });
     }
-  }, [resizing, isDragging, items, updateShapePosition, editorSize.height]);
+  }, [resizing, updateShapePosition]);
   
   const handleMouseUp = useCallback(() => {
-    setIsDragging(false);
+    store.draggingItem = null;
     setResizing(null);
   }, []);
 
@@ -248,19 +251,19 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
       if (canvas) {
         const context = canvas.getContext('2d');
         if (context) {
-          drawShapes(context, items);
+          drawShapes(context, store.children);
         }
       }
     });
 
     return () => dispose();
-  }, [items, editorSize, drawShapes]);
+  }, [store.children, store.size, drawShapes]);
 
   return (
     <canvas
       ref={canvasRef}
-      width={editorSize.width}
-      height={editorSize.height}
+      width={store.size.width}
+      height={store.size.height}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
