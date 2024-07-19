@@ -13,20 +13,6 @@ interface GraphicEditorProps {
 
 const GraphicEditor: React.FC<GraphicEditorProps> = observer(({ store }) => {
 
-  const handleShapeChange = useCallback((shapeId: number, key: keyof CuiElementModel, value: any) => {
-    const element = store.getParentOrChildById(shapeId);
-    if (element) {
-      element.updateProperty(key, value);
-    }
-  }, [store]);
-
-  const toggleShapeProperty = useCallback((shapeId: number, property: 'visible' | 'collapsed') => {
-    const element = store.getParentOrChildById(shapeId);
-    if (element) {
-      element[property] = !element[property];
-    }
-  }, [store]);
-
   return (
     <Container fluid className="bg-light p-4">
       <Row>
