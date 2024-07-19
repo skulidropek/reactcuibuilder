@@ -1,17 +1,17 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { observer } from 'mobx-react-lite';
+import { autorun } from 'mobx';
 import CuiElementModel, { Marker, ShapePosition } from '../models/CuiElementModel';
 import CuiRectTransformModel, { Size } from '../models/CuiRectTransformModel';
 
 interface EditorCanvasProps {
   editorSize: { width: number; height: number };
   items: CuiElementModel[];
-  onShapesChange: (updatedShapes: CuiElementModel[]) => void;
 }
 
-const EditorCanvas: React.FC<EditorCanvasProps> = ({
+const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
   editorSize,
   items,
-  onShapesChange,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -19,7 +19,6 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
   const [resizing, setResizing] = useState<Marker | null>(null);
 
   const drawShapes = useCallback((context: CanvasRenderingContext2D, items: CuiElementModel[]) => {
-
     const shapePositions = items.map(shape => shape.generateShapePositions()).filter((position): position is ShapePosition => position !== null);
 
     context.clearRect(0, 0, editorSize.width, editorSize.height);
@@ -28,7 +27,6 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
     context.scale(1, -1);
 
     const getColorById = (id: number): string => {
-      // Генерация цвета на основе хеширования id
       const hue = id * 137.508; // 137.508 - произвольное число, для равномерного распределения цветов
       return `hsl(${hue % 360}, 50%, 50%)`; // Преобразование в цветовую модель HSL
     };
@@ -76,11 +74,9 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
       const findShape = (shapePosition: ShapePosition, shape: CuiElementModel): CuiElementModel | null => {
         const { x: shapeX, y: shapeY, width, height, children } = shapePosition;
   
-        // Check if the coordinates are within this shape
-        const withinX = x >= shapeX  && x <= shapeX + width;
+        const withinX = x >= shapeX && x <= shapeX + width;
         const withinY = y >= shapeY && y <= shapeY + height;
   
-        // Recursively check children
         for (const child of children) {
           const foundChild = findShape(child, shape.children.find(c => c.id === child.id)!);
           if (foundChild) return foundChild;
@@ -120,7 +116,6 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
 
         return shape;
       }
-      // shape.children = updateShapePosition(shape.children, clientX, clientY);
       return shape;
     });
   }, [dragStart, editorSize]);
@@ -160,7 +155,6 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
           for (const markerType of ['blue', 'red', 'green', 'yellow'] as const) {
             for (const marker of markers[markerType]) {
               if (isClose(x, y, marker.x, marker.y)) {
-                // Для маркеров используем тип handle, который обозначает цвет
                 return { handle: markerType as 'topLeft' | 'topRight' | 'bottomLeft' | 'bottomRight' | 'top' | 'right' | 'bottom' | 'left', isOffset: false, isEdge: false, startX: x, startY: y, element: shape.element };
               }
             }
@@ -210,8 +204,6 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
         }
       });
 
-      // setSelectedShape(shape.id);
-      onShapesChange(updatedShapes);
       setIsDragging(true);
       setDragStart({ x: e.clientX, y: e.clientY });
     } else {
@@ -219,40 +211,20 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
         s.selected = false;
         return s;
       });
-
-      // setSelectedShape(null);
-      onShapesChange(updatedShapes);
     }
-  }, [getShapeAtCoordinates, getMarkerUnderMouse, onShapesChange, items]);
+  }, [getShapeAtCoordinates, getMarkerUnderMouse, items, editorSize.height]);
 
-  const handleMouseMove = useCallback((e: MouseEvent) => {
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     if (resizing) {
       const canvasBounds = canvasRef.current?.getBoundingClientRect();
       if (!canvasBounds) return;
   
       const rectTransform = resizing.element.findComponentByType<CuiRectTransformModel>();
       if (rectTransform) {
-        // const parentRectTransform = resizing.element.parent.findComponentByType<CuiRectTransformModel>();
-        // const parentSize = parentRectTransform
-        //   ? parentRectTransform.calculatePositionAndSize(editorSize)
-        //   : editorSize;
-  
         const currentX = e.clientX - canvasBounds.left;
         const currentY = editorSize.height - (e.clientY - canvasBounds.top);
-        
-        // console.log(`currentX = ${currentX} = ${e.clientX} - ${canvasBounds.left}`);
-        // console.log(`currentY = ${currentY} = ${editorSize.height} - (${e.clientY} - ${canvasBounds.top})`);
 
         rectTransform.resize(resizing.handle, resizing.isOffset, resizing.isEdge, currentX, currentY);
-  
-        const updatedShapes = items.map(shape => {
-          if (shape.id === resizing.element.id) {
-            return shape.updateComponent(rectTransform);
-          }
-          return shape;
-        });
-  
-        onShapesChange(updatedShapes);
       }
     } else if (isDragging) {
       const canvasBounds = canvasRef.current?.getBoundingClientRect();
@@ -261,11 +233,9 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
       const updatedShapes = updateShapePosition(items, e.clientX, e.clientY);
       if (!updatedShapes) return;
   
-      onShapesChange(updatedShapes);
       setDragStart({ x: e.clientX, y: e.clientY });
     }
-  }, [resizing, isDragging, items, onShapesChange, updateShapePosition, editorSize]);
-  
+  }, [resizing, isDragging, items, updateShapePosition, editorSize.height]);
   
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
@@ -274,29 +244,17 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (canvas) {
-      const context = canvas.getContext('2d');
-      if (context) {
-        drawShapes(context, items);
-      }
-    }
-  }, [items, editorSize, drawShapes]);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (canvas) {
-      canvas.addEventListener('mousemove', handleMouseMove);
-      canvas.addEventListener('mouseup', handleMouseUp);
-      canvas.addEventListener('mouseleave', handleMouseUp);
-    }
-    return () => {
+    const dispose = autorun(() => {
       if (canvas) {
-        canvas.removeEventListener('mousemove', handleMouseMove);
-        canvas.removeEventListener('mouseup', handleMouseUp);
-        canvas.removeEventListener('mouseleave', handleMouseUp);
+        const context = canvas.getContext('2d');
+        if (context) {
+          drawShapes(context, items);
+        }
       }
-    };
-  }, [handleMouseMove, handleMouseUp]);
+    });
+
+    return () => dispose();
+  }, [items, editorSize, drawShapes]);
 
   return (
     <canvas
@@ -304,9 +262,12 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
       width={editorSize.width}
       height={editorSize.height}
       onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
       style={{ border: '1px solid gray' }}
     />
   );
-};
+});
 
 export default EditorCanvas;

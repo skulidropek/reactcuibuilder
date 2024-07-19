@@ -42,7 +42,6 @@ const GraphicEditor: React.FC<GraphicEditorProps> = observer(({ store }) => {
           <EditorCanvas
             editorSize={store.size}
             items={store.children}
-            onShapesChange={(updatedShapes) => {}}
           />
         </Col>
       </Row>

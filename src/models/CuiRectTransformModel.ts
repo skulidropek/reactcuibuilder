@@ -1,3 +1,4 @@
+import { makeObservable, observable } from "mobx";
 import CuiElementModel from "./CuiElementModel";
 import ICuiComponent from "./ICuiComponent";
 import { Rect } from "./TreeNodeModel";
@@ -34,6 +35,12 @@ export default class CuiRectTransformModel implements ICuiComponent {
     this.offsetMin = offsetMin;
     this.offsetMax = offsetMax;
     this.element = element;
+    makeObservable(this, {
+      anchorMin: observable,
+      anchorMax: observable,
+      offsetMin: observable,
+      offsetMax: observable,
+    });
   }
 
   extractTransformValues(): TransformValues {
