@@ -15,19 +15,6 @@ const ShapeHierarchy: React.FC<ShapeHierarchyProps> = ({
   store,
 }) => {
 
-  const setSelectedShape = useCallback((element: CuiElementModel | null) => {
-    store.forEach(el => {
-      if (el instanceof CuiElementModel) {
-        el.selected = false;
-      }
-    });
-  
-    if (element) {
-      element.selected = true;
-    }
-  }, [store]);
-
-
   const moveToParent = useCallback((sourceId: number, parentId: number) => {
     const sourceElement = store.getParentOrChildById(sourceId);
     const targetElement = store.getParentOrChildById(parentId);
@@ -60,7 +47,7 @@ const ShapeHierarchy: React.FC<ShapeHierarchyProps> = ({
             const draggedId = parseInt(e.dataTransfer.getData("shapeId"));
             moveToParent(draggedId, shape.id);
           }}
-          onClick={() => setSelectedShape(shape)}
+          onClick={() => store.setSelected(shape)}
         >
           {shape.children.length > 0 && (
             <Button variant="link" size="sm" onClick={(e) => { e.stopPropagation(); shape.collapsed = !shape.collapsed; }} className="mr-2 p-0">

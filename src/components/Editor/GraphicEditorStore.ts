@@ -42,4 +42,28 @@ export default class GraphicEditorStore extends TreeNodeModel {
     this.pushChild(element);
     return element;
   };
+
+  setSelected = (element: CuiElementModel | null) => {
+    this.forEach(el => {
+      if (el instanceof CuiElementModel) {
+        el.selected = false;
+      }
+    });
+  
+    if (element) {
+      element.selected = true;
+    }
+
+    this.selectedItem = element;
+  };
+
+  desetSelected = () => {
+    this.forEach(el => {
+      if (el instanceof CuiElementModel) {
+        el.selected = false;
+      }
+    });
+
+    this.selectedItem = null;
+  };
 }

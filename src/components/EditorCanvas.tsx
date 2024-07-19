@@ -192,50 +192,42 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
     if (marker) {
       setResizing(marker);
     } else if (shape) {
-      shape.selected = true;
-      const updatedShapes = store.children.map(s => {
-        if (s.id === shape.id) {
-          return shape;
-        } else {
-          s.selected = false;
-          return s;
-        }
-      });
+      store.setSelected(shape);
       
-      store.draggingItem = shape;
       setDragStart({ x: e.clientX, y: e.clientY });
     } else {
-      const updatedShapes = store.children.map(s => {
-        s.selected = false;
-        return s;
-      });
+      store.desetSelected();
     }
   }, [getShapeAtCoordinates, getMarkerUnderMouse, store.children, store.size.height]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
 
-    if(!store.draggingItem) return;
+    if(!store.selectedItem) return;
 
     const canvasBounds = canvasRef.current?.getBoundingClientRect();
     if (!canvasBounds) return;
-
-    const rectTransform = store.draggingItem.findComponentByType<CuiRectTransformModel>();
-    if (!rectTransform) return store.draggingItem;
 
     if (resizing) {
       const currentX = e.clientX - canvasBounds.left;
       const currentY = store.size.height - (e.clientY - canvasBounds.top);
 
+      const rectTransform = resizing.element.findComponentByType<CuiRectTransformModel>();
+      if (!rectTransform) return;
+
       rectTransform.resize(resizing.handle, resizing.isOffset, resizing.isEdge, currentX, currentY);
-      return;
-    } 
+    } else if(store.draggingItem) {
 
-    const dx = e.clientX - dragStart.x;
-    const dy = dragStart.y - e.clientY;
+      const rectTransform = store.draggingItem.findComponentByType<CuiRectTransformModel>();
+      if (!rectTransform) return;
 
-    rectTransform.updatePosition(dx, dy, store.size);
+      const dx = e.clientX - dragStart.x;
+      const dy = dragStart.y - e.clientY;
 
-    setDragStart({ x: e.clientX, y: e.clientY });
+      rectTransform.updatePosition(dx, dy, store.size);
+
+      setDragStart({ x: e.clientX, y: e.clientY });
+    }
+
   }, [resizing, updateShapePosition]);
   
   const handleMouseUp = useCallback(() => {
