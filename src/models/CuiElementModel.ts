@@ -1,6 +1,7 @@
 import ICuiComponent from "./ICuiComponent";
 import CuiRectTransformModel, { Size, TransformValues } from "./CuiRectTransformModel";
 import TreeNodeModel, { Rect } from "./TreeNodeModel";
+import { makeObservable, observable } from "mobx";
 
 
 export interface Marker {
@@ -48,6 +49,12 @@ export default class CuiElementModel extends TreeNodeModel {
     parent?: TreeNodeModel, // добавлен аргумент parent
   ) {
     super(children, parent); // Add the super() call here
+    makeObservable(this, {
+      visible: observable,
+      components: observable,
+      collapsed: observable,
+      selected: observable,
+    });
   }
 
   public rectTransform(): CuiRectTransformModel {
@@ -64,7 +71,6 @@ export default class CuiElementModel extends TreeNodeModel {
 
   public updateProperty<K extends keyof this>(key: K, value: this[K]): void {
     (this as any)[key] = value;
-    this.notifySubscribers();
   }
 
   findComponentByType<T extends ICuiComponent>(): T | undefined {

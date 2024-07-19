@@ -2,13 +2,13 @@ import React from 'react';
 import CuiRectTransform from './cui/CuiRectTransform';
 import CuiElementModel from '../models/CuiElementModel';
 import CuiRectTransformModel from '../models/CuiRectTransformModel';
+import { observer } from 'mobx-react-lite';
 
 interface ElementSettingProps {
   element: CuiElementModel;
-  onChange: (key: keyof CuiElementModel, value: any) => void;
 }
 
-const ElementSetting: React.FC<ElementSettingProps> = ({ element, onChange }) => {
+const ElementSetting: React.FC<ElementSettingProps> = ({ element }) => {
   switch (element.type) {
     case 'rect': {
       const cuiRectTransformModel = element.findComponentByType<CuiRectTransformModel>();
@@ -21,10 +21,9 @@ const ElementSetting: React.FC<ElementSettingProps> = ({ element, onChange }) =>
         <CuiRectTransform
           element={cuiRectTransformModel}
           onChange={(key: keyof CuiRectTransformModel, value: any) => {
-            const updatedElement = element.updateComponent<CuiRectTransformModel>(
+            element.updateComponent<CuiRectTransformModel>(
               { [key]: value }
             );
-            onChange('components' as keyof CuiElementModel, updatedElement.components);
           }}
         />
       );
@@ -39,4 +38,4 @@ const ElementSetting: React.FC<ElementSettingProps> = ({ element, onChange }) =>
   }
 };
 
-export default ElementSetting;
+export default observer(ElementSetting);

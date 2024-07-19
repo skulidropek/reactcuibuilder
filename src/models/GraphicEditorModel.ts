@@ -12,7 +12,6 @@ export default class GraphicEditorModel extends TreeNodeModel {
 
   public setSize(size: Size): void {    
     this.size = size;
-    this.notifySubscribers();
   }
 
   calculatePositionAndSize(): Rect {
@@ -36,7 +35,6 @@ export default class GraphicEditorModel extends TreeNodeModel {
   
     element.addComponent(new CuiRectTransformModel("0.1 0.1", "0.2 0.2", "10 10", "-10 -10", element));
     this.pushChild(element);
-    this.notifySubscribers();
     return element;
   };
 }

@@ -1,3 +1,4 @@
+import { makeObservable, observable, action } from "mobx";
 import CuiElementModel from "./CuiElementModel";
 
 export class Rect {
@@ -9,46 +10,43 @@ export class Rect {
   ) {}
 }
 
-type Subscriber = () => void;
-
 export default abstract class TreeNodeModel {
-  private subscribers: Subscriber[] = [];
   readonly id: number = Date.now();
   private _parent?: TreeNodeModel;
+  readonly children: CuiElementModel[];
 
-  constructor(readonly children: CuiElementModel[], parent?: TreeNodeModel) {
+  constructor(children: CuiElementModel[], parent?: TreeNodeModel) {
+    this.children = children;
     this._parent = parent;
+    makeObservable(this, {
+      children: observable,
+      pushChild: action,
+    });
   }
 
   get parent(): TreeNodeModel | undefined {
     return this._parent;
   }
 
-  set parent(newParent: TreeNodeModel | undefined) {
-    if (this._parent !== newParent) {
-      this._parent = newParent;
-      this.notifySubscribers();
-    }
-  }
-
   pushChild(element: CuiElementModel) {
+    element._parent?.deleteChild(element);
+    element._parent = this;
     this.children.push(element);
-    this.notifySubscribers();
   }
-
-  deleteChild(element: CuiElementModel) {
+ 
+  private deleteChild(element: CuiElementModel) {
     const index = this.children.indexOf(element);
     if (index !== -1) {
+      element._parent = undefined;
       this.children.splice(index, 1);
-      this.notifySubscribers();
     }
   }
 
-  getParentOrChildById(id: number): CuiElementModel | null {
+  getParentOrChildById(id: number): CuiElementModel | null { // Заменить на TreeNodeModel
     if (this instanceof CuiElementModel && this.id === id) {
       return this;
     }
-    
+
     for (const child of this.children) {
       if (child.id === id) {
         return child;
@@ -59,20 +57,8 @@ export default abstract class TreeNodeModel {
         }
       }
     }
-    
+
     return null;
-  }
-
-  public subscribe(callback: Subscriber): void {
-    this.subscribers.push(callback);
-  }
-
-  public unsubscribe(callback: Subscriber): void {
-    this.subscribers = this.subscribers.filter(sub => sub !== callback);
-  }
-
-  public notifySubscribers(): void {
-    this.subscribers.forEach(sub => sub());
   }
 
   abstract calculateParentPositionAndSize(): Rect;
