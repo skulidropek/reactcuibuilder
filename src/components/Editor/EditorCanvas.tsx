@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { observer } from 'mobx-react-lite';
 import { autorun } from 'mobx';
-import CuiElementModel, { Marker, ShapePosition } from '../models/CuiElementModel';
-import CuiRectTransformModel, { Size } from '../models/CuiRectTransformModel';
-import GraphicEditorStore from './Editor/GraphicEditorStore';
+import CuiElementModel, { Marker, ShapePosition } from '../../models/CuiElementModel';
+import CuiRectTransformModel, { Size } from '../../models/CuiRectTransformModel';
+import GraphicEditorStore from './GraphicEditorStore';
 
 interface EditorCanvasProps {
   store: GraphicEditorStore;
