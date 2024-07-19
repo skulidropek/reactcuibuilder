@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
 import { ChevronRight, ChevronDown, Eye, EyeOff, ArrowUp } from 'lucide-react';
 import { Button, Card, ListGroup, ListGroupItem, Collapse } from 'react-bootstrap';
-import CuiElementModel from '@/models/CuiElementModel';
+import CuiElementModel from '../../models/CuiElementModel';
 import ElementProfile from '../ElementProfile';
 import GraphicEditorModel from '@/models/GraphicEditorModel';
 import GraphicEditorStore from './GraphicEditorStore';
@@ -9,18 +9,24 @@ import { observer } from 'mobx-react-lite';
 
 interface ShapeHierarchyProps {
   store: GraphicEditorStore;
-  handleProfileChange: (shapeId: number, key: keyof CuiElementModel, value: any) => void;
-  setSelectedShape: (shapeId: number | null) => void;
 }
 
 const ShapeHierarchy: React.FC<ShapeHierarchyProps> = ({
   store,
-  handleProfileChange,
-  setSelectedShape,
 }) => {
-  const handleSelectShape = (shape: CuiElementModel) => {
-    setSelectedShape(shape.id);
-  };
+
+  const setSelectedShape = useCallback((element: CuiElementModel | null) => {
+    store.forEach(el => {
+      if (el instanceof CuiElementModel) {
+        el.selected = false;
+      }
+    });
+  
+    if (element) {
+      element.selected = true;
+    }
+  }, [store]);
+
 
   const moveToParent = useCallback((sourceId: number, parentId: number) => {
     const sourceElement = store.getParentOrChildById(sourceId);
@@ -36,7 +42,6 @@ const ShapeHierarchy: React.FC<ShapeHierarchyProps> = ({
 
     store.draggingItem = null;
   }, [store]);
-
 
   const renderHierarchy = (items: CuiElementModel[], level = 0) => {
     return items.map(shape => (
@@ -55,7 +60,7 @@ const ShapeHierarchy: React.FC<ShapeHierarchyProps> = ({
             const draggedId = parseInt(e.dataTransfer.getData("shapeId"));
             moveToParent(draggedId, shape.id);
           }}
-          onClick={() => handleSelectShape(shape)}
+          onClick={() => setSelectedShape(shape)}
         >
           {shape.children.length > 0 && (
             <Button variant="link" size="sm" onClick={(e) => { e.stopPropagation(); shape.collapsed = !shape.collapsed; }} className="mr-2 p-0">

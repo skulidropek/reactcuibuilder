@@ -27,15 +27,6 @@ const GraphicEditor: React.FC<GraphicEditorProps> = observer(({ store }) => {
     }
   }, [store]);
 
-  const setSelectedShape = useCallback((shapeId: number | null) => {
-    if (shapeId !== null) {
-      const element = store.getParentOrChildById(shapeId);
-      if (element) {
-        element.selected = !element.selected;
-      }
-    }
-  }, [store]);
-
   return (
     <Container fluid className="bg-light p-4">
       <Row>
@@ -44,8 +35,6 @@ const GraphicEditor: React.FC<GraphicEditorProps> = observer(({ store }) => {
             <EditorControls store={store} />
             <ShapeHierarchy
               store={store}
-              handleProfileChange={handleShapeChange}
-              setSelectedShape={setSelectedShape}
             />
           </div>
         </Col>
@@ -54,7 +43,6 @@ const GraphicEditor: React.FC<GraphicEditorProps> = observer(({ store }) => {
             editorSize={store.size}
             items={store.children}
             onShapesChange={(updatedShapes) => {}}
-            setSelectedShape={setSelectedShape}
           />
         </Col>
       </Row>

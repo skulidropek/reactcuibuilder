@@ -61,6 +61,11 @@ export default abstract class TreeNodeModel {
     return null;
   }
 
+  forEach(callback: (element: TreeNodeModel) => void): void {
+    this.children.forEach(child => child.forEach(callback));
+    callback(this);
+  }
+
   abstract calculateParentPositionAndSize(): Rect;
   abstract calculatePositionAndSize(): Rect;
 }

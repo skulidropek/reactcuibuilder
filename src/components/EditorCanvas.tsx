@@ -6,14 +6,12 @@ interface EditorCanvasProps {
   editorSize: { width: number; height: number };
   items: CuiElementModel[];
   onShapesChange: (updatedShapes: CuiElementModel[]) => void;
-  setSelectedShape: (selectedShape: number | null) => void;
 }
 
 const EditorCanvas: React.FC<EditorCanvasProps> = ({
   editorSize,
   items,
   onShapesChange,
-  setSelectedShape,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -212,7 +210,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
         }
       });
 
-      setSelectedShape(shape.id);
+      // setSelectedShape(shape.id);
       onShapesChange(updatedShapes);
       setIsDragging(true);
       setDragStart({ x: e.clientX, y: e.clientY });
@@ -222,10 +220,10 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({
         return s;
       });
 
-      setSelectedShape(null);
+      // setSelectedShape(null);
       onShapesChange(updatedShapes);
     }
-  }, [getShapeAtCoordinates, getMarkerUnderMouse, setSelectedShape, onShapesChange, items]);
+  }, [getShapeAtCoordinates, getMarkerUnderMouse, onShapesChange, items]);
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (resizing) {
