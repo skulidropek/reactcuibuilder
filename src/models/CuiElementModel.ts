@@ -1,7 +1,7 @@
 import ICuiComponent from "./ICuiComponent";
 import CuiRectTransformModel, { Size, TransformValues } from "./CuiRectTransformModel";
 import TreeNodeModel, { Rect } from "./TreeNodeModel";
-import { makeObservable, observable } from "mobx";
+import { action, makeObservable, observable } from "mobx";
 
 
 export interface Marker {
@@ -56,11 +56,12 @@ export default class CuiElementModel extends TreeNodeModel {
       collapsed: observable,
       selected: observable,
       dragging: observable,
+      updateComponent: action,
     });
   }
 
   public rectTransform(): CuiRectTransformModel {
-    return this.findComponentByType<CuiRectTransformModel>()!;
+    return this.findComponentByType(CuiRectTransformModel)!;
   }
 
   calculateParentPositionAndSize(): Rect {
@@ -74,16 +75,17 @@ export default class CuiElementModel extends TreeNodeModel {
   public updateProperty<K extends keyof this>(key: K, value: this[K]): void {
     (this as any)[key] = value;
   }
-
-  findComponentByType<T extends ICuiComponent>(): T | undefined {
+  findComponentByType<T extends ICuiComponent>(componentClass: new (...args: any[]) => T): T | undefined {
     return this.components.find(
-      (component): component is T => true
+      (component): component is T => component instanceof componentClass
     ) as T | undefined;
   }
 
-  updateComponent<T extends ICuiComponent>(updatedValues: Partial<T>): CuiElementModel {
-    const component = this.findComponentByType<T>();
+  updateComponent<T extends ICuiComponent>(componentClass: new (...args: any[]) => T, updatedValues: Partial<T>): CuiElementModel {
+    const component = this.findComponentByType(componentClass);
   
+    console.log(component)
+
     if (component == null) {
       return this;
     }
@@ -95,6 +97,8 @@ export default class CuiElementModel extends TreeNodeModel {
       c.type === component.type ? updatedComponent : c
     );
   
+
+
     return this;
   }
 

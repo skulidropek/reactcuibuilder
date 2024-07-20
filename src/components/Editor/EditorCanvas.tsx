@@ -192,13 +192,13 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
       const currentX = e.clientX - canvasBounds.left;
       const currentY = store.size.height - (e.clientY - canvasBounds.top);
 
-      const rectTransform = resizing.element.findComponentByType<CuiRectTransformModel>();
+      const rectTransform = resizing.element.findComponentByType(CuiRectTransformModel);
       if (!rectTransform) return;
 
       rectTransform.resize(resizing.handle, resizing.isOffset, resizing.isEdge, currentX, currentY);
     } else if(store.draggingItem) {
 
-      const rectTransform = store.draggingItem.element.findComponentByType<CuiRectTransformModel>();
+      const rectTransform = store.draggingItem.element.findComponentByType(CuiRectTransformModel);
       if (!rectTransform) return;
 
       const dx = e.clientX - store.draggingItem.startX;

@@ -2,6 +2,7 @@ import { makeObservable, observable, action } from "mobx";
 import CuiElementModel from "../../models/CuiElementModel";
 import CuiRectTransformModel, { Size } from "../../models/CuiRectTransformModel";
 import TreeNodeModel, { Rect } from "../../models/TreeNodeModel";
+import CuiImageComponentModel from "../../models/CuiImageComponentModel";
 
 export interface DragingModel {
   element: CuiElementModel;
@@ -45,6 +46,7 @@ export default class GraphicEditorStore extends TreeNodeModel {
     );
   
     element.addComponent(new CuiRectTransformModel("0.1 0.1", "0.2 0.2", "10 10", "-10 -10", element));
+    element.addComponent(new CuiImageComponentModel(element, undefined, undefined, '1', undefined, undefined, undefined, undefined, undefined));
     this.pushChild(element);
     return element;
   };
