@@ -4,6 +4,8 @@ import { autorun } from 'mobx';
 import CuiElementModel, { Marker, ShapePosition } from '../../models/CuiElementModel';
 import CuiRectTransformModel, { Size } from '../../models/CuiRectTransformModel';
 import GraphicEditorStore from './GraphicEditorStore';
+import CuiImageComponent from '../cui/CuiImageComponent';
+import CuiImageComponentModel from '../../models/CuiImageComponentModel';
 
 interface EditorCanvasProps {
   store: GraphicEditorStore;
@@ -29,8 +31,14 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
     };
     
     const drawShape = (shape: ShapePosition) => {
-      const shapeColor = getColorById(shape.id); // получение цвета по id
-      context.fillStyle = shape.selected ? 'green' : shapeColor;
+      const cuiImageComponent = shape.element.findComponentByType(CuiImageComponentModel);
+      if(cuiImageComponent) {
+        // const shapeColor = getColorById(shape.id); // получение цвета по id
+        if(cuiImageComponent.color){
+          context.fillStyle = cuiImageComponent.color;
+        }
+      }
+
       context.globalAlpha = 1;
     
       if (shape.type === 'rect') {
