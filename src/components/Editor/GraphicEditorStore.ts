@@ -2,10 +2,17 @@ import { makeObservable, observable, action } from "mobx";
 import CuiElementModel from "../../models/CuiElementModel";
 import CuiRectTransformModel, { Size } from "../../models/CuiRectTransformModel";
 import TreeNodeModel, { Rect } from "../../models/TreeNodeModel";
+import CuiImageComponentModel from "../../models/CuiImageComponentModel";
+
+export interface DragingModel {
+  element: CuiElementModel;
+  startX: number;
+  startY: number;
+}
 
 export default class GraphicEditorStore extends TreeNodeModel {
 
-  public draggingItem: CuiElementModel | null = null;
+  public draggingItem: DragingModel | null = null;
   public selectedItem: CuiElementModel | null = null;
 
   constructor(public size: Size, children: CuiElementModel[], parent?: TreeNodeModel) {
@@ -39,6 +46,7 @@ export default class GraphicEditorStore extends TreeNodeModel {
     );
   
     element.addComponent(new CuiRectTransformModel("0.1 0.1", "0.2 0.2", "10 10", "-10 -10", element));
+    element.addComponent(new CuiImageComponentModel(element, undefined, undefined, '1', undefined, undefined, undefined, undefined, undefined));
     this.pushChild(element);
     return element;
   };
@@ -55,6 +63,31 @@ export default class GraphicEditorStore extends TreeNodeModel {
     }
 
     this.selectedItem = element;
+  };
+
+  setDragging = (dragging: DragingModel | null) => {
+    this.forEach(el => {
+      if (el instanceof CuiElementModel) {
+        el.dragging = false;
+      }
+    });
+  
+    if (dragging?.element) {
+      dragging.element.dragging = true;
+    }
+
+    this.draggingItem = dragging;
+  };
+
+  
+  desetDragging = () => {
+    this.forEach(el => {
+      if (el instanceof CuiElementModel) {
+        el.dragging = false;
+      }
+    });
+
+    this.draggingItem = null;
   };
 
   desetSelected = () => {

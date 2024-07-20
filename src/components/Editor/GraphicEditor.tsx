@@ -2,7 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { Container, Row, Col } from 'react-bootstrap';
 import EditorControls from './EditorControls';
 import ShapeHierarchy from './EditorHierarchy';
-import EditorCanvas from '../EditorCanvas';
+import EditorCanvas from './EditorCanvas';
 import GraphicEditorStore from './GraphicEditorStore';
 import { observer } from 'mobx-react-lite';
 import CuiElementModel from '../../models/CuiElementModel';

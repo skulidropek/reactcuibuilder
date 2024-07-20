@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { observer } from 'mobx-react-lite';
 import { autorun } from 'mobx';
-import CuiElementModel, { Marker, ShapePosition } from '../models/CuiElementModel';
-import CuiRectTransformModel, { Size } from '../models/CuiRectTransformModel';
-import GraphicEditorStore from './Editor/GraphicEditorStore';
+import CuiElementModel, { Marker, ShapePosition } from '../../models/CuiElementModel';
+import CuiRectTransformModel, { Size } from '../../models/CuiRectTransformModel';
+import GraphicEditorStore from './GraphicEditorStore';
+import CuiImageComponent from '../cui/CuiImageComponent';
+import CuiImageComponentModel from '../../models/CuiImageComponentModel';
 
 interface EditorCanvasProps {
   store: GraphicEditorStore;
@@ -13,7 +15,6 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
   store,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [resizing, setResizing] = useState<Marker | null>(null);
 
   const drawShapes = useCallback((context: CanvasRenderingContext2D, items: CuiElementModel[]) => {
@@ -30,8 +31,14 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
     };
     
     const drawShape = (shape: ShapePosition) => {
-      const shapeColor = getColorById(shape.id); // получение цвета по id
-      context.fillStyle = shape.selected ? 'green' : shapeColor;
+      const cuiImageComponent = shape.element.findComponentByType(CuiImageComponentModel);
+      if(cuiImageComponent) {
+        // const shapeColor = getColorById(shape.id); // получение цвета по id
+        if(cuiImageComponent.color){
+          context.fillStyle = cuiImageComponent.color;
+        }
+      }
+
       context.globalAlpha = 1;
     
       if (shape.type === 'rect') {
@@ -100,23 +107,6 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
     },
     []
   );
-
-  const updateShapePosition = useCallback((items: CuiElementModel[], clientX: number, clientY: number): CuiElementModel[] => {
-    return items.map((shape) => {
-      if (shape.selected) {
-        const rectTransform = shape.findComponentByType<CuiRectTransformModel>();
-        if (!rectTransform) return shape;
-
-        const dx = clientX - dragStart.x;
-        const dy = dragStart.y - clientY;
-
-        rectTransform.updatePosition(dx, dy, store.size);
-
-        return shape;
-      }
-      return shape;
-    });
-  }, [dragStart, store.size]);
 
   const getMarkerUnderMouse = useCallback(
     (x: number, y: number, items: CuiElementModel[]): Marker | null => {
@@ -193,8 +183,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
       setResizing(marker);
     } else if (shape) {
       store.setSelected(shape);
-      
-      setDragStart({ x: e.clientX, y: e.clientY });
+      store.setDragging({ element: shape, startX: e.clientX, startY: e.clientY });
     } else {
       store.desetSelected();
     }
@@ -211,27 +200,28 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
       const currentX = e.clientX - canvasBounds.left;
       const currentY = store.size.height - (e.clientY - canvasBounds.top);
 
-      const rectTransform = resizing.element.findComponentByType<CuiRectTransformModel>();
+      const rectTransform = resizing.element.findComponentByType(CuiRectTransformModel);
       if (!rectTransform) return;
 
       rectTransform.resize(resizing.handle, resizing.isOffset, resizing.isEdge, currentX, currentY);
     } else if(store.draggingItem) {
 
-      const rectTransform = store.draggingItem.findComponentByType<CuiRectTransformModel>();
+      const rectTransform = store.draggingItem.element.findComponentByType(CuiRectTransformModel);
       if (!rectTransform) return;
 
-      const dx = e.clientX - dragStart.x;
-      const dy = dragStart.y - e.clientY;
+      const dx = e.clientX - store.draggingItem.startX;
+      const dy = store.draggingItem.startY - e.clientY;
 
-      rectTransform.updatePosition(dx, dy, store.size);
+      rectTransform.updatePosition(dx, dy);
 
-      setDragStart({ x: e.clientX, y: e.clientY });
+      store.setDragging({ element: store.draggingItem.element, startX: e.clientX, startY: e.clientY });
+      // setDragStart({ x: e.clientX, y: e.clientY });
     }
 
-  }, [resizing, updateShapePosition]);
+  }, [resizing]);
   
   const handleMouseUp = useCallback(() => {
-    store.draggingItem = null;
+    store.desetDragging();
     setResizing(null);
   }, []);
 

@@ -169,7 +169,7 @@ export default class CuiRectTransformModel implements ICuiComponent {
     }
   }
 
-  updatePosition(dx: number, dy: number, parentSize: Size) {
+  updatePosition(dx: number, dy: number) {
     const transformValues = this.extractTransformValues();
     const offsetMinX = transformValues.offsetMin.x + dx;
     const offsetMinY = transformValues.offsetMin.y + dy;
