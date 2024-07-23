@@ -6,6 +6,8 @@ import CuiImageComponentModel from '../models/CuiImageComponentModel'; // Имп
 import { observer } from 'mobx-react-lite';
 import ICuiComponent from '@/models/ICuiComponent';
 import CuiImageComponent from './cui/CuiImageComponent';
+import { Button, Card } from 'react-bootstrap';
+import { FaMinus, FaPlus } from 'react-icons/fa';
 
 interface ElementSettingProps {
   element: CuiElementModel;
@@ -53,9 +55,17 @@ const ElementSetting: React.FC<ElementSettingProps> = ({ element }) => {
   return (
     <div>
       {element?.components?.map((component, index) => (
-        <div key={index}>
-          {renderComponent(component)}
-        </div>
+        <Card key={index} className="mb-2">
+          <Card.Header className="d-flex justify-content-between align-items-center">
+            <span>{component.type}</span>
+            <Button variant="link" size="sm">
+              <FaMinus />
+            </Button>
+          </Card.Header>
+          <Card.Body>
+            {renderComponent(component)}
+          </Card.Body>
+        </Card>
       ))}
     </div>
   );
