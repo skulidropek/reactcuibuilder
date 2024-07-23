@@ -2,9 +2,8 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { observer } from 'mobx-react-lite';
 import { autorun } from 'mobx';
 import CuiElementModel, { Marker, ShapePosition } from '../../models/CuiElementModel';
-import CuiRectTransformModel, { Size } from '../../models/CuiRectTransformModel';
+import CuiRectTransformModel from '../../models/CuiRectTransformModel';
 import GraphicEditorStore from './GraphicEditorStore';
-import CuiImageComponent from '../cui/CuiImageComponent';
 import CuiImageComponentModel from '../../models/CuiImageComponentModel';
 
 interface EditorCanvasProps {
@@ -16,52 +15,71 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [resizing, setResizing] = useState<Marker | null>(null);
+  const [imagesLoaded, setImagesLoaded] = useState(false);
+  const preloadedImages = useRef(new Map<string, HTMLImageElement>()).current;
+
+  const preloadImages = useCallback(async (items: CuiElementModel[]) => {
+    const promises: Promise<void>[] = items.map((item) => {
+      const cuiImageComponent = item.findComponentByType(CuiImageComponentModel);
+      if (cuiImageComponent?.png && !preloadedImages.has(cuiImageComponent.png)) {
+        return new Promise<void>((resolve) => {
+          const image = new Image();
+          image.src = cuiImageComponent.png as string;
+          image.onload = () => {
+            preloadedImages.set(cuiImageComponent.png as string, image);
+            resolve();
+          };
+        });
+      }
+      return Promise.resolve();
+    });
+
+    await Promise.all(promises);
+    setImagesLoaded(true);
+  }, [preloadedImages]);
 
   const drawShapes = useCallback((context: CanvasRenderingContext2D, items: CuiElementModel[]) => {
-    const shapePositions = items.map(shape => shape.generateShapePositions()).filter((position): position is ShapePosition => position !== null);
-
     context.clearRect(0, 0, store.size.width, store.size.height);
     context.save();
     context.translate(0, store.size.height);
     context.scale(1, -1);
-
-    const getColorById = (id: number): string => {
-      const hue = id * 137.508; // 137.508 - произвольное число, для равномерного распределения цветов
-      return `hsl(${hue % 360}, 50%, 50%)`; // Преобразование в цветовую модель HSL
-    };
     
-    const drawShape = (shape: ShapePosition) => {
-      const cuiImageComponent = shape.element.findComponentByType(CuiImageComponentModel);
-      if(cuiImageComponent) {
-        // const shapeColor = getColorById(shape.id); // получение цвета по id
-        if(cuiImageComponent.color){
-          context.fillStyle = cuiImageComponent.color;
-        }
+    const drawShape = (element: CuiElementModel) => {
+      const shape = element.generateShapePositions();
+      if (shape == null) return;
+
+      const cuiImageComponent = element.findComponentByType(CuiImageComponentModel);
+      if (cuiImageComponent?.color) {
+        context.fillStyle = cuiImageComponent.color;
       }
 
       context.globalAlpha = 1;
     
-      if (shape.type === 'rect') {
+      if (cuiImageComponent?.png) {
+        const image = preloadedImages.get(cuiImageComponent.png as string);
+        if (image) {
+          context.save();
+          context.scale(1, -1);
+          context.drawImage(image, shape.x, -shape.y - shape.height, shape.width, shape.height);
+          context.restore();
+        }
+      } else {
         context.fillRect(shape.x, shape.y, shape.width, shape.height);
-      } else if (shape.type === 'circle') {
-        context.beginPath();
-        context.arc(shape.x + shape.width / 2, shape.y + shape.height / 2, Math.min(shape.width, shape.height) / 2, 0, 2 * Math.PI);
-        context.fill();
       }
     
-      if (shape.selected && shape.anchor && shape.markers) {
+      if (shape.anchor && shape.markers) {
         context.strokeStyle = 'blue';
         context.setLineDash([5, 5]);
         context.strokeRect(shape.anchor.x, shape.anchor.y, shape.anchor.width, shape.anchor.height);
         context.setLineDash([]);
-    
+
         shape.markers.blue.forEach(marker => drawMarker(marker.x, marker.y, 'blue'));
         shape.markers.red.forEach(marker => drawMarker(marker.x, marker.y, 'red'));
         shape.markers.green.forEach(marker => drawMarker(marker.x, marker.y, 'green'));
         shape.markers.yellow.forEach(marker => drawMarker(marker.x, marker.y, 'yellow'));
       }
     
-      shape.children.forEach(drawShape);
+      element.children.forEach(drawShape);
     };
     
     const drawMarker = (x: number, y: number, color: string) => {
@@ -69,19 +87,19 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
       context.fillRect(x - 5, y - 5, 10, 10);
     };
 
-    shapePositions.forEach(drawShape);
+    items.forEach(drawShape);
 
     context.restore();
-  }, [store.size]);
+  }, [preloadedImages, store.size]);
 
   const getShapeAtCoordinates = useCallback(
     (x: number, y: number, items: CuiElementModel[]): CuiElementModel | null => {
       const findShape = (shapePosition: ShapePosition, shape: CuiElementModel): CuiElementModel | null => {
         const { x: shapeX, y: shapeY, width, height, children } = shapePosition;
-  
+
         const withinX = x >= shapeX && x <= shapeX + width;
         const withinY = y >= shapeY && y <= shapeY + height;
-  
+
         for (const child of children) {
           const foundChild = findShape(child, shape.children.find(c => c.id === child.id)!);
           if (foundChild) return foundChild;
@@ -90,13 +108,12 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
         if (withinX && withinY) {
           return shape;
         }
-  
+
         return null;
       };
-  
+
       for (let i = items.length - 1; i >= 0; i--) {
         const shapePosition = items[i].generateShapePositions();
-
         if (!shapePosition) continue;
 
         const foundShape = findShape(shapePosition, items[i]);
@@ -111,34 +128,34 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
   const getMarkerUnderMouse = useCallback(
     (x: number, y: number, items: CuiElementModel[]): Marker | null => {
       const isClose = (x1: number, y1: number, x2: number, y2: number) => Math.abs(x1 - x2) < 10 && Math.abs(y1 - y2) < 10;
-  
+
       const findMarker = (shape: ShapePosition): Marker | null => {
         const { x: shapeX, y: shapeY, width: shapeWidth, height: shapeHeight, anchor, markers } = shape;
-  
+
         if (anchor) {
           const { x: anchorX, y: anchorY, width: anchorWidth, height: anchorHeight } = anchor;
-  
+
           if (isClose(x, y, anchorX, anchorY)) return { handle: 'topLeft', isOffset: false, isEdge: false, startX: x, startY: y, element: shape.element };
           if (isClose(x, y, anchorX + anchorWidth, anchorY)) return { handle: 'topRight', isOffset: false, isEdge: false, startX: x, startY: y, element: shape.element };
           if (isClose(x, y, anchorX, anchorY + anchorHeight)) return { handle: 'bottomLeft', isOffset: false, isEdge: false, startX: x, startY: y, element: shape.element };
           if (isClose(x, y, anchorX + anchorWidth, anchorY + anchorHeight)) return { handle: 'bottomRight', isOffset: false, isEdge: false, startX: x, startY: y, element: shape.element };
-  
+
           if (isClose(x, y, anchorX + anchorWidth / 2, anchorY)) return { handle: 'top', isOffset: false, isEdge: true, startX: x, startY: y, element: shape.element };
           if (isClose(x, y, anchorX + anchorWidth, anchorY + anchorHeight / 2)) return { handle: 'right', isOffset: false, isEdge: true, startX: x, startY: y, element: shape.element };
           if (isClose(x, y, anchorX + anchorWidth / 2, anchorY + anchorHeight)) return { handle: 'bottom', isOffset: false, isEdge: true, startX: x, startY: y, element: shape.element };
           if (isClose(x, y, anchorX, anchorY + anchorHeight / 2)) return { handle: 'left', isOffset: false, isEdge: true, startX: x, startY: y, element: shape.element };
         }
-  
+
         if (isClose(x, y, shapeX, shapeY)) return { handle: 'topLeft', isOffset: true, isEdge: false, startX: x, startY: y, element: shape.element };
         if (isClose(x, y, shapeX + shapeWidth, shapeY)) return { handle: 'topRight', isOffset: true, isEdge: false, startX: x, startY: y, element: shape.element };
         if (isClose(x, y, shapeX, shapeY + shapeHeight)) return { handle: 'bottomLeft', isOffset: true, isEdge: false, startX: x, startY: y, element: shape.element };
         if (isClose(x, y, shapeX + shapeWidth, shapeY + shapeHeight)) return { handle: 'bottomRight', isOffset: true, isEdge: false, startX: x, startY: y, element: shape.element };
-  
+
         if (isClose(x, y, shapeX + shapeWidth / 2, shapeY)) return { handle: 'top', isOffset: true, isEdge: true, startX: x, startY: y, element: shape.element };
         if (isClose(x, y, shapeX + shapeWidth, shapeY + shapeHeight / 2)) return { handle: 'right', isOffset: true, isEdge: true, startX: x, startY: y, element: shape.element };
         if (isClose(x, y, shapeX + shapeWidth / 2, shapeY + shapeHeight)) return { handle: 'bottom', isOffset: true, isEdge: true, startX: x, startY: y, element: shape.element };
         if (isClose(x, y, shapeX, shapeY + shapeHeight / 2)) return { handle: 'left', isOffset: true, isEdge: true, startX: x, startY: y, element: shape.element };
-  
+
         if (markers) {
           for (const markerType of ['blue', 'red', 'green', 'yellow'] as const) {
             for (const marker of markers[markerType]) {
@@ -148,23 +165,23 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
             }
           }
         }
-  
+
         for (const child of shape.children) {
           const marker = findMarker(child);
           if (marker) return marker;
         }
-  
+
         return null;
       };
-  
+
       const shapePositions = items.map(shape => shape.generateShapePositions()).filter((position): position is ShapePosition => position !== null);
-  
+
       for (let i = shapePositions.length - 1; i >= 0; i--) {
         const marker = findMarker(shapePositions[i]);
 
         if (marker?.element.selected && marker) return marker;
       }
-  
+
       return null;
     },
     [store.children]
@@ -190,8 +207,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
   }, [getShapeAtCoordinates, getMarkerUnderMouse, store.children, store.size.height]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-
-    if(!store.selectedItem) return;
+    if (!store.selectedItem) return;
 
     const canvasBounds = canvasRef.current?.getBoundingClientRect();
     if (!canvasBounds) return;
@@ -204,8 +220,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
       if (!rectTransform) return;
 
       rectTransform.resize(resizing.handle, resizing.isOffset, resizing.isEdge, currentX, currentY);
-    } else if(store.draggingItem) {
-
+    } else if (store.draggingItem) {
       const rectTransform = store.draggingItem.element.findComponentByType(CuiRectTransformModel);
       if (!rectTransform) return;
 
@@ -215,15 +230,13 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
       rectTransform.updatePosition(dx, dy);
 
       store.setDragging({ element: store.draggingItem.element, startX: e.clientX, startY: e.clientY });
-      // setDragStart({ x: e.clientX, y: e.clientY });
     }
+  }, [resizing, store.draggingItem]);
 
-  }, [resizing]);
-  
   const handleMouseUp = useCallback(() => {
     store.desetDragging();
     setResizing(null);
-  }, []);
+  }, [store]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -238,6 +251,10 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
 
     return () => dispose();
   }, [store.children, store.size, drawShapes]);
+
+  useEffect(() => {
+    preloadImages(store.children);
+  }, [store.children, preloadImages]);
 
   return (
     <canvas
