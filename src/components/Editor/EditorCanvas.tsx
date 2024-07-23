@@ -18,38 +18,29 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
   const [resizing, setResizing] = useState<Marker | null>(null);
 
   const drawShapes = useCallback((context: CanvasRenderingContext2D, items: CuiElementModel[]) => {
-    const shapePositions = items.map(shape => shape.generateShapePositions()).filter((position): position is ShapePosition => position !== null);
 
     context.clearRect(0, 0, store.size.width, store.size.height);
     context.save();
     context.translate(0, store.size.height);
     context.scale(1, -1);
-
-    const getColorById = (id: number): string => {
-      const hue = id * 137.508; // 137.508 - произвольное число, для равномерного распределения цветов
-      return `hsl(${hue % 360}, 50%, 50%)`; // Преобразование в цветовую модель HSL
-    };
     
-    const drawShape = (shape: ShapePosition) => {
-      const cuiImageComponent = shape.element.findComponentByType(CuiImageComponentModel);
-      if(cuiImageComponent) {
-        // const shapeColor = getColorById(shape.id); // получение цвета по id
-        if(cuiImageComponent.color){
-          context.fillStyle = cuiImageComponent.color;
-        }
+    const drawShape = (element: CuiElementModel) => {
+      const shape = element.generateShapePositions();
+
+      if (shape == null){
+        return;
+      }
+
+      const cuiImageComponent = element.findComponentByType(CuiImageComponentModel);
+      if(cuiImageComponent?.color){
+        context.fillStyle = cuiImageComponent.color;
       }
 
       context.globalAlpha = 1;
     
-      if (shape.type === 'rect') {
-        context.fillRect(shape.x, shape.y, shape.width, shape.height);
-      } else if (shape.type === 'circle') {
-        context.beginPath();
-        context.arc(shape.x + shape.width / 2, shape.y + shape.height / 2, Math.min(shape.width, shape.height) / 2, 0, 2 * Math.PI);
-        context.fill();
-      }
+      context.fillRect(shape.x, shape.y, shape.width, shape.height);
     
-      if (shape.selected && shape.anchor && shape.markers) {
+      if (shape.anchor && shape.markers) {
         context.strokeStyle = 'blue';
         context.setLineDash([5, 5]);
         context.strokeRect(shape.anchor.x, shape.anchor.y, shape.anchor.width, shape.anchor.height);
@@ -61,7 +52,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
         shape.markers.yellow.forEach(marker => drawMarker(marker.x, marker.y, 'yellow'));
       }
     
-      shape.children.forEach(drawShape);
+      element.children.forEach(drawShape);
     };
     
     const drawMarker = (x: number, y: number, color: string) => {
@@ -69,7 +60,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
       context.fillRect(x - 5, y - 5, 10, 10);
     };
 
-    shapePositions.forEach(drawShape);
+    items.forEach(drawShape);
 
     context.restore();
   }, [store.size]);
