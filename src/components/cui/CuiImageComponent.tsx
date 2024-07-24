@@ -99,10 +99,12 @@ const CuiImageComponent: React.FC<CuiImageComponentProps> = ({ element, onChange
           value={element.imageType || ImageType.Simple}
           onChange={handleInputChange}
         >
-          {Object.values(ImageType).map(type => (
-            <option key={type} value={type}>
-              {type}
-            </option>
+          {Object.keys(ImageType)
+            .filter(key => isNaN(Number(key)))  // Фильтруем только строковые ключи
+            .map(type => (
+              <option key={type} value={ImageType[type as keyof typeof ImageType]}>
+                {type}
+              </option>
           ))}
         </Form.Control>
       </Form.Group>
