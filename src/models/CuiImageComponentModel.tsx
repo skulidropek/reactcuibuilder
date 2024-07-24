@@ -55,6 +55,24 @@ export default class CuiImageComponentModel implements ICuiComponent {
   }
 
   ToCode(): string {
-    return `new CuiImageComponent { Color = "${this.color}", Material = "${this.material}", Sprite = "${this.sprite}", ImageType = ${this.imageType}, Png = "${this.png}", FadeIn = ${this.fadeIn}, ItemId = ${this.itemId}, SkinId = ${this.skinId} }`
-  }
+    const components = [];
+
+    if (this.color != null) {
+        const colorValues = this.color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/);
+        if (colorValues) {
+            const [_, r, g, b, a] = colorValues;
+            components.push(`Color = "${Number(r) / 255} ${Number(g) / 255} ${Number(b) / 255} ${a}"`);
+        }
+    }
+
+    if (this.material != null) components.push(`Material = "${this.material}"`);
+    if (this.sprite != null) components.push(`Sprite = "${this.sprite}"`);
+    if (this.imageType != null) components.push(`ImageType = ${this.imageType}`);
+    if (this.png != null) components.push(`Png = "${this.png}"`);
+    if (this.fadeIn != null) components.push(`FadeIn = ${this.fadeIn}`);
+    if (this.itemId != null) components.push(`ItemId = ${this.itemId}`);
+    if (this.skinId != null) components.push(`SkinId = ${this.skinId}`);
+
+    return `new CuiImageComponent { ${components.join(', ')} }`;
+}
 }
