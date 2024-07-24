@@ -17,26 +17,23 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
   const [resizing, setResizing] = useState<Marker | null>(null);
   const preloadedImages = useRef(new Map<string, HTMLImageElement>()).current;
 
-  const preloadImages = useCallback(async (items: CuiElementModel[]) => {
-    const promises: Promise<void>[] = items.map((item) => {
+  const preloadImages = useCallback((items: CuiElementModel[]) => {
+    items.forEach((item) => {
       const cuiImageComponent = item.findComponentByType(CuiImageComponentModel);
       if (cuiImageComponent?.png && !preloadedImages.has(cuiImageComponent.png)) {
-        return new Promise<void>((resolve) => {
           const image = new Image();
           image.src = cuiImageComponent.png as string;
           image.onload = () => {
             preloadedImages.set(cuiImageComponent.png as string, image);
-            resolve();
           };
-        });
       }
-      return Promise.resolve();
     });
-
-    await Promise.all(promises);
-  }, [preloadedImages]);
+  }, [preloadedImages, store.children]);
 
   const drawShapes = useCallback((context: CanvasRenderingContext2D, items: CuiElementModel[]) => {
+
+    preloadImages(store.children);
+    
     context.clearRect(0, 0, context.canvas.width, context.canvas.height);
     context.save();
     context.translate(0, context.canvas.height);
@@ -289,6 +286,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
   }, [store]);
 
   useEffect(() => {
+    console.log('useEffect');
     const canvas = canvasRef.current;
     const dispose = autorun(() => {
       if (canvas) {
@@ -300,19 +298,20 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
     });
 
     return () => dispose();
-  }, [store.children, store.size, drawShapes]);
+  }, [store.children, store.size, drawShapes, preloadedImages]);
 
-  useEffect(() => {
-    preloadImages(store.children).then(() => {
-      const canvas = canvasRef.current;
-      if (canvas) {
-        const context = canvas.getContext('2d');
-        if (context) {
-          drawShapes(context, store.children);
-        }
-      }
-    });
-  }, [store.children, preloadImages, drawShapes]);
+  // useEffect(() => {
+  //   console.log('useEffect1');
+  //   {
+  //     const canvas = canvasRef.current;
+  //     if (canvas) {
+  //       const context = canvas.getContext('2d');
+  //       if (context) {
+  //         drawShapes(context, store.children);
+  //       }
+  //     }
+  //   });
+  // }, [store.children, preloadImages, drawShapes]);
 
   return (
     <canvas
