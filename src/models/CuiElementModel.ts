@@ -2,6 +2,8 @@ import ICuiComponent from "./ICuiComponent";
 import CuiRectTransformModel, { Size, TransformValues } from "./CuiRectTransformModel";
 import TreeNodeModel, { Rect } from "./TreeNodeModel";
 import { action, makeObservable, observable } from "mobx";
+import GraphicEditor from "../components/Editor/GraphicEditor";
+import GraphicEditorStore from "../components/Editor/GraphicEditorStore";
 
 
 export interface Marker {
@@ -101,6 +103,20 @@ export default class CuiElementModel extends TreeNodeModel {
 
     return this;
   }
+
+  ToCode(): string {
+    return `container.Add(new CuiElement
+{
+Name = "${this.id}",
+Parent = "${this?.parent instanceof GraphicEditorStore ? "Overlay" : this.parent?.id}",
+Components = {
+  ${this.components.map(c => c.ToCode()).join(',\n')}
+}
+});
+
+${this.children?.map(s => s?.ToCode()).join(',\n')}
+`;
+}
 
   addComponent<T extends ICuiComponent>(componentClass : T): CuiElementModel {
   

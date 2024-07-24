@@ -53,4 +53,8 @@ export default class CuiImageComponentModel implements ICuiComponent {
       skinId: observable,
     });
   }
+
+  ToCode(): string {
+    return `new CuiImageComponent { Color = "${this.color}", Material = "${this.material}", Sprite = "${this.sprite}", ImageType = ${this.imageType}, Png = "${this.png}", FadeIn = ${this.fadeIn}, ItemId = ${this.itemId}, SkinId = ${this.skinId} }`
+  }
 }
