@@ -1,5 +1,7 @@
 import { makeObservable, observable, action } from "mobx";
 import CuiElementModel from "./CuiElementModel";
+import CuiRectTransformModel, { Size } from "../models/CuiRectTransformModel";
+import CuiImageComponentModel from "../models/CuiImageComponentModel";
 
 export class Rect {
   constructor(
@@ -33,7 +35,25 @@ export default abstract class TreeNodeModel {
     element._parent = this;
     this.children.push(element);
   }
- 
+  
+  pushNewElement = (type: 'rect' | 'circle' = 'rect'): CuiElementModel => {
+    const element = new CuiElementModel(
+      type,
+      undefined,  // visible
+      undefined,  // children
+      undefined,  // components
+      undefined,  // collapsed
+      undefined,  // selected
+      undefined,  // dragging
+      this        // parent
+    );
+  
+    element.addComponent(new CuiRectTransformModel("0.1 0.1", "0.2 0.2", "10 10", "-10 -10", element));
+    element.addComponent(new CuiImageComponentModel(element, undefined, undefined, '1', undefined, undefined, undefined, undefined, undefined));
+    this.pushChild(element);
+    return element;
+  };
+
   private deleteChild(element: CuiElementModel) {
     const index = this.children.indexOf(element);
     if (index !== -1) {
