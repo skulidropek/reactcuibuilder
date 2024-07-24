@@ -70,9 +70,9 @@ const EditorControls: React.FC<EditorControlsProps> = ({ store }) => {
         <Button variant="primary" onClick={() => store.pushNewElement('rect')} className="mr-2 mb-2">
           <FaPlus className="mr-2" /> Rectangle
         </Button>
-        <Button variant="primary" onClick={() => store.pushNewElement('circle')} className="mr-2 mb-2">
+        {/* <Button variant="primary" onClick={() => store.pushNewElement('circle')} className="mr-2 mb-2">
           <FaPlus className="mr-2" /> Circle
-        </Button>
+        </Button> */}
         <Button variant="secondary" onClick={exportToPlugin} className="mb-2">
           Export to C#
         </Button>
