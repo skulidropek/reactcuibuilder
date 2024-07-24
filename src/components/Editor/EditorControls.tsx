@@ -10,6 +10,7 @@ interface EditorControlsProps {
 
 const plugin = `using System.Collections.Generic;
 using Oxide.Core.Plugins;
+using Oxide.Game.Rust.Cui;
 using UnityEngine;
 
 namespace Oxide.Plugins
