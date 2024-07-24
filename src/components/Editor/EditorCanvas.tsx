@@ -4,7 +4,7 @@ import { autorun, observable } from 'mobx';
 import CuiElementModel, { Marker, ShapePosition } from '../../models/CuiElementModel';
 import CuiRectTransformModel from '../../models/CuiRectTransformModel';
 import GraphicEditorStore from './GraphicEditorStore';
-import CuiImageComponentModel from '../../models/CuiImageComponentModel';
+import CuiImageComponentModel, { ImageType } from '../../models/CuiImageComponentModel';
 
 interface EditorCanvasProps {
   store: GraphicEditorStore;
@@ -37,59 +37,111 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
   }, [preloadedImages]);
 
   const drawShapes = useCallback((context: CanvasRenderingContext2D, items: CuiElementModel[]) => {
-    context.clearRect(0, 0, store.size.width, store.size.height);
+    context.clearRect(0, 0, context.canvas.width, context.canvas.height);
     context.save();
-    context.translate(0, store.size.height);
+    context.translate(0, context.canvas.height);
     context.scale(1, -1);
     
     const drawShape = (element: CuiElementModel) => {
       const shape = element.generateShapePositions();
-      if (shape == null) return;
-
+      if (!shape) return;
+  
+      console.log('123')
       const cuiImageComponent = element.findComponentByType(CuiImageComponentModel);
       if (cuiImageComponent?.color) {
         context.fillStyle = cuiImageComponent.color;
       }
-
+  
       context.globalAlpha = 1;
-    
+      
       if (cuiImageComponent?.png) {
-        const image = preloadedImages.get(cuiImageComponent.png as string);
+        const image = preloadedImages.get(cuiImageComponent.png as string) as HTMLImageElement;
         if (image) {
           context.save();
           context.scale(1, -1);
-          context.drawImage(image, shape.x, -shape.y - shape.height, shape.width, shape.height);
+          
+          switch (cuiImageComponent.imageType) {
+            case ImageType.Sliced:
+              drawSlicedImage(context, image, shape);
+              break;
+            case ImageType.Tiled:
+              drawTiledImage(context, image, shape);
+              break;
+            case ImageType.Filled:
+              drawFilledImage(context, image, shape);
+              break;
+            default: //ImageType.Simple
+              context.drawImage(image, shape.x, -shape.y - shape.height, shape.width, shape.height);
+              break;
+          }
+  
           context.restore();
         }
       } else {
         context.fillRect(shape.x, shape.y, shape.width, shape.height);
       }
-    
+  
       if (shape.anchor && shape.markers) {
         context.strokeStyle = 'blue';
         context.setLineDash([5, 5]);
         context.strokeRect(shape.anchor.x, shape.anchor.y, shape.anchor.width, shape.anchor.height);
         context.setLineDash([]);
-
-        shape.markers.blue.forEach(marker => drawMarker(marker.x, marker.y, 'blue'));
-        shape.markers.red.forEach(marker => drawMarker(marker.x, marker.y, 'red'));
-        shape.markers.green.forEach(marker => drawMarker(marker.x, marker.y, 'green'));
-        shape.markers.yellow.forEach(marker => drawMarker(marker.x, marker.y, 'yellow'));
+  
+        shape.markers.blue.forEach(marker => drawMarker(context, marker.x, marker.y, 'blue'));
+        shape.markers.red.forEach(marker => drawMarker(context, marker.x, marker.y, 'red'));
+        shape.markers.green.forEach(marker => drawMarker(context, marker.x, marker.y, 'green'));
+        shape.markers.yellow.forEach(marker => drawMarker(context, marker.x, marker.y, 'yellow'));
       }
-    
+  
       element.children.forEach(drawShape);
     };
     
-    const drawMarker = (x: number, y: number, color: string) => {
+    const drawMarker = (context: CanvasRenderingContext2D, x: number, y: number, color: string) => {
       context.fillStyle = color;
       context.fillRect(x - 5, y - 5, 10, 10);
     };
-
+  
     items.forEach(drawShape);
-
+  
     context.restore();
-  }, [preloadedImages, store.size]);
-
+  }, [preloadedImages]);
+  
+  const drawSlicedImage = (context: CanvasRenderingContext2D, image: HTMLImageElement, shape: ShapePosition) => {
+    const { x, y, width, height } = shape;
+    const borderWidth = 20; // ширина границы
+    const borderHeight = 20; // высота границы
+    
+    // Центральная часть
+    context.drawImage(image, borderWidth, borderHeight, image.width - 2 * borderWidth, image.height - 2 * borderHeight,
+      x + borderWidth, y + borderHeight, width - 2 * borderWidth, height - 2 * borderHeight);
+    
+    // Четыре угла
+    context.drawImage(image, 0, 0, borderWidth, borderHeight, x, y, borderWidth, borderHeight);
+    context.drawImage(image, image.width - borderWidth, 0, borderWidth, borderHeight, x + width - borderWidth, y, borderWidth, borderHeight);
+    context.drawImage(image, 0, image.height - borderHeight, borderWidth, borderHeight, x, y + height - borderHeight, borderWidth, borderHeight);
+    context.drawImage(image, image.width - borderWidth, image.height - borderHeight, borderWidth, borderHeight, x + width - borderWidth, y + height - borderHeight, borderWidth, borderHeight);
+    
+    // Боковые стороны
+    context.drawImage(image, borderWidth, 0, image.width - 2 * borderWidth, borderHeight, x + borderWidth, y, width - 2 * borderWidth, borderHeight);
+    context.drawImage(image, borderWidth, image.height - borderHeight, image.width - 2 * borderWidth, borderHeight, x + borderWidth, y + height - borderHeight, width - 2 * borderWidth, borderHeight);
+    context.drawImage(image, 0, borderHeight, borderWidth, image.height - 2 * borderHeight, x, y + borderHeight, borderWidth, height - 2 * borderHeight);
+    context.drawImage(image, image.width - borderWidth, borderHeight, borderWidth, image.height - 2 * borderHeight, x + width - borderWidth, y + borderHeight, borderWidth, height - 2 * borderHeight);
+  };
+  
+  const drawTiledImage = (context: CanvasRenderingContext2D, image: HTMLImageElement, shape: ShapePosition) => {
+    const pattern = context.createPattern(image, 'repeat');
+    if (pattern) {
+      context.fillStyle = pattern;
+      context.fillRect(shape.x, -shape.y - shape.height, shape.width, shape.height);
+    }
+  };
+  
+  const drawFilledImage = (context: CanvasRenderingContext2D, image: HTMLImageElement, shape: ShapePosition) => {
+    const { x, y, width, height } = shape;
+    context.drawImage(image, x, y, width, height);
+  };
+  
+  
   const getShapeAtCoordinates = useCallback(
     (x: number, y: number, items: CuiElementModel[]): CuiElementModel | null => {
       const findShape = (shapePosition: ShapePosition, shape: CuiElementModel): CuiElementModel | null => {
