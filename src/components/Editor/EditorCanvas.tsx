@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { observer } from 'mobx-react-lite';
-import { autorun } from 'mobx';
+import { autorun, observable } from 'mobx';
 import CuiElementModel, { Marker, ShapePosition } from '../../models/CuiElementModel';
 import CuiRectTransformModel from '../../models/CuiRectTransformModel';
 import GraphicEditorStore from './GraphicEditorStore';
@@ -15,7 +15,6 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [resizing, setResizing] = useState<Marker | null>(null);
-  const [imagesLoaded, setImagesLoaded] = useState(false);
   const preloadedImages = useRef(new Map<string, HTMLImageElement>()).current;
 
   const preloadImages = useCallback(async (items: CuiElementModel[]) => {
@@ -35,7 +34,6 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
     });
 
     await Promise.all(promises);
-    setImagesLoaded(true);
   }, [preloadedImages]);
 
   const drawShapes = useCallback((context: CanvasRenderingContext2D, items: CuiElementModel[]) => {
@@ -253,8 +251,16 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
   }, [store.children, store.size, drawShapes]);
 
   useEffect(() => {
-    preloadImages(store.children);
-  }, [store.children, preloadImages]);
+    preloadImages(store.children).then(() => {
+      const canvas = canvasRef.current;
+      if (canvas) {
+        const context = canvas.getContext('2d');
+        if (context) {
+          drawShapes(context, store.children);
+        }
+      }
+    });
+  }, [store.children, preloadImages, drawShapes]);
 
   return (
     <canvas

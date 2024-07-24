@@ -42,6 +42,15 @@ export default class CuiRectTransformModel implements ICuiComponent {
       offsetMax: observable,
     });
   }
+  ToCode(): string {
+    return `new CuiRectTransformComponent 
+    { 
+      AnchorMin = "${this.anchorMin}",
+      AnchorMax = "${this.anchorMax}",
+      OffsetMin = "${this.offsetMin}",
+      OffsetMax = "${this.offsetMax}" 
+    }`
+  }
 
   extractTransformValues(): TransformValues {
     const [anchorMinX, anchorMinY] = this.anchorMin.split(' ').map(Number);

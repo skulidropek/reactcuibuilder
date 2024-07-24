@@ -42,22 +42,16 @@ const ElementProfile = forwardRef<HTMLDivElement, ElementProfileProps>(({ elemen
             <FaArrowsAlt />
           </Button>
         </div>
-        <ElementSetting element={element} />
         <div className="mt-3">
-          <b>Components</b>
-          {element.components?.map((component: any, index: number) => (
-            <Card key={index} className="mb-2">
-              <Card.Header className="d-flex justify-content-between align-items-center">
-                <span>{component.name}</span>
-                <Button variant="link" size="sm">
-                  <FaPlus />
-                </Button>
-              </Card.Header>
-              <Card.Body>
-                <ElementSetting element={component} />
-              </Card.Body>
-            </Card>
-          ))}
+          <Card className="mb-2">
+            <Card.Header className="d-flex justify-content-between align-items-center">
+              <b>Components</b>      
+              <Button variant="link" size="sm">
+                <FaPlus />
+              </Button>
+            </Card.Header>
+          </Card>      
+          <ElementSetting element={element} />
         </div>
       </Card.Body>
     </Card>
