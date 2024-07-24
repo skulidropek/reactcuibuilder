@@ -85,9 +85,6 @@ export default class CuiElementModel extends TreeNodeModel {
 
   updateComponent<T extends ICuiComponent>(componentClass: new (...args: any[]) => T, updatedValues: Partial<T>): CuiElementModel {
     const component = this.findComponentByType(componentClass);
-  
-    console.log(component)
-
     if (component == null) {
       return this;
     }
