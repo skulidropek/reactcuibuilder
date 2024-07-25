@@ -2,6 +2,7 @@ import { makeObservable, observable, action } from "mobx";
 import CuiElementModel from "./CuiElementModel";
 import CuiRectTransformModel, { Size } from "../models/CuiRectTransformModel";
 import CuiImageComponentModel from "../models/CuiImageComponentModel";
+import CuiButtonComponentModel from "./CuiButtonComponentModel";
 
 export class Rect {
   constructor(
@@ -50,6 +51,8 @@ export default abstract class TreeNodeModel {
   
     element.addComponent(new CuiRectTransformModel("0.1 0.1", "0.2 0.2", "10 10", "-10 -10", element));
     element.addComponent(new CuiImageComponentModel(element, undefined, undefined, '1', undefined, undefined, undefined, undefined, undefined));
+    element.addComponent(new CuiButtonComponentModel(element));
+
     this.pushChild(element);
     return element;
   };
@@ -84,6 +87,11 @@ export default abstract class TreeNodeModel {
   forEach(callback: (element: TreeNodeModel) => void): void {
     this.children.forEach(child => child.forEach(callback));
     callback(this);
+  }
+
+  map(callback: (element: TreeNodeModel) => any): any[] {
+    const results = this.children.map(child => child.map(callback));
+    return results.flat().concat(callback(this));
   }
 
   abstract calculateParentPositionAndSize(): Rect;
