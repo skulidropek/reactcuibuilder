@@ -37,7 +37,7 @@ export default abstract class TreeNodeModel {
     this.children.push(element);
   }
   
-  pushNewElement = (type: 'rect' | 'circle' = 'rect'): CuiElementModel => {
+  pushNewElement = (type: 'CuiButton' | 'CuiPanel' | 'CuiLabel' | 'CuiElement' = 'CuiPanel'): CuiElementModel => {
     const element = new CuiElementModel(
       type,
       undefined,  // visible
@@ -48,10 +48,17 @@ export default abstract class TreeNodeModel {
       undefined,  // dragging
       this        // parent
     );
-  
+
     element.addComponent(new CuiRectTransformModel("0.1 0.1", "0.2 0.2", "10 10", "-10 -10", element));
-    element.addComponent(new CuiImageComponentModel(element, undefined, undefined, '1', undefined, undefined, undefined, undefined, undefined));
-    element.addComponent(new CuiButtonComponentModel(element));
+
+    switch(type) {
+      case 'CuiButton':
+        element.addComponent(new CuiButtonComponentModel(element));
+        break;
+      case 'CuiPanel':
+        element.addComponent(new CuiImageComponentModel(element, undefined, undefined, '1', undefined, undefined, undefined, undefined, undefined));
+        break;
+    }
 
     this.pushChild(element);
     return element;

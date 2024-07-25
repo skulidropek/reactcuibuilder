@@ -42,7 +42,7 @@ export interface ShapePosition {
 export default class CuiElementModel extends TreeNodeModel {
 
   constructor(
-    public type: 'rect' | 'circle',
+    public type: 'CuiButton' | 'CuiPanel' | 'CuiLabel' | 'CuiElement',
     public visible: boolean = true,
     children: CuiElementModel[] = [],
     public components: ICuiComponent[] = [],

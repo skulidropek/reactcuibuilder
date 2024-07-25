@@ -97,8 +97,11 @@ const EditorControls: React.FC<EditorControlsProps> = ({ store }) => {
         />
       </Form.Group>
       <div className="d-flex justify-content-between">
-        <Button variant="primary" onClick={() => store.pushNewElement('rect')} className="mr-2 mb-2">
-          <FaPlus className="mr-2" /> Rectangle
+        <Button variant="primary" onClick={() => store.pushNewElement('CuiPanel')} className="mr-2 mb-2">
+          <FaPlus className="mr-2" /> CuiPanel
+        </Button>
+        <Button variant="primary" onClick={() => store.pushNewElement('CuiButton')} className="mr-2 mb-2">
+          <FaPlus className="mr-2" /> CuiButton
         </Button>
         {/* <Button variant="primary" onClick={() => store.pushNewElement('circle')} className="mr-2 mb-2">
           <FaPlus className="mr-2" /> Circle
