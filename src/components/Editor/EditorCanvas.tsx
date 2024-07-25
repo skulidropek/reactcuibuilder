@@ -5,7 +5,7 @@ import CuiElementModel, { Marker, ShapePosition } from '../../models/CuiElementM
 import CuiRectTransformModel from '../../models/CuiRectTransformModel';
 import GraphicEditorStore from './GraphicEditorStore';
 import CuiImageComponentModel from '../../models/CuiImageComponentModel';
-import { ImageType } from '@/models/ICuiImageComponent';
+import { ImageType } from '../../models/ICuiImageComponent';
 
 interface EditorCanvasProps {
   store: GraphicEditorStore;

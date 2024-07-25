@@ -3,7 +3,7 @@ import { observer } from 'mobx-react-lite';
 import { Form, Button } from 'react-bootstrap';
 import { ChromePicker, ColorResult } from 'react-color'; 
 import CuiButtonComponentModel from '../../models/CuiButtonComponentModel';
-import { ImageType } from '@/models/ICuiImageComponent';
+import { ImageType } from '../../models/ICuiImageComponent';
 
 interface CuiButtonComponentProps {
   element: CuiButtonComponentModel;
