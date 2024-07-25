@@ -33,7 +33,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
   const drawShapes = useCallback((context: CanvasRenderingContext2D, items: CuiElementModel[]) => {
 
     preloadImages(store.children);
-    
+
     context.clearRect(0, 0, context.canvas.width, context.canvas.height);
     context.save();
     context.translate(0, context.canvas.height);
@@ -43,7 +43,6 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
       const shape = element.generateShapePositions();
       if (!shape) return;
   
-      console.log('123')
       const cuiImageComponent = element.findComponentByType(CuiImageComponentModel);
       if (cuiImageComponent?.color) {
         context.fillStyle = cuiImageComponent.color;

@@ -42,7 +42,7 @@ export interface ShapePosition {
 export default class CuiElementModel extends TreeNodeModel {
 
   constructor(
-    public type: 'rect' | 'circle',
+    public type: 'CuiButton' | 'CuiPanel' | 'CuiLabel' | 'CuiElement',
     public visible: boolean = true,
     children: CuiElementModel[] = [],
     public components: ICuiComponent[] = [],
@@ -85,9 +85,6 @@ export default class CuiElementModel extends TreeNodeModel {
 
   updateComponent<T extends ICuiComponent>(componentClass: new (...args: any[]) => T, updatedValues: Partial<T>): CuiElementModel {
     const component = this.findComponentByType(componentClass);
-  
-    console.log(component)
-
     if (component == null) {
       return this;
     }

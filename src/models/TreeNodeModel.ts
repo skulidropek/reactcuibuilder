@@ -2,6 +2,7 @@ import { makeObservable, observable, action } from "mobx";
 import CuiElementModel from "./CuiElementModel";
 import CuiRectTransformModel, { Size } from "../models/CuiRectTransformModel";
 import CuiImageComponentModel from "../models/CuiImageComponentModel";
+import CuiButtonComponentModel from "./CuiButtonComponentModel";
 
 export class Rect {
   constructor(
@@ -36,7 +37,7 @@ export default abstract class TreeNodeModel {
     this.children.push(element);
   }
   
-  pushNewElement = (type: 'rect' | 'circle' = 'rect'): CuiElementModel => {
+  pushNewElement = (type: 'CuiButton' | 'CuiPanel' | 'CuiLabel' | 'CuiElement' = 'CuiPanel'): CuiElementModel => {
     const element = new CuiElementModel(
       type,
       undefined,  // visible
@@ -47,9 +48,18 @@ export default abstract class TreeNodeModel {
       undefined,  // dragging
       this        // parent
     );
-  
+
     element.addComponent(new CuiRectTransformModel("0.1 0.1", "0.2 0.2", "10 10", "-10 -10", element));
-    element.addComponent(new CuiImageComponentModel(element, undefined, undefined, '1', undefined, undefined, undefined, undefined, undefined));
+
+    switch(type) {
+      case 'CuiButton':
+        element.addComponent(new CuiButtonComponentModel(element));
+        break;
+      case 'CuiPanel':
+        element.addComponent(new CuiImageComponentModel(element, undefined, undefined, '1', undefined, undefined, undefined, undefined, undefined));
+        break;
+    }
+
     this.pushChild(element);
     return element;
   };
@@ -84,6 +94,11 @@ export default abstract class TreeNodeModel {
   forEach(callback: (element: TreeNodeModel) => void): void {
     this.children.forEach(child => child.forEach(callback));
     callback(this);
+  }
+
+  map(callback: (element: TreeNodeModel) => any): any[] {
+    const results = this.children.map(child => child.map(callback));
+    return results.flat().concat(callback(this));
   }
 
   abstract calculateParentPositionAndSize(): Rect;

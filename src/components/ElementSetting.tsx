@@ -8,6 +8,8 @@ import ICuiComponent from '@/models/ICuiComponent';
 import CuiImageComponent from './cui/CuiImageComponent';
 import { Button, Card } from 'react-bootstrap';
 import { FaMinus, FaPlus } from 'react-icons/fa';
+import CuiButtonComponentModel from '../models/CuiButtonComponentModel';
+import CuiButtonComponent from './cui/CuiButtonComponent';
 
 interface ElementSettingProps {
   element: CuiElementModel;
@@ -44,6 +46,22 @@ const ElementSetting: React.FC<ElementSettingProps> = ({ element }) => {
         />
       );
     }
+    else if(component instanceof CuiButtonComponentModel) {
+      const cuiImageComponentModel = component as CuiButtonComponentModel;
+
+      return (
+        <CuiButtonComponent
+          element={cuiImageComponentModel}
+          onChange={(key: keyof CuiButtonComponentModel, value: any) => {
+            element.updateComponent(
+              CuiButtonComponentModel,
+              { [key]: value }
+            );
+          }}
+        />
+      );
+    }
+    
     // else if (component instanceof CuiButtonModel) {
     //   return <CuiButton element={element} onChange={onChange} />;
     // }

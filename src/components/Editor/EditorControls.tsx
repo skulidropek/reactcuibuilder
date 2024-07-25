@@ -3,6 +3,9 @@ import { FaPlus } from 'react-icons/fa';
 import { Button, Form } from 'react-bootstrap';
 import { observer } from 'mobx-react-lite';
 import GraphicEditorStore from './GraphicEditorStore';
+import CuiElementModel from '../../models/CuiElementModel';
+import CuiButtonComponentModel from '../../models/CuiButtonComponentModel';
+import TreeNodeModel from '../../models/TreeNodeModel';
 
 interface EditorControlsProps {
   store: GraphicEditorStore;
@@ -25,6 +28,8 @@ namespace Oxide.Plugins
             CreateGui(player);
         }
 
+        %COMMANDS%
+
         private void CreateGui(BasePlayer player)
         {
             var container = new CuiElementContainer();
@@ -38,8 +43,32 @@ namespace Oxide.Plugins
 `;
 
 const EditorControls: React.FC<EditorControlsProps> = ({ store }) => {
+
   const exportToPlugin = () => {
-    const data = plugin.replace("%CONTAINER_ELEMENTS%", store.children.map(s => s.ToCode()).join(',\n'));
+    const allCommands = store.map((s: TreeNodeModel) => {
+          if (s instanceof CuiElementModel) {
+              return s.findComponentByType(CuiButtonComponentModel);
+          } else {
+              console.warn('Element is not an instance of CuiElementModel:', s);
+              return undefined;
+          }
+      }).filter(s => s != null && s != undefined).filter(s => s.command != null);
+
+
+     const commandText = allCommands.map(s => `[ConsoleCommand("${s.command}")]
+        void ${s.command}(ConsoleSystem.Arg arg)
+        {
+          var player = arg.Player();
+          if (player == null) 
+          { 
+              Puts("Hello ${s.command}"); 
+              return;
+          }
+
+          player.ConsoleMessage("Hello ${s.command}");
+        }`).join('\n');
+
+    const data = plugin.replace("%COMMANDS%", commandText).replace("%CONTAINER_ELEMENTS%", store.children.map(s => s.ToCode()).join(',\n'));
     const blob = new Blob([data], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -68,8 +97,11 @@ const EditorControls: React.FC<EditorControlsProps> = ({ store }) => {
         />
       </Form.Group>
       <div className="d-flex justify-content-between">
-        <Button variant="primary" onClick={() => store.pushNewElement('rect')} className="mr-2 mb-2">
-          <FaPlus className="mr-2" /> Rectangle
+        <Button variant="primary" onClick={() => store.pushNewElement('CuiPanel')} className="mr-2 mb-2">
+          <FaPlus className="mr-2" /> CuiPanel
+        </Button>
+        <Button variant="primary" onClick={() => store.pushNewElement('CuiButton')} className="mr-2 mb-2">
+          <FaPlus className="mr-2" /> CuiButton
         </Button>
         {/* <Button variant="primary" onClick={() => store.pushNewElement('circle')} className="mr-2 mb-2">
           <FaPlus className="mr-2" /> Circle
