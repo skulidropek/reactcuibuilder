@@ -4,7 +4,8 @@ import { autorun, observable } from 'mobx';
 import CuiElementModel, { Marker, ShapePosition } from '../../models/CuiElementModel';
 import CuiRectTransformModel from '../../models/CuiRectTransformModel';
 import GraphicEditorStore from './GraphicEditorStore';
-import CuiImageComponentModel, { ImageType } from '../../models/CuiImageComponentModel';
+import CuiImageComponentModel from '../../models/CuiImageComponentModel';
+import { ImageType } from '@/models/ICuiImageComponent';
 
 interface EditorCanvasProps {
   store: GraphicEditorStore;

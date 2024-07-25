@@ -1,15 +1,9 @@
 import { makeObservable, observable, action } from 'mobx';
 import CuiElementModel from './CuiElementModel';
 import ICuiComponent from './ICuiComponent';
+import ICuiImageComponent, { ImageType } from './ICuiImageComponent';
 
-export enum ImageType {
-    Simple,
-    Sliced,
-    Tiled,
-    Filled
-}
-
-export default class CuiImageComponentModel implements ICuiComponent {
+export default class CuiImageComponentModel implements ICuiImageComponent {
   readonly type: string = "UnityEngine.UI.Image";
   public sprite?: string;
   public material?: string;
