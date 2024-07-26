@@ -4,6 +4,7 @@ import TreeNodeModel, { Rect } from "./TreeNodeModel";
 import { action, makeObservable, observable } from "mobx";
 import GraphicEditor from "../components/Editor/GraphicEditor";
 import GraphicEditorStore from "../components/Editor/GraphicEditorStore";
+import ICuiImageComponent from "./ICuiImageComponent";
 
 
 export interface Marker {
@@ -77,10 +78,24 @@ export default class CuiElementModel extends TreeNodeModel {
   public updateProperty<K extends keyof this>(key: K, value: this[K]): void {
     (this as any)[key] = value;
   }
+
+  //instance: new (...args: any[]) => T
   findComponentByType<T extends ICuiComponent>(componentClass: new (...args: any[]) => T): T | undefined {
     return this.components.find(
       (component): component is T => component instanceof componentClass
     ) as T | undefined;
+  }
+
+  findComponentByTypes<T extends ICuiComponent>(componentClasses: Array<new (...args: any[]) => T>): T | undefined {
+    for (const componentClass of componentClasses) {
+      const foundComponent = this.components.find(
+        (component): component is T => component instanceof componentClass
+      );
+      if (foundComponent) {
+        return foundComponent;
+      }
+    }
+    return undefined;
   }
 
   updateComponent<T extends ICuiComponent>(componentClass: new (...args: any[]) => T, updatedValues: Partial<T>): CuiElementModel {
