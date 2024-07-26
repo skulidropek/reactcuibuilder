@@ -5,7 +5,10 @@ import CuiElementModel, { Marker, ShapePosition } from '../../models/CuiElementM
 import CuiRectTransformModel from '../../models/CuiRectTransformModel';
 import GraphicEditorStore from './GraphicEditorStore';
 import CuiImageComponentModel from '../../models/CuiImageComponentModel';
-import { ImageType } from '../../models/ICuiImageComponent';
+import ICuiImageComponent, { ImageType } from '../../models/ICuiImageComponent';
+import ICuiComponent from '@/models/ICuiComponent';
+import CuiButtonComponent from '../cui/CuiButtonComponent';
+import CuiButtonComponentModel from '../../models/CuiButtonComponentModel';
 
 interface EditorCanvasProps {
   store: GraphicEditorStore;
@@ -44,14 +47,15 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
       const shape = element.generateShapePositions();
       if (!shape) return;
   
-      const cuiImageComponent = element.findComponentByType(CuiImageComponentModel);
+      const cuiImageComponent = element.findComponentByTypes<ICuiImageComponent>([CuiImageComponentModel, CuiButtonComponentModel]);
+
       if (cuiImageComponent?.color) {
         context.fillStyle = cuiImageComponent.color;
       }
   
       context.globalAlpha = 1;
       
-      if (cuiImageComponent?.png) {
+      if (cuiImageComponent instanceof CuiImageComponentModel && cuiImageComponent.png) {
         const image = preloadedImages.get(cuiImageComponent.png as string) as HTMLImageElement;
         if (image) {
           context.save();
