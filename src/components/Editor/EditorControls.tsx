@@ -80,6 +80,16 @@ const EditorControls: React.FC<EditorControlsProps> = ({ store }) => {
 
   return (
     <div className="bg-white p-4">
+       <Form.Group controlId="github" className="mb-3">
+        <Form.Label>
+          <a href="https://github.com/skulidropek/reactcuibuilder" target="_blank" rel="noopener noreferrer">Github</a>
+        </Form.Label>
+      </Form.Group>
+      <Form.Group controlId="discord" className="mb-3">
+        <Form.Label>
+          <a href="https://discord.gg/jM3DPA5VSv" target="_blank" rel="noopener noreferrer">Discord</a>
+        </Form.Label>
+      </Form.Group>
       <Form.Group controlId="editorWidth" className="mb-3">
         <Form.Label>Width:</Form.Label>
         <Form.Control
