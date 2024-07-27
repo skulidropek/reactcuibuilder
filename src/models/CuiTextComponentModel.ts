@@ -50,8 +50,8 @@ export default class CuiTextComponentModel implements ICuiComponent {
       this.text !== undefined ? `Text = "${this.text}"` : null,
       this.fontSize !== undefined ? `FontSize = ${this.fontSize}` : null,
       this.font !== undefined ? `Font = "${this.font}"` : null,
-      this.align !== undefined ? `Align = ${this.align}` : null,
-      this.verticalOverflow !== undefined ? `VerticalOverflow = ${this.verticalOverflow}` : null,
+      this.align !== undefined ? `Align = TextAnchor.${this.align}` : null,
+      this.verticalOverflow !== undefined ? `VerticalOverflow = VerticalWrapMode.${this.verticalOverflow}` : null,
     ].filter(property => property !== null); // Удаление null значений
 
     return `new CuiTextComponent { ${properties.join(', ')} }`;
