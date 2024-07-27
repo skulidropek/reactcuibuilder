@@ -126,7 +126,7 @@ Components = {
 }
 });
 
-${this.children?.map(s => s?.ToCode()).join(',\n')}
+${this.children?.map(s => s?.ToCode()).join('\n')}
 `;
 }
 

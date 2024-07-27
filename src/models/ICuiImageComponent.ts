@@ -2,10 +2,10 @@ import { makeObservable, observable, computed, action } from 'mobx';
 import ICuiComponent from "./ICuiComponent";
 
 export enum ImageType {
-    Simple,
-    Sliced,
-    Tiled,
-    Filled
+    Simple = "Simple",
+    Sliced = "Sliced",
+    Tiled = "Tiled",
+    Filled = "Filled",
 }
 
 export default abstract class CuiImageComponentBase implements ICuiComponent {
