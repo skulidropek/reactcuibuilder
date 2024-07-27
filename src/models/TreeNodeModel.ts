@@ -60,6 +60,9 @@ export default abstract class TreeNodeModel {
       case 'CuiPanel':
         element.addComponent(new CuiImageComponentModel(element));
         break;
+      case 'CuiLabel':
+        element.addComponent(new CuiTextComponentModel(element));
+        break;
     }
 
     this.pushChild(element);

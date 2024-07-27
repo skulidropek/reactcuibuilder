@@ -113,6 +113,9 @@ const EditorControls: React.FC<EditorControlsProps> = ({ store }) => {
         <Button variant="primary" onClick={() => store.pushNewElement('CuiButton')} className="mr-2 mb-2">
           <FaPlus className="mr-2" /> CuiButton
         </Button>
+        <Button variant="primary" onClick={() => store.pushNewElement('CuiLabel')} className="mr-2 mb-2">
+          <FaPlus className="mr-2" /> CuiLabel
+        </Button>
         {/* <Button variant="primary" onClick={() => store.pushNewElement('circle')} className="mr-2 mb-2">
           <FaPlus className="mr-2" /> Circle
         </Button> */}
