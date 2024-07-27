@@ -4,6 +4,7 @@ import { Form, Button } from 'react-bootstrap';
 import { ChromePicker, ColorResult } from 'react-color'; // Import ChromePicker from 'react-color'
 import CuiImageComponentModel from '@/models/CuiImageComponentModel';
 import { ImageType } from '../../models/ICuiImageComponent';
+import { rustToRGBA, rustToHex, RGBAToRust } from '../../utils/colorUtils';
 
 interface CuiImageComponentProps {
   element: CuiImageComponentModel;
@@ -25,7 +26,7 @@ const CuiImageComponent: React.FC<CuiImageComponentProps> = ({ element, onChange
   };
 
   const handleColorChange = (color: ColorResult) => {
-    onChange('color', `rgba(${color.rgb.r}, ${color.rgb.g}, ${color.rgb.b}, ${color.rgb.a})`);
+    onChange('color', RGBAToRust(color));
   };
 
   const handleClickOutside = (event: MouseEvent) => {
@@ -73,7 +74,7 @@ const CuiImageComponent: React.FC<CuiImageComponentProps> = ({ element, onChange
             variant="primary"
             onClick={() => setColorPickerVisible(!colorPickerVisible)}
             style={{
-              backgroundColor: element.color || '#000000',
+              backgroundColor: rustToHex(element?.color || '0 0 0 1'),
               borderColor: '#000000',
               color: '#ffffff',
               width: '40px',
@@ -85,7 +86,7 @@ const CuiImageComponent: React.FC<CuiImageComponentProps> = ({ element, onChange
           {colorPickerVisible && (
             <div ref={colorPickerRef} style={{ position: 'absolute', zIndex: 2 }}>
               <ChromePicker
-                color={element.color || 'rgba(0,0,0,1)'}
+                color={rustToRGBA(element?.color || '0 0 0 1')}
                 onChange={handleColorChange}
               />
             </div>

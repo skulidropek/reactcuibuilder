@@ -89,9 +89,6 @@ export default class CuiRectTransformModel implements ICuiComponent {
 
     const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 
-    // console.log(`resize currentX = ${currentX - parentX} = ${currentX} - ${parentX}`);
-    // console.log(`resize currentY = ${currentY - parentY} = ${currentY} - ${parentY}`);
-
     currentX = currentX - parentX;
     currentY = currentY - parentY;
 
