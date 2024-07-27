@@ -68,7 +68,7 @@ const EditorControls: React.FC<EditorControlsProps> = ({ store }) => {
           player.ConsoleMessage("Hello ${s.command}");
         }`).join('\n');
 
-    const data = plugin.replace("%COMMANDS%", commandText).replace("%CONTAINER_ELEMENTS%", store.children.map(s => s.ToCode()).join(',\n'));
+    const data = plugin.replace("%COMMANDS%", commandText).replace("%CONTAINER_ELEMENTS%", store.children.map(s => s.ToCode()).join('\n'));
     const blob = new Blob([data], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
