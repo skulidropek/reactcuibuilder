@@ -23,13 +23,13 @@ export default class CuiButtonComponentModel extends CuiImageComponentBase {
 
   ToCode(): string {
     const properties = [
-      this.command !== null ? `command: "${this.command}"` : null,
-      this.close !== null ? `close: "${this.close}"` : null,
-      this.sprite !== undefined ? `sprite: "${this.sprite}"` : null,
-      this.material !== undefined ? `material: "${this.material}"` : null,
-      this.color !== undefined ? `color: "${this.color}"` : null,
-      this.imageType !== undefined ? `imageType: ${this.imageType}` : null,
-      this.fadeIn !== null ? `fadeIn: ${this.fadeIn}` : null
+      this.command !== null ? `Command = "${this.command}"` : null,
+      this.close !== null ? `Close = "${this.close}"` : null,
+      this.sprite !== undefined ? `Sprite = "${this.sprite}"` : null,
+      this.material !== undefined ? `Material = "${this.material}"` : null,
+      this.color !== undefined ? `Color = "${this.color}"` : null,
+      this.imageType !== undefined ? `ImageType = ${this.imageType}` : null,
+      this.fadeIn !== null ? `FadeIn = ${this.fadeIn}` : null
     ].filter(property => property !== null); // Удаление null значений
 
     return `new CuiButtonComponentModel { ${properties.join(', ')} }`;

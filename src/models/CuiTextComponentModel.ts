@@ -2,22 +2,22 @@ import { makeObservable, observable, action } from "mobx";
 import ICuiComponent from "./ICuiComponent";
 import CuiElementModel from "./CuiElementModel";
 
-export enum TextAnchor {
-  UpperLeft = "UpperLeft",
-  UpperCenter = "UpperCenter",
-  UpperRight = "UpperRight",
-  MiddleLeft = "MiddleLeft",
-  MiddleCenter = "MiddleCenter",
-  MiddleRight = "MiddleRight",
-  LowerLeft = "LowerLeft",
-  LowerCenter = "LowerCenter",
-  LowerRight = "LowerRight",
-}
+  export enum TextAnchor {
+    UpperLeft = "UpperLeft",
+    UpperCenter = "UpperCenter",
+    UpperRight = "UpperRight",
+    MiddleLeft = "MiddleLeft",
+    MiddleCenter = "MiddleCenter",
+    MiddleRight = "MiddleRight",
+    LowerLeft = "LowerLeft",
+    LowerCenter = "LowerCenter",
+    LowerRight = "LowerRight",
+  }
 
-export enum VerticalWrapMode {
-  Truncate = "Truncate",
-  Overflow = "Overflow",
-}
+  export enum VerticalWrapMode {
+    Truncate = "Truncate",
+    Overflow = "Overflow",
+  }
 
 export default class CuiTextComponentModel implements ICuiComponent {
   readonly type: string = "UnityEngine.UI.Text";
@@ -45,6 +45,15 @@ export default class CuiTextComponentModel implements ICuiComponent {
   }
 
   ToCode(): string {
-    throw new Error("Method not implemented.");
+    const properties = [
+      this.fadeIn !== null ? `FadeIn = ${this.fadeIn}` : null,
+      this.text !== undefined ? `Text = "${this.text}"` : null,
+      this.fontSize !== undefined ? `FontSize = ${this.fontSize}` : null,
+      this.font !== undefined ? `Font = "${this.font}"` : null,
+      this.align !== undefined ? `Align = ${this.align}` : null,
+      this.verticalOverflow !== undefined ? `VerticalOverflow = ${this.verticalOverflow}` : null,
+    ].filter(property => property !== null); // Удаление null значений
+
+    return `new CuiButtonComponentModel { ${properties.join(', ')} }`;
   }
 }
