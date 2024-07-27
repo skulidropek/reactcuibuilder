@@ -76,7 +76,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
                 drawFilledImage(context, image, shape);
                 break;
               default: //ImageType.Simple
-                context.drawImage(image, shape.x, shape.y, shape.width, shape.height);
+                context.drawImage(image, shape.x, -shape.y - shape.height, shape.width, shape.height);
                 break;
             }
   
