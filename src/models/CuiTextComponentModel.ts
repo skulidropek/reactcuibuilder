@@ -54,6 +54,6 @@ export default class CuiTextComponentModel implements ICuiComponent {
       this.verticalOverflow !== undefined ? `VerticalOverflow = ${this.verticalOverflow}` : null,
     ].filter(property => property !== null); // Удаление null значений
 
-    return `new CuiButtonComponent { ${properties.join(', ')} }`;
+    return `new CuiTextComponent { ${properties.join(', ')} }`;
   }
 }
