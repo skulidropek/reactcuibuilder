@@ -32,6 +32,6 @@ export default class CuiButtonComponentModel extends CuiImageComponentBase {
       this.fadeIn !== null ? `FadeIn = ${this.fadeIn}` : null
     ].filter(property => property !== null); // Удаление null значений
 
-    return `new CuiButtonComponentModel { ${properties.join(', ')} }`;
+    return `new CuiButtonComponent { ${properties.join(', ')} }`;
   }
 }
