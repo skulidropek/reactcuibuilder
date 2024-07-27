@@ -1,3 +1,4 @@
+import { makeObservable, observable, computed, action } from 'mobx';
 import ICuiComponent from "./ICuiComponent";
 
 export enum ImageType {
@@ -7,9 +8,21 @@ export enum ImageType {
     Filled
 }
 
-export default interface ICuiImageComponent extends ICuiComponent {
+export default abstract class CuiImageComponentBase implements ICuiComponent {
+    abstract type: string;
+    abstract ToCode(): string;
+    
     color?: string;
     imageType?: ImageType;
     sprite?: string;
     material?: string;
+
+    constructor() {
+        makeObservable(this, {
+            imageType: observable,
+            sprite: observable,
+            material: observable,
+            color: observable,
+        });
+    }
 }

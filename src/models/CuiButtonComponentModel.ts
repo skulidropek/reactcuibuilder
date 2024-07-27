@@ -1,28 +1,21 @@
 import { makeObservable, observable, action } from 'mobx';
 import CuiElementModel from './CuiElementModel';
-import ICuiImageComponent, { ImageType } from './ICuiImageComponent';
+import CuiImageComponentBase, { ImageType } from './ICuiImageComponent';
 
-export default class CuiButtonComponentModel implements ICuiImageComponent {
+export default class CuiButtonComponentModel extends CuiImageComponentBase {
   type: string = "UnityEngine.UI.Button";
   command: string | null = null;
   close: string | null = null;
-  sprite: string | undefined;
-  material: string | undefined = undefined;
-  color: string | undefined = undefined;
-  imageType: ImageType | undefined = undefined;
   fadeIn: number | null = null;
   readonly element: CuiElementModel;
 
   constructor(element: CuiElementModel) {
+    super();
     this.element = element;
     
     makeObservable(this, {
       command: observable,
       close: observable,
-      sprite: observable,
-      material: observable,
-      color: observable,
-      imageType: observable,
       fadeIn: observable,
       ToCode: action
     });
@@ -40,19 +33,5 @@ export default class CuiButtonComponentModel implements ICuiImageComponent {
     ].filter(property => property !== null); // Удаление null значений
 
     return `new CuiButtonComponentModel { ${properties.join(', ')} }`;
-  }
-
-  // Метод для сериализации в JSON
-  toJSON() {
-    return {
-      type: this.type,
-      command: this.command,
-      close: this.close,
-      sprite: this.sprite,
-      material: this.material,
-      color: this.color,
-      imageType: this.imageType,
-      fadeIn: this.fadeIn
-    };
   }
 }

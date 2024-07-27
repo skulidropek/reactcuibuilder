@@ -9,6 +9,7 @@ import ICuiImageComponent, { ImageType } from '../../models/ICuiImageComponent';
 import ICuiComponent from '@/models/ICuiComponent';
 import CuiButtonComponent from '../cui/CuiButtonComponent';
 import CuiButtonComponentModel from '../../models/CuiButtonComponentModel';
+import { rustToRGBA } from '../../utils/colorUtils';
 
 interface EditorCanvasProps {
   store: GraphicEditorStore;
@@ -50,7 +51,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
       const cuiImageComponent = element.findComponentByTypes<ICuiImageComponent>([CuiImageComponentModel, CuiButtonComponentModel]);
 
       if (cuiImageComponent?.color) {
-        context.fillStyle = cuiImageComponent.color;
+        context.fillStyle = rustToRGBA(cuiImageComponent.color);
       }
   
       context.globalAlpha = 1;
@@ -290,7 +291,6 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
   }, [store]);
 
   useEffect(() => {
-    console.log('useEffect');
     const canvas = canvasRef.current;
     const dispose = autorun(() => {
       if (canvas) {
@@ -303,19 +303,6 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
 
     return () => dispose();
   }, [store.children, store.size, drawShapes, preloadedImages]);
-
-  // useEffect(() => {
-  //   console.log('useEffect1');
-  //   {
-  //     const canvas = canvasRef.current;
-  //     if (canvas) {
-  //       const context = canvas.getContext('2d');
-  //       if (context) {
-  //         drawShapes(context, store.children);
-  //       }
-  //     }
-  //   });
-  // }, [store.children, preloadImages, drawShapes]);
 
   return (
     <canvas

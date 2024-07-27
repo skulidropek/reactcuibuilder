@@ -56,7 +56,7 @@ export default abstract class TreeNodeModel {
         element.addComponent(new CuiButtonComponentModel(element));
         break;
       case 'CuiPanel':
-        element.addComponent(new CuiImageComponentModel(element, undefined, undefined, '1', undefined, undefined, undefined, undefined, undefined));
+        element.addComponent(new CuiImageComponentModel(element));
         break;
     }
 
