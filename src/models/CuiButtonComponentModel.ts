@@ -28,7 +28,7 @@ export default class CuiButtonComponentModel extends CuiImageComponentBase {
       this.sprite !== undefined ? `Sprite = "${this.sprite}"` : null,
       this.material !== undefined ? `Material = "${this.material}"` : null,
       this.color !== undefined ? `Color = "${this.color}"` : null,
-      this.imageType !== undefined ? `ImageType = ${this.imageType}` : null,
+      this.imageType !== undefined ? `ImageType = Image.Type.${this.imageType}` : null,
       this.fadeIn !== null ? `FadeIn = ${this.fadeIn}` : null
     ].filter(property => property !== null); // Удаление null значений
 
