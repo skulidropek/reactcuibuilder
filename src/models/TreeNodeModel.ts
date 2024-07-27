@@ -3,6 +3,7 @@ import CuiElementModel from "./CuiElementModel";
 import CuiRectTransformModel, { Size } from "../models/CuiRectTransformModel";
 import CuiImageComponentModel from "../models/CuiImageComponentModel";
 import CuiButtonComponentModel from "./CuiButtonComponentModel";
+import CuiTextComponentModel from "./CuiTextComponentModel";
 
 export class Rect {
   constructor(
@@ -54,6 +55,7 @@ export default abstract class TreeNodeModel {
     switch(type) {
       case 'CuiButton':
         element.addComponent(new CuiButtonComponentModel(element));
+        element.addComponent(new CuiTextComponentModel(element));
         break;
       case 'CuiPanel':
         element.addComponent(new CuiImageComponentModel(element));

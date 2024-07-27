@@ -2,72 +2,70 @@ import React from 'react';
 import CuiRectTransform from './cui/CuiRectTransform';
 import CuiElementModel from '../models/CuiElementModel';
 import CuiRectTransformModel from '../models/CuiRectTransformModel';
-import CuiImageComponentModel from '../models/CuiImageComponentModel'; // Импортируйте ваш класс
+import CuiImageComponentModel from '../models/CuiImageComponentModel';
 import { observer } from 'mobx-react-lite';
 import ICuiComponent from '@/models/ICuiComponent';
 import CuiImageComponent from './cui/CuiImageComponent';
 import { Button, Card } from 'react-bootstrap';
-import { FaMinus, FaPlus } from 'react-icons/fa';
+import { FaMinus } from 'react-icons/fa';
 import CuiButtonComponentModel from '../models/CuiButtonComponentModel';
 import CuiButtonComponent from './cui/CuiButtonComponent';
+import CuiTextComponentModel from '../models/CuiTextComponentModel';
+import CuiTextComponent from './cui/CuiTextComponent';
 
 interface ElementSettingProps {
   element: CuiElementModel;
+  onRemoveComponent?: (index: number) => void;
 }
 
-const ElementSetting: React.FC<ElementSettingProps> = ({ element }) => {
+const ElementSetting: React.FC<ElementSettingProps> = observer(({ element, onRemoveComponent }) => {
+  const handleComponentChange = <T extends ICuiComponent>(
+    ComponentModel: new (...args: any[]) => T,
+    key: keyof T,
+    value: T[keyof T]
+  ) => {
+    element.updateComponent(ComponentModel, { [key]: value } as Partial<T>);
+  };
+
   const renderComponent = (component: ICuiComponent) => {
     if (component instanceof CuiRectTransformModel) {
-      const cuiRectTransformModel = component as CuiRectTransformModel;
-
       return (
         <CuiRectTransform
-          element={cuiRectTransformModel}
-          onChange={(key: keyof CuiRectTransformModel, value: any) => {
-            element.updateComponent(
-              CuiRectTransformModel,
-              { [key]: value }
-            );
-          }}
+          element={component}
+          onChange={(key, value) => handleComponentChange(CuiRectTransformModel, key, value)}
         />
       );
     } else if (component instanceof CuiImageComponentModel) {
-      const cuiImageComponentModel = component as CuiImageComponentModel;
-
       return (
         <CuiImageComponent
-          element={cuiImageComponentModel}
-          onChange={(key: keyof CuiImageComponentModel, value: any) => {
-            element.updateComponent(
-              CuiImageComponentModel,
-              { [key]: value }
-            );
-          }}
+          element={component}
+          onChange={(key, value) => handleComponentChange(CuiImageComponentModel, key, value)}
         />
       );
-    }
-    else if(component instanceof CuiButtonComponentModel) {
-      const cuiImageComponentModel = component as CuiButtonComponentModel;
-
+    } else if (component instanceof CuiButtonComponentModel) {
       return (
         <CuiButtonComponent
-          element={cuiImageComponentModel}
-          onChange={(key: keyof CuiButtonComponentModel, value: any) => {
-            element.updateComponent(
-              CuiButtonComponentModel,
-              { [key]: value }
-            );
-          }}
+          element={component}
+          onChange={(key, value) => handleComponentChange(CuiButtonComponentModel, key, value)}
+        />
+      );
+    } else if (component instanceof CuiTextComponentModel) {
+      return (
+        <CuiTextComponent
+          element={component}
+          onChange={(key, value) => handleComponentChange(CuiTextComponentModel, key, value)}
         />
       );
     }
-    
-    // else if (component instanceof CuiButtonModel) {
-    //   return <CuiButton element={element} onChange={onChange} />;
-    // }
-    // else if (component instanceof CuiLabelModel) {
-    //   return <CuiLabel element={element} onChange={onChange} />;
     return null;
+  };
+
+  const handleRemoveComponent = (index: number) => {
+    if (onRemoveComponent) {
+      onRemoveComponent(index);
+    } else {
+      console.warn('onRemoveComponent is not defined');
+    }
   };
 
   return (
@@ -76,7 +74,11 @@ const ElementSetting: React.FC<ElementSettingProps> = ({ element }) => {
         <Card key={index} className="mb-2">
           <Card.Header className="d-flex justify-content-between align-items-center">
             <span>{component.type}</span>
-            <Button variant="link" size="sm">
+            <Button 
+              variant="link" 
+              size="sm" 
+              onClick={() => handleRemoveComponent(index)}
+            >
               <FaMinus />
             </Button>
           </Card.Header>
@@ -87,6 +89,6 @@ const ElementSetting: React.FC<ElementSettingProps> = ({ element }) => {
       ))}
     </div>
   );
-};
+});
 
-export default observer(ElementSetting);
+export default ElementSetting;

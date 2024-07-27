@@ -10,6 +10,7 @@ import ICuiComponent from '@/models/ICuiComponent';
 import CuiButtonComponent from '../cui/CuiButtonComponent';
 import CuiButtonComponentModel from '../../models/CuiButtonComponentModel';
 import { rustToRGBA } from '../../utils/colorUtils';
+import CuiTextComponentModel, { TextAnchor, VerticalWrapMode } from '../../models/CuiTextComponentModel';
 
 interface EditorCanvasProps {
   store: GraphicEditorStore;
@@ -38,49 +39,56 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
   const drawShapes = useCallback((context: CanvasRenderingContext2D, items: CuiElementModel[]) => {
 
     preloadImages(store.children);
-
+  
     context.clearRect(0, 0, context.canvas.width, context.canvas.height);
     context.save();
     context.translate(0, context.canvas.height);
     context.scale(1, -1);
-    
+  
     const drawShape = (element: CuiElementModel) => {
       const shape = element.generateShapePositions();
       if (!shape) return;
   
       const cuiImageComponent = element.findComponentByTypes<ICuiImageComponent>([CuiImageComponentModel, CuiButtonComponentModel]);
-
-      if (cuiImageComponent?.color) {
-        context.fillStyle = rustToRGBA(cuiImageComponent.color);
+      const cuiTextComponent = element.findComponentByType(CuiTextComponentModel);
+  
+      if (cuiImageComponent) {
+        if (cuiImageComponent.color) {
+          context.fillStyle = rustToRGBA(cuiImageComponent.color);
+        }
+  
+        context.globalAlpha = 1;
+  
+        if (cuiImageComponent instanceof CuiImageComponentModel && cuiImageComponent.png) {
+          const image = preloadedImages.get(cuiImageComponent.png as string) as HTMLImageElement;
+          if (image) {
+            context.save();
+            context.scale(1, -1);
+  
+            switch (cuiImageComponent.imageType) {
+              case ImageType.Sliced:
+                drawSlicedImage(context, image, shape);
+                break;
+              case ImageType.Tiled:
+                drawTiledImage(context, image, shape);
+                break;
+              case ImageType.Filled:
+                drawFilledImage(context, image, shape);
+                break;
+              default: //ImageType.Simple
+                context.drawImage(image, shape.x, shape.y, shape.width, shape.height);
+                break;
+            }
+  
+            context.restore();
+          }
+        } else {
+          context.fillRect(shape.x, shape.y, shape.width, shape.height);
+        }
       }
   
-      context.globalAlpha = 1;
-      
-      if (cuiImageComponent instanceof CuiImageComponentModel && cuiImageComponent.png) {
-        const image = preloadedImages.get(cuiImageComponent.png as string) as HTMLImageElement;
-        if (image) {
-          context.save();
-          context.scale(1, -1);
-          
-          switch (cuiImageComponent.imageType) {
-            case ImageType.Sliced:
-              drawSlicedImage(context, image, shape);
-              break;
-            case ImageType.Tiled:
-              drawTiledImage(context, image, shape);
-              break;
-            case ImageType.Filled:
-              drawFilledImage(context, image, shape);
-              break;
-            default: //ImageType.Simple
-              context.drawImage(image, shape.x, -shape.y - shape.height, shape.width, shape.height);
-              break;
-          }
-  
-          context.restore();
-        }
-      } else {
-        context.fillRect(shape.x, shape.y, shape.width, shape.height);
+      if (cuiTextComponent) {
+        drawTextComponent(context, cuiTextComponent, shape);
       }
   
       if (shape.anchor && shape.markers) {
@@ -97,10 +105,133 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
   
       element.children.forEach(drawShape);
     };
-    
+  
     const drawMarker = (context: CanvasRenderingContext2D, x: number, y: number, color: string) => {
       context.fillStyle = color;
       context.fillRect(x - 5, y - 5, 10, 10);
+    };
+
+    const drawTextComponent = (context: CanvasRenderingContext2D, textComponent: CuiTextComponentModel, shape: { x: number; y: number; width: number; height: number }) => {
+      context.save();
+    
+      // Отзеркаливаем контекст обратно для правильной отрисовки текста
+      context.translate(0, context.canvas.height);
+      context.scale(1, -1);
+    
+      if(textComponent.color) {
+        context.fillStyle = rustToRGBA(textComponent.color);
+      }
+      
+      let fontSize = textComponent.fontSize || 12;
+      const minFontSize = 1; // Минимальный размер шрифта
+      
+      let x = shape.x;
+      let y = context.canvas.height - shape.y - shape.height; // Изменено: y теперь указывает на нижнюю границу shape
+      const width = shape.width;
+      const height = shape.height;
+      const padding = 5;
+    
+      // Определение выравнивания текста
+      let textAlign: CanvasTextAlign;
+      let verticalAlign: 'top' | 'middle' | 'bottom';
+      
+      switch (textComponent.align) {
+        case TextAnchor.UpperLeft:
+        case TextAnchor.MiddleLeft:
+        case TextAnchor.LowerLeft:
+          textAlign = 'left';
+          x += padding;
+          break;
+        case TextAnchor.UpperCenter:
+        case TextAnchor.MiddleCenter:
+        case TextAnchor.LowerCenter:
+          textAlign = 'center';
+          x += width / 2;
+          break;
+        case TextAnchor.UpperRight:
+        case TextAnchor.MiddleRight:
+        case TextAnchor.LowerRight:
+          textAlign = 'right';
+          x += width - padding;
+          break;
+      }
+    
+      switch (textComponent.align) {
+        case TextAnchor.UpperLeft:
+        case TextAnchor.UpperCenter:
+        case TextAnchor.UpperRight:
+          verticalAlign = 'bottom';
+          break;
+        case TextAnchor.MiddleLeft:
+        case TextAnchor.MiddleCenter:
+        case TextAnchor.MiddleRight:
+          verticalAlign = 'middle';
+          break;
+        case TextAnchor.LowerLeft:
+        case TextAnchor.LowerCenter:
+        case TextAnchor.LowerRight:
+          verticalAlign = 'top';
+          break;
+      }
+    
+      context.textAlign = textAlign;
+      context.textBaseline = 'alphabetic';
+    
+      // Функция для разбиения текста на строки
+      const getLines = (text: string, maxWidth: number): string[] => {
+        const words = text.split(' ');
+        const lines: string[] = [];
+        let currentLine = words[0];
+    
+        for (let i = 1; i < words.length; i++) {
+          const word = words[i];
+          const width = context.measureText(currentLine + " " + word).width;
+          if (width < maxWidth - 2 * padding) {
+            currentLine += " " + word;
+          } else {
+            lines.push(currentLine);
+            currentLine = word;
+          }
+        }
+        lines.push(currentLine);
+        return lines;
+      };
+    
+      // Подбор оптимального размера шрифта
+      while (fontSize > minFontSize) {
+        context.font = `${fontSize}px ${textComponent.font || 'Arial'}`;
+        const lines = getLines(textComponent.text, width);
+        const totalHeight = lines.length * fontSize * 1.2;
+        
+        if (totalHeight <= height - 2 * padding) {
+          break;
+        }
+        
+        fontSize -= 1;
+      }
+    
+      context.font = `${fontSize}px ${textComponent.font || 'Arial'}`;
+      const lines = getLines(textComponent.text, width);
+      const lineHeight = fontSize * 1.2;
+    
+      // Вычисляем начальную позицию Y в зависимости от вертикального выравнивания
+      let startY: number;
+      const totalTextHeight = lines.length * lineHeight;
+      if (verticalAlign === 'top') {
+        startY = y + height - padding;
+      } else if (verticalAlign === 'middle') {
+        startY = y + height / 2 + totalTextHeight / 2;
+      } else { // 'bottom'
+        startY = y + padding + totalTextHeight;
+      }
+    
+      // Рисуем текст
+      lines.forEach((line, index) => {
+        const lineY = startY - index * lineHeight;
+        context.fillText(line, x, lineY);
+      });
+    
+      context.restore();
     };
   
     items.forEach(drawShape);
