@@ -18,7 +18,6 @@ export default class GraphicEditorStore extends TreeNodeModel {
     super(children, parent);
     makeObservable(this, {
       size: observable,
-      pushNewElement: action,
       draggingItem: observable,
       selectedItem: observable,
     });

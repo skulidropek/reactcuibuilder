@@ -10,7 +10,7 @@ export enum ImageType {
 
 export default abstract class CuiImageComponentBase implements ICuiComponent {
     abstract type: string;
-    abstract ToCode(): string;
+    abstract ToCode(typeClass?: boolean): string;
     
     color?: string;
     imageType?: ImageType;

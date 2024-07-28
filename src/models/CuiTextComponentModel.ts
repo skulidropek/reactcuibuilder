@@ -21,9 +21,9 @@ import CuiElementModel from "./CuiElementModel";
 
 export default class CuiTextComponentModel implements ICuiComponent {
   readonly type: string = "UnityEngine.UI.Text";
-  text: string = "123123";
+  text: string = "";
   fontSize: number = 14;
-  font: string = "";
+  font: string = "robotocondensed-regular.ttf";
   align: TextAnchor = TextAnchor.UpperCenter;
   color?: string;
   verticalOverflow: VerticalWrapMode = VerticalWrapMode.Truncate;
@@ -44,9 +44,14 @@ export default class CuiTextComponentModel implements ICuiComponent {
     });
   }
 
-  ToCode(): string {
+  ToCode(typeClass?: boolean): string {
+
+    if(typeClass == null)
+      typeClass = true;
+    
     const properties = [
       this.fadeIn !== null ? `FadeIn = ${this.fadeIn}` : null,
+      this.color !== null ? `Color = "${this.color}"` : null,
       this.text !== undefined ? `Text = "${this.text}"` : null,
       this.fontSize !== undefined ? `FontSize = ${this.fontSize}` : null,
       this.font !== undefined ? `Font = "${this.font}"` : null,
@@ -54,6 +59,6 @@ export default class CuiTextComponentModel implements ICuiComponent {
       this.verticalOverflow !== undefined ? `VerticalOverflow = VerticalWrapMode.${this.verticalOverflow}` : null,
     ].filter(property => property !== null); // Удаление null значений
 
-    return `new CuiTextComponent { ${properties.join(', ')} }`;
+    return `${typeClass ? "new CuiTextComponent" : ""} { ${properties.join(', ')} }`;
   }
 }

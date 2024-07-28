@@ -4,6 +4,7 @@ import { FaPlus, FaArrowsAlt } from 'react-icons/fa';
 import ElementSetting from './ElementSetting';
 import CuiElementModel from '../models/CuiElementModel';
 import { observer } from 'mobx-react-lite';
+import CuiPanelModel from '../models/CuiPanelModel';
 
 interface ElementProfileProps {
   element: CuiElementModel;
@@ -11,7 +12,7 @@ interface ElementProfileProps {
 
 const ElementProfile = forwardRef<HTMLDivElement, ElementProfileProps>(({ element }, ref) => {
   const handleAddChild = () => {
-    element.pushNewElement();
+    element.pushChild(new CuiPanelModel());
   };
 
   const handleToggleFill = () => {

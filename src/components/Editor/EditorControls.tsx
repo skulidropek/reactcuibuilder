@@ -6,6 +6,9 @@ import GraphicEditorStore from './GraphicEditorStore';
 import CuiElementModel from '../../models/CuiElementModel';
 import CuiButtonComponentModel from '../../models/CuiButtonComponentModel';
 import TreeNodeModel from '../../models/TreeNodeModel';
+import CuiPanelModel from '../../models/CuiPanelModel';
+import CuiButtonModel from '../../models/CuiButtonModel';
+import CuiLabelModel from '../../models/CuiLabelModel';
 
 interface EditorControlsProps {
   store: GraphicEditorStore;
@@ -108,13 +111,13 @@ const EditorControls: React.FC<EditorControlsProps> = ({ store }) => {
         />
       </Form.Group>
       <div className="d-flex justify-content-between">
-        <Button variant="primary" onClick={() => store.pushNewElement('CuiPanel')} className="mr-2 mb-2">
+        <Button variant="primary" onClick={() => store.pushChild(new CuiPanelModel())} className="mr-2 mb-2">
           <FaPlus className="mr-2" /> CuiPanel
         </Button>
-        <Button variant="primary" onClick={() => store.pushNewElement('CuiButton')} className="mr-2 mb-2">
+        <Button variant="primary" onClick={() => store.pushChild(new CuiButtonModel())} className="mr-2 mb-2">
           <FaPlus className="mr-2" /> CuiButton
         </Button>
-        <Button variant="primary" onClick={() => store.pushNewElement('CuiLabel')} className="mr-2 mb-2">
+        <Button variant="primary" onClick={() => store.pushChild(new CuiLabelModel())} className="mr-2 mb-2">
           <FaPlus className="mr-2" /> CuiLabel
         </Button>
         {/* <Button variant="primary" onClick={() => store.pushNewElement('circle')} className="mr-2 mb-2">
