@@ -2,28 +2,35 @@ import { makeObservable, observable, action } from "mobx";
 import ICuiComponent from "./ICuiComponent";
 import CuiElementModel from "./CuiElementModel";
 
-  export enum TextAnchor {
-    UpperLeft = "UpperLeft",
-    UpperCenter = "UpperCenter",
-    UpperRight = "UpperRight",
-    MiddleLeft = "MiddleLeft",
-    MiddleCenter = "MiddleCenter",
-    MiddleRight = "MiddleRight",
-    LowerLeft = "LowerLeft",
-    LowerCenter = "LowerCenter",
-    LowerRight = "LowerRight",
-  }
+export enum TextAnchor {
+  UpperLeft = "UpperLeft",
+  UpperCenter = "UpperCenter",
+  UpperRight = "UpperRight",
+  MiddleLeft = "MiddleLeft",
+  MiddleCenter = "MiddleCenter",
+  MiddleRight = "MiddleRight",
+  LowerLeft = "LowerLeft",
+  LowerCenter = "LowerCenter",
+  LowerRight = "LowerRight",
+}
 
-  export enum VerticalWrapMode {
-    Truncate = "Truncate",
-    Overflow = "Overflow",
-  }
+export enum VerticalWrapMode {
+  Truncate = "Truncate",
+  Overflow = "Overflow",
+}
+
+export enum Font {
+  DroidSansMono = "droidsansmono.ttf",
+  PermanentMarker = "permanentmarker.ttf",
+  RobotoCondensedBold = "robotocondensed-bold.ttf",
+  RobotoCondensedRegular = "robotocondensed-regular.ttf",
+}
 
 export default class CuiTextComponentModel implements ICuiComponent {
   readonly type: string = "UnityEngine.UI.Text";
   text: string = "";
   fontSize: number = 14;
-  font: string = "robotocondensed-regular.ttf";
+  font: Font = Font.RobotoCondensedRegular;
   align: TextAnchor = TextAnchor.UpperCenter;
   color?: string;
   verticalOverflow: VerticalWrapMode = VerticalWrapMode.Truncate;
