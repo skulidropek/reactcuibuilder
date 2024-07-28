@@ -21,7 +21,7 @@ import CuiElementModel from "./CuiElementModel";
 
 export default class CuiTextComponentModel implements ICuiComponent {
   readonly type: string = "UnityEngine.UI.Text";
-  text: string = "123123";
+  text: string = "";
   fontSize: number = 14;
   font: string = "";
   align: TextAnchor = TextAnchor.UpperCenter;

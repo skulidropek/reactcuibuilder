@@ -25,7 +25,11 @@ export default class CuiImageComponentModel extends CuiImageComponentBase {
     });
   }
 
-  ToCode(): string {
+  ToCode(typeClass?: boolean): string {
+
+    if(typeClass == null)
+      typeClass = true;
+
     const components = [];
 
     if (this.color != null) components.push(`Color = "${this.color}"`);
@@ -37,6 +41,6 @@ export default class CuiImageComponentModel extends CuiImageComponentBase {
     if (this.itemId != null) components.push(`ItemId = ${this.itemId}`);
     if (this.skinId != null) components.push(`SkinId = ${this.skinId}`);
 
-    return `new CuiImageComponent { ${components.join(', ')} }`;
+    return `${typeClass ? "new CuiImageComponent" : ""} { ${components.join(', ')} }`;
   }
 }

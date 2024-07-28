@@ -47,7 +47,7 @@ export default class CuiRectTransformModel implements ICuiComponent {
     if(typeClass == null)
       typeClass = true;
     
-    return `${ typeClass ? "new CuiRectTransformComponent" : ""} 
+    return `${typeClass ? "new CuiRectTransformComponent" : ""} 
     { 
       AnchorMin = "${this.anchorMin}",
       AnchorMax = "${this.anchorMax}",

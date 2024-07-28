@@ -53,6 +53,7 @@ export default class CuiElementModel extends TreeNodeModel {
     parent?: TreeNodeModel, // добавлен аргумент parent
   ) {
     super(children, parent); // Add the super() call here
+    this.addComponent(new CuiRectTransformModel("0.1 0.1", "0.2 0.2", "10 10", "-10 -10", this));
     makeObservable(this, {
       visible: observable,
       components: observable,

@@ -1,38 +1,30 @@
-import GraphicEditorStore from "@/components/Editor/GraphicEditorStore";
+import GraphicEditorStore from "../components/Editor/GraphicEditorStore";
 import CuiButtonComponentModel from "./CuiButtonComponentModel";
 import CuiElementModel from "./CuiElementModel";
+import CuiImageComponentModel from "./CuiImageComponentModel";
 import CuiRectTransformModel from "./CuiRectTransformModel";
 import CuiTextComponentModel from "./CuiTextComponentModel";
-import ICuiComponent from "./ICuiComponent";
-import TreeNodeModel from "./TreeNodeModel";
 
-export default class CuiButtonModel extends CuiElementModel {
+export default class CuiLabelModel extends CuiElementModel {
 
     constructor(
     ) {
-      super('CuiButton'); // Add the super() call here
+      super('CuiLabel'); // Add the super() call here
 
-      this.addComponent(new CuiRectTransformModel("0.1 0.1", "0.2 0.2", "10 10", "-10 -10", this));
-      this.addComponent(new CuiButtonComponentModel(this));
       this.addComponent(new CuiTextComponentModel(this));
     }
 
     
-    public button(): CuiButtonComponentModel {
-        return this.findComponentByType(CuiButtonComponentModel)!;
-    }
-  
     public text(): CuiTextComponentModel {
         return this.findComponentByType(CuiTextComponentModel)!;
     }
 
     ToCode(): string {
         return `
-        container.Add(new CuiButton()
+        container.Add(new ${this.type}
         {
-            Button = ${this.button().ToCode(false)},
-            RectTransform = ${this.rectTransform().ToCode(false)},
             Text = ${this.text().ToCode(false)},
+            RectTransform = ${this.rectTransform().ToCode(false)},
         }, "${this?.parent instanceof GraphicEditorStore ? "Overlay" : this.parent?.id}", "${this.id}");
 
         ${this.children?.map(s => s?.ToCode()).join('\n')}
