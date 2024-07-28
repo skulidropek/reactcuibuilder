@@ -51,7 +51,7 @@ export default class CuiTextComponentModel implements ICuiComponent {
     
     const properties = [
       this.fadeIn !== null ? `FadeIn = ${this.fadeIn}` : null,
-      this.color !== null ? `Color = ${this.color}` : null,
+      this.color !== null ? `Color = "${this.color}"` : null,
       this.text !== undefined ? `Text = "${this.text}"` : null,
       this.fontSize !== undefined ? `FontSize = ${this.fontSize}` : null,
       this.font !== undefined ? `Font = "${this.font}"` : null,
