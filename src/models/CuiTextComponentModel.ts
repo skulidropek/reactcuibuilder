@@ -23,7 +23,7 @@ export default class CuiTextComponentModel implements ICuiComponent {
   readonly type: string = "UnityEngine.UI.Text";
   text: string = "";
   fontSize: number = 14;
-  font: string = "";
+  font: string = "robotocondensed-regular.ttf";
   align: TextAnchor = TextAnchor.UpperCenter;
   color?: string;
   verticalOverflow: VerticalWrapMode = VerticalWrapMode.Truncate;
