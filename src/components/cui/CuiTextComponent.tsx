@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, ChangeEvent } from 'react';
 import { observer } from 'mobx-react-lite';
 import { Form, Button } from 'react-bootstrap';
 import { ChromePicker, ColorResult } from 'react-color';
-import CuiTextComponentModel, { TextAnchor, VerticalWrapMode } from '../../models/CuiTextComponentModel';
+import CuiTextComponentModel, { Font, TextAnchor, VerticalWrapMode } from '../../models/CuiTextComponentModel';
 import { rustToRGBA, rustToHex, RGBAToRust } from '../../utils/colorUtils';
 
 interface CuiTextComponentProps {
@@ -68,12 +68,17 @@ const CuiTextComponent: React.FC<CuiTextComponentProps> = observer(({ element, o
       </Form.Group>
       <Form.Group controlId="font">
         <Form.Label>Font</Form.Label>
-        <Form.Control
-          type="text"
+        <Form.Select
           name="font"
           value={element.font}
           onChange={handleChange}
-        />
+        >
+          {Object.entries(Font).map(([key, value]) => (
+            <option key={key} value={value}>
+              {key}
+            </option>
+          ))}
+        </Form.Select>
       </Form.Group>
       <Form.Group controlId="align">
         <Form.Label>Alignment</Form.Label>
