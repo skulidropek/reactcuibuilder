@@ -44,7 +44,11 @@ export default class CuiTextComponentModel implements ICuiComponent {
     });
   }
 
-  ToCode(): string {
+  ToCode(typeClass?: boolean): string {
+
+    if(typeClass == null)
+      typeClass = true;
+    
     const properties = [
       this.fadeIn !== null ? `FadeIn = ${this.fadeIn}` : null,
       this.color !== null ? `Color = ${this.color}` : null,
@@ -55,6 +59,6 @@ export default class CuiTextComponentModel implements ICuiComponent {
       this.verticalOverflow !== undefined ? `VerticalOverflow = VerticalWrapMode.${this.verticalOverflow}` : null,
     ].filter(property => property !== null); // Удаление null значений
 
-    return `new CuiTextComponent { ${properties.join(', ')} }`;
+    return `${typeClass ? "new CuiTextComponent" : ""} { ${properties.join(', ')} }`;
   }
 }

@@ -21,7 +21,11 @@ export default class CuiButtonComponentModel extends CuiImageComponentBase {
     });
   }
 
-  ToCode(): string {
+  ToCode(typeClass?: boolean): string {
+
+    if(typeClass == null)
+      typeClass = true;
+
     const properties = [
       this.command !== null ? `Command = "${this.command}"` : null,
       this.close !== null ? `Close = "${this.close}"` : null,
@@ -32,6 +36,6 @@ export default class CuiButtonComponentModel extends CuiImageComponentBase {
       this.fadeIn !== null ? `FadeIn = ${this.fadeIn}` : null
     ].filter(property => property !== null); // Удаление null значений
 
-    return `new CuiButtonComponent { ${properties.join(', ')} }`;
+    return `${typeClass ?  "new CuiButtonComponent" : ""} { ${properties.join(', ')} }`;
   }
 }

@@ -42,8 +42,12 @@ export default class CuiRectTransformModel implements ICuiComponent {
       offsetMax: observable,
     });
   }
-  ToCode(): string {
-    return `new CuiRectTransformComponent 
+  ToCode(typeClass?: boolean): string {
+
+    if(typeClass == null)
+      typeClass = true;
+    
+    return `${ typeClass ? "new CuiRectTransformComponent" : ""} 
     { 
       AnchorMin = "${this.anchorMin}",
       AnchorMax = "${this.anchorMax}",
