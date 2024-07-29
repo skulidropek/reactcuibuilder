@@ -46,6 +46,9 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
     context.scale(1, -1);
   
     const drawShape = (element: CuiElementModel) => {
+
+      if(!element.visible) return;
+
       const shape = element.generateShapePositions();
       if (!shape) return;
   
