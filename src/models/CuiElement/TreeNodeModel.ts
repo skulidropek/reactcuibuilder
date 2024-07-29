@@ -34,7 +34,7 @@ export default abstract class TreeNodeModel {
     this.children.push(element);
   }
   
-  private deleteChild(element: CuiElementModel) {
+  deleteChild(element: CuiElementModel) {
     const index = this.children.indexOf(element);
     if (index !== -1) {
       element._parent = undefined;
