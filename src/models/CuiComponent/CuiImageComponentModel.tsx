@@ -36,7 +36,7 @@ export default class CuiImageComponentModel extends CuiImageComponentBase {
     if (this.material != null) components.push(`Material = "${this.material}"`);
     if (this.sprite != null) components.push(`Sprite = "${this.sprite}"`);
     if (this.imageType != null) components.push(`ImageType = Image.Type.${this.imageType}`);
-    if (this.png != null) components.push(`Png = "${this.png}"`);
+    if (this.png != null) components.push(`Png = ImageLibrary.Instance.GetImage("${this.png}")`);
     if (this.fadeIn != null) components.push(`FadeIn = ${this.fadeIn}`);
     if (this.itemId != null) components.push(`ItemId = ${this.itemId}`);
     if (this.skinId != null) components.push(`SkinId = ${this.skinId}`);

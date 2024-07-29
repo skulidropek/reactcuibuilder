@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 import { Form, Button } from 'react-bootstrap';
 import { ChromePicker, ColorResult } from 'react-color'; // Import ChromePicker from 'react-color'
-import CuiImageComponentModel from '@/models/CuiComponent/CuiImageComponentModel';
+import CuiImageComponentModel from '../../models/CuiComponent/CuiImageComponentModel';
 import { ImageType } from '../../models/CuiComponent/ICuiImageComponent';
 import { rustToRGBA, rustToHex, RGBAToRust } from '../../utils/colorUtils';
 
