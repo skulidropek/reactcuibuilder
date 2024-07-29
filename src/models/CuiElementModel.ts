@@ -16,30 +16,6 @@ export interface Marker {
   element: CuiElementModel;
 }
 
-export interface ShapePosition {
-  id: number;
-  type: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  children: ShapePosition[];
-  selected: boolean;
-  anchor?: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  };
-  markers?: {
-    blue: { x: number; y: number }[];
-    red: { x: number; y: number }[];
-    green: { x: number; y: number }[];
-    yellow: { x: number; y: number }[];
-  };
-  element: CuiElementModel; // добавляем это свойство
-}
-
 export default class CuiElementModel extends TreeNodeModel {
 
   constructor(
@@ -136,78 +112,5 @@ ${this.children?.map(s => s?.ToCode()).join('\n')}
     this.components.push(componentClass); 
   
     return this;
-  }
-
-  // parentSize: Size, offsetX: number = 0, offsetY: number = 0
-  generateShapePositions(): ShapePosition | null {
-
-    const rectTransform = this.rectTransform();
-    if (!rectTransform) return null;
-
-    const parrentSize = this.calculateParentPositionAndSize();
-
-    const { x, y, width, height } = rectTransform.calculatePositionAndSize();
-    
-    const shapeData: ShapePosition = {
-      id: this.id,
-      type: this.type,
-      x,
-      y,
-      width,
-      height,
-      children: [],
-      selected: this.selected,
-      element: this
-    };
-
-    if (this.selected) {
-      const transformValues = rectTransform.extractTransformValues();
-      const anchorX = transformValues.anchorMin.x * parrentSize.width + parrentSize.x;
-      const anchorY = transformValues.anchorMin.y * parrentSize.height + parrentSize.y;
-      const anchorWidth = (transformValues.anchorMax.x - transformValues.anchorMin.x) * parrentSize.width;
-      const anchorHeight = (transformValues.anchorMax.y - transformValues.anchorMin.y) * parrentSize.height;
-
-      shapeData.anchor = {
-        x: anchorX,
-        y: anchorY,
-        width: anchorWidth,
-        height: anchorHeight,
-      };
-      shapeData.markers = {
-        blue: [
-          { x: anchorX, y: anchorY },
-          { x: anchorX + anchorWidth, y: anchorY },
-          { x: anchorX, y: anchorY + anchorHeight },
-          { x: anchorX + anchorWidth, y: anchorY + anchorHeight }
-        ],
-        red: [
-          { x, y },
-          { x: x + width, y },
-          { x, y: y + height },
-          { x: x + width, y: y + height }
-        ],
-        green: [
-          { x: anchorX + anchorWidth / 2, y: anchorY },
-          { x: anchorX + anchorWidth, y: anchorY + anchorHeight / 2 },
-          { x: anchorX + anchorWidth / 2, y: anchorY + anchorHeight },
-          { x: anchorX, y: anchorY + anchorHeight / 2 }
-        ],
-        yellow: [
-          { x: x + width / 2, y },
-          { x: x + width, y: y + height / 2 },
-          { x: x + width / 2, y: y + height },
-          { x, y: y + height / 2 }
-        ]
-      };
-    }
-
-    this.children.forEach((child: CuiElementModel) => {
-      const childData = child.generateShapePositions();
-      if (childData) {
-        shapeData.children.push(childData);
-      }
-    });
-
-    return shapeData;
   }
 }

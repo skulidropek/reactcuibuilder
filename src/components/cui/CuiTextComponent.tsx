@@ -101,7 +101,7 @@ const CuiTextComponent: React.FC<CuiTextComponentProps> = observer(({ element, o
             variant="outline-secondary"
             onClick={() => setColorPickerVisible(!colorPickerVisible)}
             style={{
-              backgroundColor: rustToHex(element.color || '0 0 0 1'),
+              backgroundColor: rustToHex(element.color),
               width: '40px',
               height: '40px',
               padding: 0,
@@ -111,7 +111,7 @@ const CuiTextComponent: React.FC<CuiTextComponentProps> = observer(({ element, o
           {colorPickerVisible && (
             <div ref={colorPickerRef} style={{ position: 'absolute', zIndex: 2, marginTop: '5px' }}>
               <ChromePicker
-                color={rustToRGBA(element.color || '0 0 0 1')}
+                color={rustToRGBA(element.color)}
                 onChange={handleColorChange}
               />
             </div>

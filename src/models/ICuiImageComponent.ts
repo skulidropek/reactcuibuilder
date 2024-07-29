@@ -12,7 +12,7 @@ export default abstract class CuiImageComponentBase implements ICuiComponent {
     abstract type: string;
     abstract ToCode(typeClass?: boolean): string;
     
-    color?: string;
+    color: string = '0 0 0 0';
     imageType?: ImageType;
     sprite?: string;
     material?: string;
