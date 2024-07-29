@@ -92,7 +92,7 @@ const CuiButtonComponent: React.FC<CuiButtonComponentProps> = ({ element, onChan
             variant="primary"
             onClick={() => setColorPickerVisible(!colorPickerVisible)}
             style={{
-              backgroundColor: rustToHex(element?.color || '0 0 0 1'),
+              backgroundColor: rustToHex(element.color),
               borderColor: '#000000',
               color: '#ffffff',
               width: '40px',
@@ -104,7 +104,7 @@ const CuiButtonComponent: React.FC<CuiButtonComponentProps> = ({ element, onChan
           {colorPickerVisible && (
             <div ref={colorPickerRef} style={{ position: 'absolute', zIndex: 2 }}>
               <ChromePicker
-                color={rustToRGBA(element?.color || '0 0 0 1')}
+                color={rustToRGBA(element.color)}
                 onChange={handleColorChange}
               />
             </div>

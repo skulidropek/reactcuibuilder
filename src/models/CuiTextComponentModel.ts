@@ -32,7 +32,7 @@ export default class CuiTextComponentModel implements ICuiComponent {
   fontSize: number = 14;
   font: Font = Font.RobotoCondensedRegular;
   align: TextAnchor = TextAnchor.UpperCenter;
-  color?: string;
+  color: string = '0 0 0 1';
   verticalOverflow: VerticalWrapMode = VerticalWrapMode.Truncate;
   fadeIn: number = 0;
   readonly element: CuiElementModel;
