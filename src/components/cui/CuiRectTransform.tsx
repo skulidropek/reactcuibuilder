@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import CuiRectTransformModel from '../../models/CuiRectTransformModel';
+import CuiRectTransformModel from '../../models/CuiComponent/CuiRectTransformModel';
 import React from 'react';
 import { Form } from 'react-bootstrap';
 

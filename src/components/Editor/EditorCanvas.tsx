@@ -1,16 +1,16 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { observer } from 'mobx-react-lite';
 import { autorun, observable } from 'mobx';
-import CuiElementModel, { Marker } from '../../models/CuiElementModel';
-import CuiRectTransformModel, { ShapePosition } from '../../models/CuiRectTransformModel';
+import CuiElementModel, { Marker } from '../../models/CuiElement/CuiElementModel';
+import CuiRectTransformModel, { ShapePosition } from '../../models/CuiComponent/CuiRectTransformModel';
 import GraphicEditorStore from './GraphicEditorStore';
-import CuiImageComponentModel from '../../models/CuiImageComponentModel';
-import ICuiImageComponent, { ImageType } from '../../models/ICuiImageComponent';
-import ICuiComponent from '@/models/ICuiComponent';
+import CuiImageComponentModel from '../../models/CuiComponent/CuiImageComponentModel';
+import ICuiImageComponent, { ImageType } from '../../models/CuiComponent/ICuiImageComponent';
+import ICuiComponent from '@/models/CuiComponent/ICuiComponent';
 import CuiButtonComponent from '../cui/CuiButtonComponent';
-import CuiButtonComponentModel from '../../models/CuiButtonComponentModel';
+import CuiButtonComponentModel from '../../models/CuiComponent/CuiButtonComponentModel';
 import { rustToRGBA } from '../../utils/colorUtils';
-import CuiTextComponentModel, { TextAnchor, VerticalWrapMode } from '../../models/CuiTextComponentModel';
+import CuiTextComponentModel, { TextAnchor, VerticalWrapMode } from '../../models/CuiComponent/CuiTextComponentModel';
 
 interface EditorCanvasProps {
   store: GraphicEditorStore;

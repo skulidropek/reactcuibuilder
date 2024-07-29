@@ -3,12 +3,12 @@ import { FaPlus } from 'react-icons/fa';
 import { Button, Form } from 'react-bootstrap';
 import { observer } from 'mobx-react-lite';
 import GraphicEditorStore from './GraphicEditorStore';
-import CuiElementModel from '../../models/CuiElementModel';
-import CuiButtonComponentModel from '../../models/CuiButtonComponentModel';
-import TreeNodeModel from '../../models/TreeNodeModel';
-import CuiPanelModel from '../../models/CuiPanelModel';
-import CuiButtonModel from '../../models/CuiButtonModel';
-import CuiLabelModel from '../../models/CuiLabelModel';
+import CuiElementModel from '../../models/CuiElement/CuiElementModel';
+import CuiButtonComponentModel from '../../models/CuiComponent/CuiButtonComponentModel';
+import TreeNodeModel from '../../models/CuiElement/TreeNodeModel';
+import CuiPanelModel from '../../models/CuiElement/CuiPanelModel';
+import CuiButtonModel from '../../models/CuiElement/CuiButtonModel';
+import CuiLabelModel from '../../models/CuiElement/CuiLabelModel';
 
 interface EditorControlsProps {
   store: GraphicEditorStore;

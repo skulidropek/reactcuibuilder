@@ -1,10 +1,10 @@
-import ICuiComponent from "./ICuiComponent";
-import CuiRectTransformModel, { Size, TransformValues } from "./CuiRectTransformModel";
+import ICuiComponent from "../CuiComponent/ICuiComponent";
+import CuiRectTransformModel, { Size, TransformValues } from "../CuiComponent/CuiRectTransformModel";
 import TreeNodeModel, { Rect } from "./TreeNodeModel";
 import { action, makeObservable, observable } from "mobx";
-import GraphicEditor from "../components/Editor/GraphicEditor";
-import GraphicEditorStore from "../components/Editor/GraphicEditorStore";
-import ICuiImageComponent from "./ICuiImageComponent";
+import GraphicEditor from "../../components/Editor/GraphicEditor";
+import GraphicEditorStore from "../../components/Editor/GraphicEditorStore";
+import ICuiImageComponent from "../CuiComponent/ICuiImageComponent";
 
 
 export interface Marker {

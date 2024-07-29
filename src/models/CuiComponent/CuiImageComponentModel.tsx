@@ -1,5 +1,5 @@
 import { makeObservable, observable, action } from 'mobx';
-import CuiElementModel from './CuiElementModel';
+import CuiElementModel from '../CuiElement/CuiElementModel';
 import ICuiComponent from './ICuiComponent';
 import CuiImageComponentBase, { ImageType } from './ICuiImageComponent';
 

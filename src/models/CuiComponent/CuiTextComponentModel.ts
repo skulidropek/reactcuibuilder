@@ -1,6 +1,6 @@
 import { makeObservable, observable, action } from "mobx";
 import ICuiComponent from "./ICuiComponent";
-import CuiElementModel from "./CuiElementModel";
+import CuiElementModel from "../CuiElement/CuiElementModel";
 
 export enum TextAnchor {
   UpperLeft = "UpperLeft",

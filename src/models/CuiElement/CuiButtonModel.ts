@@ -1,8 +1,8 @@
-import GraphicEditorStore from "../components/Editor/GraphicEditorStore";
-import CuiButtonComponentModel from "./CuiButtonComponentModel";
+import GraphicEditorStore from "../../components/Editor/GraphicEditorStore";
+import CuiButtonComponentModel from "../CuiComponent/CuiButtonComponentModel";
 import CuiElementModel from "./CuiElementModel";
-import CuiRectTransformModel from "./CuiRectTransformModel";
-import CuiTextComponentModel from "./CuiTextComponentModel";
+import CuiRectTransformModel from "../CuiComponent/CuiRectTransformModel";
+import CuiTextComponentModel from "../CuiComponent/CuiTextComponentModel";
 
 export default class CuiButtonModel extends CuiElementModel {
 

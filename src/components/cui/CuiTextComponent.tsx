@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, ChangeEvent } from 'react';
 import { observer } from 'mobx-react-lite';
 import { Form, Button } from 'react-bootstrap';
 import { ChromePicker, ColorResult } from 'react-color';
-import CuiTextComponentModel, { Font, TextAnchor, VerticalWrapMode } from '../../models/CuiTextComponentModel';
+import CuiTextComponentModel, { Font, TextAnchor, VerticalWrapMode } from '../../models/CuiComponent/CuiTextComponentModel';
 import { rustToRGBA, rustToHex, RGBAToRust } from '../../utils/colorUtils';
 
 interface CuiTextComponentProps {

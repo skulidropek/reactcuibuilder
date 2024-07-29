@@ -1,9 +1,8 @@
 import React, { useCallback } from 'react';
 import { ChevronRight, ChevronDown, Eye, EyeOff, ArrowUp } from 'lucide-react';
 import { Button, Card, ListGroup, ListGroupItem, Collapse } from 'react-bootstrap';
-import CuiElementModel from '../../models/CuiElementModel';
+import CuiElementModel from '../../models/CuiElement/CuiElementModel';
 import ElementProfile from '../ElementProfile';
-import GraphicEditorModel from '@/models/GraphicEditorModel';
 import GraphicEditorStore from './GraphicEditorStore';
 import { observer } from 'mobx-react-lite';
 

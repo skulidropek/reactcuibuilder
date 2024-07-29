@@ -2,8 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 import { Form, Button } from 'react-bootstrap';
 import { ChromePicker, ColorResult } from 'react-color'; 
-import CuiButtonComponentModel from '../../models/CuiButtonComponentModel';
-import { ImageType } from '../../models/ICuiImageComponent';
+import CuiButtonComponentModel from '../../models/CuiComponent/CuiButtonComponentModel';
+import { ImageType } from '../../models/CuiComponent/ICuiImageComponent';
 import { rustToRGBA, rustToHex, RGBAToRust } from '../../utils/colorUtils';
 
 interface CuiButtonComponentProps {

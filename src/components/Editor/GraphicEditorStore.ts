@@ -1,7 +1,7 @@
 import { makeObservable, observable, action } from "mobx";
-import CuiElementModel from "../../models/CuiElementModel";
-import TreeNodeModel, { Rect } from "../../models/TreeNodeModel";
-import { Size } from "@/models/CuiRectTransformModel";
+import CuiElementModel from "../../models/CuiElement/CuiElementModel";
+import TreeNodeModel, { Rect } from "../../models/CuiElement/TreeNodeModel";
+import { Size } from "@/models/CuiComponent/CuiRectTransformModel";
 
 export interface DragingModel {
   element: CuiElementModel;

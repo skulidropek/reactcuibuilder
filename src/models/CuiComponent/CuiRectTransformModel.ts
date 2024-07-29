@@ -1,7 +1,7 @@
 import { makeObservable, observable } from "mobx";
-import CuiElementModel from "./CuiElementModel";
+import CuiElementModel from "../CuiElement/CuiElementModel";
 import ICuiComponent from "./ICuiComponent";
-import { Rect } from "./TreeNodeModel";
+import { Rect } from "../CuiElement/TreeNodeModel";
 
 export interface TransformValues {
   anchorMin: { x: number; y: number };
