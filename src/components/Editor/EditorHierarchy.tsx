@@ -1,11 +1,10 @@
-import React, { useCallback } from 'react';
-import { ChevronRight, ChevronDown, Eye, EyeOff, ArrowUp } from 'lucide-react';
+import React, { useCallback, useEffect } from 'react';
+import { ChevronRight, ChevronDown, Eye, EyeOff, ArrowUp, Trash2 } from 'lucide-react';
 import { Button, Card, ListGroup, ListGroupItem, Collapse } from 'react-bootstrap';
-import CuiElementModel from '../../models/CuiElementModel';
+import CuiElementModel from '../../models/CuiElement/CuiElementModel';
 import ElementProfile from '../ElementProfile';
-import GraphicEditorModel from '@/models/GraphicEditorModel';
-import GraphicEditorStore from './GraphicEditorStore';
 import { observer } from 'mobx-react-lite';
+import GraphicEditorStore from './GraphicEditorStore';
 
 interface ShapeHierarchyProps {
   store: GraphicEditorStore;
@@ -30,6 +29,26 @@ const ShapeHierarchy: React.FC<ShapeHierarchyProps> = ({
     store.desetDragging();
   }, [store]);
 
+  const deleteSelectedElement = useCallback(() => {
+    if (store.selectedItem && store.selectedItem.parent) {
+      store.selectedItem.parent.deleteChild(store.selectedItem);
+      store.setSelected(null);
+    }
+  }, [store]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Delete' && store.selectedItem) {
+        deleteSelectedElement();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [deleteSelectedElement, store.selectedItem]);
+
   const renderHierarchy = (items: CuiElementModel[], level = 0) => {
     return items.map(shape => (
       <li key={shape.id} style={{ listStyleType: 'none' }}>
@@ -38,7 +57,7 @@ const ShapeHierarchy: React.FC<ShapeHierarchyProps> = ({
           className={`d-flex align-items-center p-1 ${store.draggingItem?.element?.id === shape.id ? 'bg-light' : ''}`}
           draggable
           onDragStart={(e) => {
-            store.setDragging( { element: shape, startX: e.clientX, startY: e.clientY } );
+            store.setDragging({ element: shape, startX: e.clientX, startY: e.clientY });
             e.dataTransfer.setData("shapeId", shape.id.toString());
           }}
           onDragOver={(e) => e.preventDefault()}
@@ -50,16 +69,19 @@ const ShapeHierarchy: React.FC<ShapeHierarchyProps> = ({
           onClick={() => store.setSelected(shape)}
         >
           {shape.children.length > 0 && (
-            <Button variant="link" size="sm" onClick={(e) => { e.stopPropagation(); shape.collapsed = !shape.collapsed; }} className="mr-2 p-0">
+            <Button variant="link" size="sm" onClick={(e) => { e.stopPropagation(); shape.updateProperty('collapsed', !shape.collapsed); }} className="mr-2 p-0">
               {shape.collapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
             </Button>
           )}
-          <Button variant="link" size="sm" onClick={(e) => { e.stopPropagation(); shape.visible = !shape.visible; }} className="mr-2 p-0">
+          <Button variant="link" size="sm" onClick={(e) => { e.stopPropagation(); shape.updateProperty('visible', !shape.visible); }} className="mr-2 p-0">
             {shape.visible ? <Eye size={12} /> : <EyeOff size={12} />}
           </Button>
           <span className="mr-2">{shape.type} - {shape.id}</span>
           <Button variant="link" size="sm" onClick={(e) => { e.stopPropagation(); moveToParent(shape.id, store.id); }} className="ml-auto p-0">
             <ArrowUp size={12} />
+          </Button>
+          <Button variant="link" size="sm" onClick={(e) => { e.stopPropagation(); store.setSelected(shape); deleteSelectedElement(); }} className="ml-2 p-0">
+            <Trash2 size={12} />
           </Button>
         </ListGroupItem>
         {!shape.collapsed && shape.children.length > 0 && (

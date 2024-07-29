@@ -5,7 +5,7 @@ import ShapeHierarchy from './EditorHierarchy';
 import EditorCanvas from './EditorCanvas';
 import GraphicEditorStore from './GraphicEditorStore';
 import { observer } from 'mobx-react-lite';
-import CuiElementModel from '../../models/CuiElementModel';
+import CuiElementModel from '../../models/CuiElement/CuiElementModel';
 
 interface GraphicEditorProps {
   store: GraphicEditorStore;

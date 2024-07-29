@@ -2,9 +2,9 @@ import React, { forwardRef } from 'react';
 import { Button, Card } from 'react-bootstrap';
 import { FaPlus, FaArrowsAlt } from 'react-icons/fa';
 import ElementSetting from './ElementSetting';
-import CuiElementModel from '../models/CuiElementModel';
+import CuiElementModel from '../models/CuiElement/CuiElementModel';
 import { observer } from 'mobx-react-lite';
-import CuiPanelModel from '../models/CuiPanelModel';
+import CuiPanelModel from '../models/CuiElement/CuiPanelModel';
 
 interface ElementProfileProps {
   element: CuiElementModel;

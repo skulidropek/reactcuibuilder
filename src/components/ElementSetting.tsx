@@ -1,16 +1,16 @@
 import React from 'react';
 import CuiRectTransform from './cui/CuiRectTransform';
-import CuiElementModel from '../models/CuiElementModel';
-import CuiRectTransformModel from '../models/CuiRectTransformModel';
-import CuiImageComponentModel from '../models/CuiImageComponentModel';
+import CuiElementModel from '../models/CuiElement/CuiElementModel';
+import CuiRectTransformModel from '../models/CuiComponent/CuiRectTransformModel';
+import CuiImageComponentModel from '../models/CuiComponent/CuiImageComponentModel';
 import { observer } from 'mobx-react-lite';
-import ICuiComponent from '@/models/ICuiComponent';
+import ICuiComponent from '@/models/CuiComponent/ICuiComponent';
 import CuiImageComponent from './cui/CuiImageComponent';
 import { Button, Card } from 'react-bootstrap';
 import { FaMinus } from 'react-icons/fa';
-import CuiButtonComponentModel from '../models/CuiButtonComponentModel';
+import CuiButtonComponentModel from '../models/CuiComponent/CuiButtonComponentModel';
 import CuiButtonComponent from './cui/CuiButtonComponent';
-import CuiTextComponentModel from '../models/CuiTextComponentModel';
+import CuiTextComponentModel from '../models/CuiComponent/CuiTextComponentModel';
 import CuiTextComponent from './cui/CuiTextComponent';
 
 interface ElementSettingProps {
