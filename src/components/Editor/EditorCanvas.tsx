@@ -51,7 +51,6 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
       if(!element.visible) return;
 
       const shape = element.rectTransform().generateShapePositions();
-      if (!shape) return;
   
       const cuiImageComponent = element.findComponentByTypes<ICuiImageComponent>([CuiImageComponentModel, CuiButtonComponentModel]);
       const cuiTextComponent = element.findComponentByType(CuiTextComponentModel);
