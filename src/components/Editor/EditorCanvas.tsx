@@ -10,7 +10,8 @@ import ICuiComponent from '@/models/CuiComponent/ICuiComponent';
 import CuiButtonComponent from '../cui/CuiButtonComponent';
 import CuiButtonComponentModel from '../../models/CuiComponent/CuiButtonComponentModel';
 import { rustToRGBA } from '../../utils/colorUtils';
-import CuiTextComponentModel, { TextAnchor, VerticalWrapMode } from '../../models/CuiComponent/CuiTextComponentModel';
+import CuiTextComponentModel, { TextAnchor, TextPosition, VerticalWrapMode } from '../../models/CuiComponent/CuiTextComponentModel';
+import { text } from 'stream/consumers';
 
 interface EditorCanvasProps {
   store: GraphicEditorStore;
@@ -91,7 +92,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
       }
   
       if (cuiTextComponent) {
-        drawTextComponent(context, cuiTextComponent, shape);
+        drawTextComponent(context, cuiTextComponent.generateTextPosition(context, cuiTextComponent, shape));
       }
   
       if (shape.anchor && shape.markers) {
@@ -114,124 +115,28 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
       context.fillRect(x - 5, y - 5, 10, 10);
     };
 
-    const drawTextComponent = (context: CanvasRenderingContext2D, textComponent: CuiTextComponentModel, shape: { x: number; y: number; width: number; height: number }) => {
+    const drawTextComponent = (
+      context: CanvasRenderingContext2D,
+      renderModel: TextPosition
+    ) => {
       context.save();
-    
+      
       // Отзеркаливаем контекст обратно для правильной отрисовки текста
       context.translate(0, context.canvas.height);
       context.scale(1, -1);
     
-      if(textComponent.color) {
-        context.fillStyle = rustToRGBA(textComponent.color);
+      if (renderModel.color) {
+        context.fillStyle = renderModel.color;
       }
       
-      let fontSize = textComponent.fontSize || 12;
-      const minFontSize = 1; // Минимальный размер шрифта
-      
-      let x = shape.x;
-      let y = context.canvas.height - shape.y - shape.height; // Изменено: y теперь указывает на нижнюю границу shape
-      const width = shape.width;
-      const height = shape.height;
-      const padding = 5;
-    
-      // Определение выравнивания текста
-      let textAlign: CanvasTextAlign;
-      let verticalAlign: 'top' | 'middle' | 'bottom';
-      
-      switch (textComponent.align) {
-        case TextAnchor.UpperLeft:
-        case TextAnchor.MiddleLeft:
-        case TextAnchor.LowerLeft:
-          textAlign = 'left';
-          x += padding;
-          break;
-        case TextAnchor.UpperCenter:
-        case TextAnchor.MiddleCenter:
-        case TextAnchor.LowerCenter:
-          textAlign = 'center';
-          x += width / 2;
-          break;
-        case TextAnchor.UpperRight:
-        case TextAnchor.MiddleRight:
-        case TextAnchor.LowerRight:
-          textAlign = 'right';
-          x += width - padding;
-          break;
-      }
-    
-      switch (textComponent.align) {
-        case TextAnchor.UpperLeft:
-        case TextAnchor.UpperCenter:
-        case TextAnchor.UpperRight:
-          verticalAlign = 'bottom';
-          break;
-        case TextAnchor.MiddleLeft:
-        case TextAnchor.MiddleCenter:
-        case TextAnchor.MiddleRight:
-          verticalAlign = 'middle';
-          break;
-        case TextAnchor.LowerLeft:
-        case TextAnchor.LowerCenter:
-        case TextAnchor.LowerRight:
-          verticalAlign = 'top';
-          break;
-      }
-    
-      context.textAlign = textAlign;
+      context.textAlign = renderModel.textAlign;
       context.textBaseline = 'alphabetic';
-    
-      // Функция для разбиения текста на строки
-      const getLines = (text: string, maxWidth: number): string[] => {
-        const words = text.split(' ');
-        const lines: string[] = [];
-        let currentLine = words[0];
-    
-        for (let i = 1; i < words.length; i++) {
-          const word = words[i];
-          const width = context.measureText(currentLine + " " + word).width;
-          if (width < maxWidth - 2 * padding) {
-            currentLine += " " + word;
-          } else {
-            lines.push(currentLine);
-            currentLine = word;
-          }
-        }
-        lines.push(currentLine);
-        return lines;
-      };
-    
-      // Подбор оптимального размера шрифта
-      while (fontSize > minFontSize) {
-        context.font = `${fontSize}px ${textComponent.font || 'Arial'}`;
-        const lines = getLines(textComponent.text, width);
-        const totalHeight = lines.length * fontSize * 1.2;
-        
-        if (totalHeight <= height - 2 * padding) {
-          break;
-        }
-        
-        fontSize -= 1;
-      }
-    
-      context.font = `${fontSize}px ${textComponent.font || 'Arial'}`;
-      const lines = getLines(textComponent.text, width);
-      const lineHeight = fontSize * 1.2;
-    
-      // Вычисляем начальную позицию Y в зависимости от вертикального выравнивания
-      let startY: number;
-      const totalTextHeight = lines.length * lineHeight;
-      if (verticalAlign === 'top') {
-        startY = y + height - padding;
-      } else if (verticalAlign === 'middle') {
-        startY = y + height / 2 + totalTextHeight / 2;
-      } else { // 'bottom'
-        startY = y + padding + totalTextHeight;
-      }
+      context.font = `${renderModel.fontSize}px Arial`;
     
       // Рисуем текст
-      lines.forEach((line, index) => {
-        const lineY = startY - index * lineHeight;
-        context.fillText(line, x, lineY);
+      renderModel.lines.forEach((line, index) => {
+        const lineY = renderModel.y - index * renderModel.lineHeight;
+        context.fillText(line, renderModel.x, lineY);
       });
     
       context.restore();
