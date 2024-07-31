@@ -23,9 +23,8 @@ export default class CuiPanelModel extends CuiElementModel {
         return `
         container.Add(new ${this.type}
         {
-            // RawImage = { }
             CursorEnabled = false,
-            Image = ${this.image().ToCode(false)},
+            ${this.image().png ? `Image = null, RawImage = new CuiRawImageComponent() { Png = ImageLibrary.Instance.GetImage("${this.image().png}"), },` : 'Image = ${this.image().ToCode(false)},'}
             RectTransform = ${this.rectTransform().ToCode(false)},
         }, "${this?.parent instanceof GraphicEditorStore ? "Overlay" : this.parent?.id}", "${this.id}");
 
