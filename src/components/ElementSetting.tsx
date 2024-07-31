@@ -12,6 +12,9 @@ import CuiButtonComponentModel from '../models/CuiComponent/CuiButtonComponentMo
 import CuiButtonComponent from './cui/CuiButtonComponent';
 import CuiTextComponentModel from '../models/CuiComponent/CuiTextComponentModel';
 import CuiTextComponent from './cui/CuiTextComponent';
+import CuiNeedsCursorComponentModel from '../models/CuiComponent/CuiNeedsCursorComponentModel';
+import CuiActivatableComponent from './cui/CuiActivatableComponent';
+import CuiNeedsKeyboardComponentModel from '../models/CuiComponent/CuiNeedsKeyboardComponentModel';
 
 interface ElementSettingProps {
   element: CuiElementModel;
@@ -56,6 +59,20 @@ const ElementSetting: React.FC<ElementSettingProps> = observer(({ element, onRem
           onChange={(key, value) => handleComponentChange(CuiTextComponentModel, key, value)}
         />
       );
+    } else if(component instanceof CuiNeedsCursorComponentModel) {
+      return (
+        <CuiActivatableComponent 
+          element={component}
+          onChange={(key, value) => handleComponentChange(CuiNeedsCursorComponentModel, key, value)}
+        />
+      )
+    } else if(component instanceof CuiNeedsKeyboardComponentModel) {
+      return (
+        <CuiActivatableComponent 
+          element={component}
+          onChange={(key, value) => handleComponentChange(CuiNeedsKeyboardComponentModel, key, value)}
+        />
+      )
     }
     return null;
   };
