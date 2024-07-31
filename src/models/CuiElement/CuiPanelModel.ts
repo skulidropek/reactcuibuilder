@@ -4,6 +4,8 @@ import CuiElementModel from "./CuiElementModel";
 import CuiImageComponentModel from "../CuiComponent/CuiImageComponentModel";
 import CuiRectTransformModel from "../CuiComponent/CuiRectTransformModel";
 import CuiTextComponentModel from "../CuiComponent/CuiTextComponentModel";
+import CuiNeedsCursorComponentModel from "../CuiComponent/CuiNeedsCursorComponentModel";
+import CuiNeedsKeyboardComponentModel from "../CuiComponent/CuiNeedsKeyboardComponentModel";
 
 export default class CuiPanelModel extends CuiElementModel {
 
@@ -12,6 +14,8 @@ export default class CuiPanelModel extends CuiElementModel {
       super('CuiPanel'); // Add the super() call here
 
       this.addComponent(new CuiImageComponentModel(this));
+      this.addComponent(new CuiNeedsCursorComponentModel(this));
+      this.addComponent(new CuiNeedsKeyboardComponentModel(this));
     }
 
     
@@ -19,12 +23,21 @@ export default class CuiPanelModel extends CuiElementModel {
         return this.findComponentByType(CuiImageComponentModel)!;
     }
 
+    public cursorEnabled(): boolean {
+        return this.findComponentByType(CuiNeedsCursorComponentModel)?.isActive ?? false;
+    } 
+
+    public keyboardEnabled(): boolean {
+        return this.findComponentByType(CuiNeedsKeyboardComponentModel)?.isActive ?? false;
+    } 
+
     ToCode(): string {
         return `
         container.Add(new ${this.type}
         {
-            CursorEnabled = false,
-            ${this.image().png ? `Image = null, RawImage = new CuiRawImageComponent() { Png = ImageLibrary.Instance.GetImage("${this.image().png}"), },` : 'Image = ${this.image().ToCode(false)},'}
+            KeyboardEnabled = ${this.keyboardEnabled()},
+            CursorEnabled = ${this.cursorEnabled()},
+            ${this.image().png ? `Image = null, RawImage = new CuiRawImageComponent() { Png = ImageLibrary.Instance.GetImage("${this.image().png}"), },` : `Image = ${this.image().ToCode(false)},`}
             RectTransform = ${this.rectTransform().ToCode(false)},
         }, "${this?.parent instanceof GraphicEditorStore ? "Overlay" : this.parent?.id}", "${this.id}");
 
