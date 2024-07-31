@@ -9,6 +9,7 @@ import TreeNodeModel from '../../models/CuiElement/TreeNodeModel';
 import CuiPanelModel from '../../models/CuiElement/CuiPanelModel';
 import CuiButtonModel from '../../models/CuiElement/CuiButtonModel';
 import CuiLabelModel from '../../models/CuiElement/CuiLabelModel';
+import CuiImageComponentModel from '../../models/CuiComponent/CuiImageComponentModel';
 
 interface EditorControlsProps {
   store: GraphicEditorStore;
@@ -16,9 +17,11 @@ interface EditorControlsProps {
 
 const plugin = `using System.Collections.Generic;
 using UnityEngine.UI;
+using System;
 using Oxide.Core.Plugins;
 using Oxide.Game.Rust.Cui;
 using UnityEngine;
+using Oxide.Core.Plugins;
 
 namespace Oxide.Plugins
 {
@@ -26,6 +29,12 @@ namespace Oxide.Plugins
     [Description("A simple GUI example for Rust.")]
     public class CuiPlugin : RustPlugin
     {
+        private void OnServerInitialized()
+        {
+            new ImageLibrary(plugins.Find("ImageLibrary"));
+            %IMAGES%
+        }
+
         [ChatCommand("showgui")]
         private void ShowGuiCommand(BasePlayer player, string command, string[] args)
         {
@@ -41,6 +50,42 @@ namespace Oxide.Plugins
             %CONTAINER_ELEMENTS%
 
             CuiHelper.AddUi(player, container);
+        }
+
+        private class ImageLibrary : PluginSigleton<ImageLibrary>
+        {
+            public ImageLibrary(Plugin plugin) : base(plugin)
+            {
+                if (plugin == null)
+                    throw new Exception("[CuiPlugin] Need add ImageLibrary");
+            }
+
+            public string GetImage(string shortname, ulong skin = 0) =>
+                Plugin.Call<string>("GetImage", shortname, skin);
+
+            public bool AddImage(string url, string shortname, ulong skin = 0) =>
+                Plugin.Call<bool>("AddImage", url, shortname, skin);
+
+            public bool HasImage(string imageName, ulong imageId = 0) => Plugin.Call<bool>("HasImage", imageName, imageId);
+        }
+
+        public abstract class PluginSigleton<T> : Sigleton<T> where T : PluginSigleton<T>
+        {
+            public Plugin Plugin { get; private set; }
+            public PluginSigleton(Plugin plugin)
+            {
+                Plugin = plugin;
+            }
+        }
+
+        public abstract class Sigleton<T> where T : Sigleton<T>
+        {
+            public static T Instance;
+
+            public Sigleton()
+            {
+                Instance = (T)this;
+            }
         }
     }
 }
@@ -72,7 +117,18 @@ const EditorControls: React.FC<EditorControlsProps> = ({ store }) => {
           player.ConsoleMessage("Hello ${s.command}");
         }`).join('\n');
 
-    const data = plugin.replace("%COMMANDS%", commandText).replace("%CONTAINER_ELEMENTS%", store.children.map(s => s.ToCode()).join('\n'));
+      const allImages = store.map((s: TreeNodeModel) => {
+          if (s instanceof CuiElementModel) {
+              return s.findComponentByType(CuiImageComponentModel);
+          } else {
+              console.warn('Element is not an instance of CuiElementModel:', s);
+              return undefined;
+          }
+      }).filter(s => s != null && s != undefined).filter(s => s.png != null);
+
+    const imagesText = allImages.map(s => `ImageLibrary.Instance.AddImage("${s.png}", "${s.png}");`).join('\n');
+
+    const data = plugin.replace("%IMAGES%", imagesText).replace("%COMMANDS%", commandText).replace("%CONTAINER_ELEMENTS%", store.children.map(s => s.ToCode()).join('\n'));
     const blob = new Blob([data], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
