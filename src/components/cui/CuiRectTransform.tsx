@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite';
 import CuiRectTransformModel from '../../models/CuiComponent/CuiRectTransformModel';
-import React, { useState } from 'react';
+import React from 'react';
 import { Form } from 'react-bootstrap';
 
 interface CuiRectTransformProps {
@@ -9,22 +9,9 @@ interface CuiRectTransformProps {
 }
 
 const CuiRectTransform: React.FC<CuiRectTransformProps> = ({ element, onChange }) => {
-    const [tempValues, setTempValues] = useState({
-        anchorMin: element.anchorMin,
-        anchorMax: element.anchorMax,
-        offsetMin: element.offsetMin,
-        offsetMax: element.offsetMax,
-    });
-
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         const isValidNumber = (val: string) => /^-?\d*\.?\d*$/.test(val);
-
-        // Обновляем временное состояние для данного поля
-        setTempValues(prev => ({
-            ...prev,
-            [name]: value
-        }));
 
         // Разделяем значения по пробелам и проверяем каждое из них
         const values = value.split(' ');
@@ -40,7 +27,7 @@ const CuiRectTransform: React.FC<CuiRectTransformProps> = ({ element, onChange }
                 <Form.Control
                     type="text"
                     name="anchorMin"
-                    value={tempValues.anchorMin}
+                    value={element.anchorMin}
                     onChange={handleInputChange}
                 />
             </Form.Group>
@@ -49,7 +36,7 @@ const CuiRectTransform: React.FC<CuiRectTransformProps> = ({ element, onChange }
                 <Form.Control
                     type="text"
                     name="anchorMax"
-                    value={tempValues.anchorMax}
+                    value={element.anchorMax}
                     onChange={handleInputChange}
                 />
             </Form.Group>
@@ -58,7 +45,7 @@ const CuiRectTransform: React.FC<CuiRectTransformProps> = ({ element, onChange }
                 <Form.Control
                     type="text"
                     name="offsetMin"
-                    value={tempValues.offsetMin}
+                    value={element.offsetMin}
                     onChange={handleInputChange}
                 />
             </Form.Group>
@@ -67,7 +54,7 @@ const CuiRectTransform: React.FC<CuiRectTransformProps> = ({ element, onChange }
                 <Form.Control
                     type="text"
                     name="offsetMax"
-                    value={tempValues.offsetMax}
+                    value={element.offsetMax}
                     onChange={handleInputChange}
                 />
             </Form.Group>
