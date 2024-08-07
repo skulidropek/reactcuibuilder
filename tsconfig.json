@@ -22,6 +22,10 @@
       "@/*": ["*"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/types/images.d.ts" // Укажите правильный путь к вашему файлу декларации
+  ],
   "exclude": ["node_modules"]
 }
