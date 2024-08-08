@@ -1,13 +1,12 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useCallback } from 'react';
 import { observer } from 'mobx-react-lite';
 import { Form, Button, Modal } from 'react-bootstrap';
-import Select from 'react-select';
 import { ChromePicker, ColorResult } from 'react-color';
+import { makeAutoObservable } from 'mobx';
 import CuiImageComponentModel from '../../models/CuiComponent/CuiImageComponentModel';
 import { ImageType } from '../../models/CuiComponent/ICuiImageComponent';
 import { rustToRGBA, rustToHex, RGBAToRust } from '../../utils/colorUtils';
 
-// Импорт всех изображений из папки
 function importAll(r: __WebpackModuleApi.RequireContext): Record<string, string> {
   let images: Record<string, string> = {};
   r.keys().forEach((item: string) => {
@@ -18,9 +17,44 @@ function importAll(r: __WebpackModuleApi.RequireContext): Record<string, string>
 
 const images = importAll(require.context('../../../public/Sprites', false, /\.(png|jpe?g|svg)$/));
 
-interface ImageOption {
-  value: string;
-  label: JSX.Element;
+class CuiImageComponentState {
+  colorPickerVisible = false;
+  modalVisible = false;
+  loadedImages: string[] = [];
+  hasMoreImages = true;
+  isLoading = false;
+
+  constructor() {
+    makeAutoObservable(this);
+  }
+
+  setColorPickerVisible(visible: boolean) {
+    this.colorPickerVisible = visible;
+  }
+
+  setModalVisible(visible: boolean) {
+    this.modalVisible = visible;
+  }
+
+  loadMoreImages(images: Record<string, string>, loadCount: number) {
+    if (this.isLoading || !this.hasMoreImages) return;
+
+    this.isLoading = true;
+    const nextIndex = this.loadedImages.length;
+    const moreImages = Object.keys(images).slice(nextIndex, nextIndex + loadCount);
+
+    setTimeout(() => {
+      this.loadedImages = [...this.loadedImages, ...moreImages];
+      this.hasMoreImages = moreImages.length === loadCount;
+      this.isLoading = false;
+    }, 300);
+  }
+
+  handleClickOutside(ref: React.RefObject<HTMLDivElement>, event: MouseEvent) {
+    if (ref.current && !ref.current.contains(event.target as Node)) {
+      this.setColorPickerVisible(false);
+    }
+  }
 }
 
 interface CuiImageComponentProps {
@@ -29,11 +63,11 @@ interface CuiImageComponentProps {
 }
 
 const CuiImageComponent: React.FC<CuiImageComponentProps> = ({ element, onChange }) => {
-  const [colorPickerVisible, setColorPickerVisible] = useState<boolean>(false);
-  const [modalVisible, setModalVisible] = useState<boolean>(false);
-  const [loadedImages, setLoadedImages] = useState<string[]>([]);
+  const state = useRef(new CuiImageComponentState()).current; 
   const colorPickerRef = useRef<HTMLDivElement>(null);
-  const loadCount = 10; // Количество изображений для загрузки за раз
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const loadMoreTriggerRef = useRef<HTMLDivElement>(null);
+  const loadCount = 20;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -49,46 +83,104 @@ const CuiImageComponent: React.FC<CuiImageComponentProps> = ({ element, onChange
     onChange('color', RGBAToRust(color));
   };
 
-  const handleClickOutside = (event: MouseEvent) => {
-    if (colorPickerRef.current && !colorPickerRef.current.contains(event.target as Node)) {
-      setColorPickerVisible(false);
-    }
-  };
-
-  const handleImageChange = (selectedOption: string) => {
-    onChange('sprite', selectedOption);
-    setModalVisible(false);
-  };
-
-  const loadMoreImages = () => {
-    const nextIndex = loadedImages.length;
-    const moreImages = Object.keys(images).slice(nextIndex, nextIndex + loadCount);
-    setLoadedImages([...loadedImages, ...moreImages]);
+  const handleImageChange = (selectedImage: string) => {
+    onChange('sprite', selectedImage);
+    state.setModalVisible(false);
   };
 
   useEffect(() => {
-    loadMoreImages();
-  }, []);
+    state.loadMoreImages(images, loadCount);
 
-  useEffect(() => {
-    if (colorPickerVisible) {
-      document.addEventListener('mousedown', handleClickOutside);
-    } else {
-      document.removeEventListener('mousedown', handleClickOutside);
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          state.loadMoreImages(images, loadCount);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (loadMoreTriggerRef.current) {
+      observerRef.current.observe(loadMoreTriggerRef.current);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
     };
-  }, [colorPickerVisible]);
+  }, [state]);
+
+  useEffect(() => {
+    if (state.colorPickerVisible) {
+      const handleClick = (event: MouseEvent) => state.handleClickOutside(colorPickerRef, event);
+      document.addEventListener('mousedown', handleClick);
+      return () => document.removeEventListener('mousedown', handleClick);
+    }
+  }, [state.colorPickerVisible]);
+
+  const ImageContainer: React.FC<{ src: string; alt: string; onClick?: () => void }> = ({ src, alt, onClick }) => (
+    <div
+      style={{
+        width: '64px',
+        height: '64px',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        border: '1px solid #ddd',
+        borderRadius: '4px',
+        overflow: 'hidden',
+        cursor: onClick ? 'pointer' : 'default',
+      }}
+      onClick={onClick}
+    >
+      <img
+        src={src}
+        alt={alt}
+        style={{
+          maxWidth: '100%',
+          maxHeight: '100%',
+          objectFit: 'contain',
+        }}
+      />
+    </div>
+  );
 
   return (
     <div className="cui-image-component">
       <Form.Group controlId="sprite">
         <Form.Label>Sprite</Form.Label>
-        <Button variant="primary" onClick={() => setModalVisible(true)}>
-          Select Image
-        </Button>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          {element.sprite ? (
+            <ImageContainer src={element.sprite} alt="Selected sprite" onClick={() => state.setModalVisible(true)} />
+          ) : (
+            <Button
+              variant="outline-secondary"
+              onClick={() => state.setModalVisible(true)}
+              style={{
+                width: '64px',
+                height: '64px',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                borderRadius: '4px',
+                border: '1px solid #ddd',
+                overflow: 'hidden',
+              }}
+            >
+              <img
+                src={images['default-image.png']}
+                alt="Default"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                }}
+              />
+              <span>Select Image</span>
+            </Button>
+          )}
+        </div>
       </Form.Group>
       <Form.Group controlId="material">
         <Form.Label>Material</Form.Label>
@@ -104,7 +196,7 @@ const CuiImageComponent: React.FC<CuiImageComponentProps> = ({ element, onChange
         <div style={{ position: 'relative' }}>
           <Button
             variant="primary"
-            onClick={() => setColorPickerVisible(!colorPickerVisible)}
+            onClick={() => state.setColorPickerVisible(!state.colorPickerVisible)}
             style={{
               backgroundColor: rustToHex(element.color),
               borderColor: '#000000',
@@ -115,7 +207,7 @@ const CuiImageComponent: React.FC<CuiImageComponentProps> = ({ element, onChange
               borderRadius: '4px'
             }}
           />
-          {colorPickerVisible && (
+          {state.colorPickerVisible && (
             <div ref={colorPickerRef} style={{ position: 'absolute', zIndex: 2 }}>
               <ChromePicker
                 color={rustToRGBA(element.color)}
@@ -134,7 +226,7 @@ const CuiImageComponent: React.FC<CuiImageComponentProps> = ({ element, onChange
           onChange={handleInputChange}
         >
           {Object.keys(ImageType)
-            .filter(key => isNaN(Number(key)))  // Фильтруем только строковые ключи
+            .filter(key => isNaN(Number(key)))
             .map(type => (
               <option key={type} value={ImageType[type as keyof typeof ImageType]}>
                 {type}
@@ -178,28 +270,26 @@ const CuiImageComponent: React.FC<CuiImageComponentProps> = ({ element, onChange
           onChange={handleNumberChange}
         />
       </Form.Group>
-      
-      <Modal show={modalVisible} onHide={() => setModalVisible(false)}>
+
+      <Modal show={state.modalVisible} onHide={() => state.setModalVisible(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Select Image</Modal.Title>
         </Modal.Header>
-        <Modal.Body>
+        <Modal.Body style={{ maxHeight: '400px', overflowY: 'auto' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap' }}>
-            {loadedImages.map((key) => (
-              <div key={key} style={{ margin: '5px' }} onClick={() => handleImageChange(images[key])}>
-                <img src={images[key]} alt={key} style={{ width: '50px', cursor: 'pointer' }} />
+            {state.loadedImages.map((imageName) => (
+              <div key={imageName} style={{ margin: '5px', width: '50px', height: '50px', cursor: 'pointer' }}>
+                <ImageContainer
+                  src={images[imageName]}
+                  alt={imageName}
+                  onClick={() => handleImageChange(images[imageName])}
+                />
               </div>
             ))}
           </div>
+          {state.isLoading && <p>Loading more images...</p>}
+          <div ref={loadMoreTriggerRef} style={{ height: '20px', backgroundColor: 'transparent' }}></div>
         </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setModalVisible(false)}>
-            Close
-          </Button>
-          <Button variant="primary" onClick={loadMoreImages}>
-            Load More
-          </Button>
-        </Modal.Footer>
       </Modal>
     </div>
   );
