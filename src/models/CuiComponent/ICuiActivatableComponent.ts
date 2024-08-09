@@ -1,5 +1,5 @@
-import ICuiComponent from "./ICuiComponent";
+import CuiComponentBase from "./CuiComponentBase";
 
-export default interface ICuiActivatableComponent extends ICuiComponent {
-    isActive: boolean;
+export default abstract class ICuiActivatableComponent extends CuiComponentBase {
+    abstract isActive: boolean;
 }

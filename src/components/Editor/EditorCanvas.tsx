@@ -6,7 +6,7 @@ import CuiRectTransformModel, { ShapePosition } from '../../models/CuiComponent/
 import GraphicEditorStore from './GraphicEditorStore';
 import CuiImageComponentModel from '../../models/CuiComponent/CuiImageComponentModel';
 import ICuiImageComponent, { ImageType } from '../../models/CuiComponent/ICuiImageComponent';
-import ICuiComponent from '@/models/CuiComponent/ICuiComponent';
+import CuiComponentBase from '@/models/CuiComponent/CuiComponentBase';
 import CuiButtonComponent from '../cui/CuiButtonComponent';
 import CuiButtonComponentModel from '../../models/CuiComponent/CuiButtonComponentModel';
 import { rustToRGBA } from '../../utils/colorUtils';

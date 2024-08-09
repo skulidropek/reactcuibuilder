@@ -1,6 +1,6 @@
 import { makeObservable, observable } from "mobx";
 import CuiElementModel from "../CuiElement/CuiElementModel";
-import ICuiComponent from "./ICuiComponent";
+import CuiComponentBase from "./CuiComponentBase";
 import { Rect } from "../CuiElement/TreeNodeModel";
 
 export interface TransformValues {
@@ -36,26 +36,18 @@ export interface ShapePosition {
   element: CuiElementModel; // добавляем это свойство
 }
 
-export default class CuiRectTransformModel implements ICuiComponent {
+export default class CuiRectTransformModel extends CuiComponentBase {
   type: string = 'RectTransform';
-  anchorMin: string;
-  anchorMax: string;
-  offsetMin: string;
-  offsetMax: string;
-  element: CuiElementModel;
+  anchorMin: string = "";
+  anchorMax: string = "";
+  offsetMin: string = "";
+  offsetMax: string = "";
 
   constructor(
-    anchorMin: string,
-    anchorMax: string,
-    offsetMin: string,
-    offsetMax: string,
     element: CuiElementModel
   ) {
-    this.anchorMin = anchorMin;
-    this.anchorMax = anchorMax;
-    this.offsetMin = offsetMin;
-    this.offsetMax = offsetMax;
-    this.element = element;
+
+    super(element);
     makeObservable(this, {
       anchorMin: observable,
       anchorMax: observable,
@@ -63,6 +55,17 @@ export default class CuiRectTransformModel implements ICuiComponent {
       offsetMax: observable,
     });
   }
+  
+  getSerializableData(): any {
+    return {
+      type: this.type,
+      anchorMin: this.anchorMin,
+      anchorMax: this.anchorMax,
+      offsetMin: this.offsetMin,
+      offsetMax: this.offsetMax,
+    };
+  }
+
   ToCode(typeClass?: boolean): string {
 
     if(typeClass == null)

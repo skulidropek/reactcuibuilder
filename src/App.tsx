@@ -3,10 +3,12 @@ import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import GraphicEditor from './components/Editor/GraphicEditor';
 import GraphicEditorStore from './components/Editor/GraphicEditorStore';
+import ProjectManager from './ProjectManager';
 
 function App() {
   return (
-    <GraphicEditor store={new GraphicEditorStore({ width: 1282, height: 722 }, [])} />
+    <ProjectManager />
+    // <GraphicEditor store={new GraphicEditorStore({ width: 1282, height: 722 }, [])} />
 
     // <div className="App">
     //   <header className="App-header">

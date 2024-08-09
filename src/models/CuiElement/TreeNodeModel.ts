@@ -1,5 +1,6 @@
 import { makeObservable, observable, action } from "mobx";
 import CuiElementModel from "./CuiElementModel";
+import CuiElementParceModel from "../Parce/CuiElementParceModel";
 
 export class Rect {
   constructor(
@@ -11,11 +12,19 @@ export class Rect {
 }
 
 export default abstract class TreeNodeModel {
-  readonly id: number = Date.now();
+  readonly id: number;
   private _parent?: TreeNodeModel;
   readonly children: CuiElementModel[];
 
-  constructor(children: CuiElementModel[], parent?: TreeNodeModel) {
+  constructor(children: CuiElementModel[], parent?: TreeNodeModel, id?: number) {
+    
+    if(id == null){
+      this.id = Date.now();
+    }
+    else {
+      this.id = id;
+    }
+
     this.children = children;
     this._parent = parent;
     makeObservable(this, {
@@ -73,4 +82,14 @@ export default abstract class TreeNodeModel {
 
   abstract calculateParentPositionAndSize(): Rect;
   abstract calculatePositionAndSize(): Rect;
+
+  abstract toRustFormat(): CuiElementParceModel[];
+
+  toJSON(): string {
+    return JSON.stringify({
+      id: this.id,
+      parent: this.parent?.id,
+      children: this.children.map(child => JSON.parse(child.toJSON())),
+    });
+  }
 }

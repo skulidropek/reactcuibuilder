@@ -1,16 +1,15 @@
 import CuiElementModel from "../CuiElement/CuiElementModel";
 import ICuiActivatableComponent from "./ICuiActivatableComponent";
-import ICuiComponent from "./ICuiComponent";
+import CuiComponentBase from "./CuiComponentBase";
 
-export default class CuiNeedsKeyboardComponentModel implements ICuiActivatableComponent {
+export default class CuiNeedsKeyboardComponentModel extends ICuiActivatableComponent {
     readonly type: string = "NeedsKeyboard";
-    element: CuiElementModel;
     isActive = false;
 
     constructor(
         element: CuiElementModel,
       ) {
-        this.element = element;
+        super(element);
     }
     
     ToCode(typeClass?: boolean): string {

@@ -2,6 +2,7 @@ import { makeObservable, observable, action } from "mobx";
 import CuiElementModel from "../../models/CuiElement/CuiElementModel";
 import TreeNodeModel, { Rect } from "../../models/CuiElement/TreeNodeModel";
 import { Size } from "@/models/CuiComponent/CuiRectTransformModel";
+import CuiElementParceModel from "@/models/Parce/CuiElementParceModel";
 
 export interface DragingModel {
   element: CuiElementModel;
@@ -10,6 +11,15 @@ export interface DragingModel {
 }
 
 export default class GraphicEditorStore extends TreeNodeModel {
+  toRustFormat(): CuiElementParceModel[] {
+    const array: CuiElementParceModel[] = [];
+
+    this.children.forEach(child => {
+      array.push(...child.toRustFormat());
+    });
+    
+    return array;
+  }
 
   public draggingItem: DragingModel | null = null;
   public selectedItem: CuiElementModel | null = null;
@@ -79,4 +89,8 @@ export default class GraphicEditorStore extends TreeNodeModel {
 
     this.selectedItem = null;
   };
+
+  toJSON(): string {
+    return JSON.stringify(this.children.map(child => JSON.parse(child.toJSON())));
+  }
 }

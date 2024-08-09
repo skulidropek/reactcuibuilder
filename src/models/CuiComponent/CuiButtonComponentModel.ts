@@ -7,11 +7,9 @@ export default class CuiButtonComponentModel extends CuiImageComponentBase {
   command: string | null = null;
   close: string | null = null;
   fadeIn: number | null = null;
-  readonly element: CuiElementModel;
 
   constructor(element: CuiElementModel) {
-    super();
-    this.element = element;
+    super(element);
     
     makeObservable(this, {
       command: observable,
