@@ -1,11 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { observer } from "mobx-react-lite";
-import projectStore from "./ProjectStore"; // Убедитесь, что путь правильный
-import GraphicEditor from "./components/Editor/GraphicEditor"; // Убедитесь, что путь правильный
+import projectStore from "./ProjectStore";
+import GraphicEditor from "./components/Editor/GraphicEditor";
 
 const ProjectManager: React.FC = observer(() => {
-  const [newProjectName, setNewProjectName] = useState<string>("");
-
   const {
     projects,
     currentProject,
@@ -13,81 +11,73 @@ const ProjectManager: React.FC = observer(() => {
     loadProject,
     deleteProject,
     saveProjects,
+    newProjectName,
+    setProjectName,
+    alertVisible
   } = projectStore;
 
-  // Состояние для управления режимом просмотра
-  const [isProjectView, setIsProjectView] = useState<boolean>(true);
-
   const handleCreateProject = () => {
-    if (newProjectName.trim()) {
-      createProject(newProjectName);
-      setNewProjectName("");
-    }
+    createProject();
   };
 
   const handleLoadProject = (id: number) => {
     loadProject(id);
-    setIsProjectView(false); // Переходим в режим редактирования проекта
   };
 
   const handleBackToProjects = () => {
-    saveProjects(); // Сохраняем текущие изменения
-    setIsProjectView(true); // Возвращаемся к списку проектов
-    projectStore.currentProject = null; // Сбрасываем текущий проект
+    saveProjects();
+    projectStore.currentProject = null;
   };
 
-  // Автосохранение при закрытии вкладки или обновлении страницы
-  useEffect(() => {
-    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      if (currentProject) {
-        saveProjects();
-        event.returnValue = "У вас есть несохраненные изменения, вы уверены, что хотите выйти?";
-      }
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
-  }, [currentProject, saveProjects]);
-
   return (
-    <div>
-      <h2>Менеджер проектов</h2>
+    <div className={currentProject ? "" : "container mt-5"}>
+      <h2 className={currentProject ? "" : "mb-4"}>Менеджер проектов</h2>
 
-      {isProjectView ? (
+      {alertVisible && (
+        <div className="alert alert-warning" role="alert">
+          Укажите название проекта
+        </div>
+      )}
+
+      {!currentProject ? (
         <div>
-          <div>
+          <div className="mb-3">
             <input
               type="text"
+              className="form-control"
               value={newProjectName}
-              onChange={(e) => setNewProjectName(e.target.value)}
+              onChange={(e) => setProjectName(e.target.value)}
               placeholder="Название нового проекта"
             />
-            <button onClick={handleCreateProject}>Создать проект</button>
+            <button className="btn btn-primary mt-2" onClick={handleCreateProject}>
+              Создать проект
+            </button>
           </div>
 
-          <h3>Список проектов</h3>
-          <ul>
+          <h3 className="mb-3">Список проектов</h3>
+          <ul className="list-group">
             {projects.map((project) => (
-              <li key={project.id}>
+              <li key={project.id} className="list-group-item d-flex justify-content-between align-items-center">
                 {project.name}
-                <button onClick={() => handleLoadProject(project.id)}>Загрузить</button>
-                <button onClick={() => deleteProject(project.id)}>Удалить</button>
+                <div>
+                  <button className="btn btn-secondary btn-sm me-2" onClick={() => handleLoadProject(project.id)}>
+                    Загрузить
+                  </button>
+                  <button className="btn btn-danger btn-sm" onClick={() => deleteProject(project.id)}>
+                    Удалить
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
         </div>
       ) : (
         <div>
-          <button onClick={handleBackToProjects}>Вернуться к списку проектов</button>
-          {currentProject && (
-            <div>
-              <h3>Текущий проект: {currentProject.name}</h3>
-              <GraphicEditor store={currentProject.graphicEditorStore} />
-            </div>
-          )}
+          <button className="btn btn-secondary mb-3" onClick={handleBackToProjects}>
+            Вернуться к списку проектов
+          </button>
+          <h3 className="mb-0">Текущий проект: {currentProject.name}</h3>
+          <GraphicEditor store={currentProject.graphicEditorStore} />
         </div>
       )}
     </div>
