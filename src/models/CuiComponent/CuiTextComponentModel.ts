@@ -1,5 +1,5 @@
 import { makeObservable, observable, action } from "mobx";
-import ICuiComponent from "./ICuiComponent";
+import CuiComponentBase from "./CuiComponentBase";
 import CuiElementModel from "../CuiElement/CuiElementModel";
 import { rustToRGBA } from "../../utils/colorUtils";
 
@@ -37,7 +37,7 @@ export interface TextPosition {
   color: string | undefined;
 }
 
-export default class CuiTextComponentModel implements ICuiComponent {
+export default class CuiTextComponentModel extends CuiComponentBase {
   readonly type: string = "UnityEngine.UI.Text";
   text: string = "";
   fontSize: number = 14;
@@ -46,10 +46,9 @@ export default class CuiTextComponentModel implements ICuiComponent {
   color: string = '0 0 0 1';
   verticalOverflow: VerticalWrapMode = VerticalWrapMode.Truncate;
   fadeIn: number = 0;
-  readonly element: CuiElementModel;
 
   constructor(element: CuiElementModel) {
-    this.element = element;
+    super(element);
 
     makeObservable(this, {
       text: observable,

@@ -8,8 +8,9 @@ import CuiTextComponentModel from "../CuiComponent/CuiTextComponentModel";
 export default class CuiLabelModel extends CuiElementModel {
 
     constructor(
+        id?: number,
     ) {
-      super('CuiLabel'); // Add the super() call here
+      super('CuiLabel', [], id); // Add the super() call here
 
       this.addComponent(new CuiTextComponentModel(this));
     }

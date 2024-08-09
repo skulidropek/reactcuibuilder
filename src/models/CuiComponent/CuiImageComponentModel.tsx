@@ -1,6 +1,6 @@
 import { makeObservable, observable, action } from 'mobx';
 import CuiElementModel from '../CuiElement/CuiElementModel';
-import ICuiComponent from './ICuiComponent';
+import CuiComponentBase from './CuiComponentBase';
 import CuiImageComponentBase, { ImageType } from './ICuiImageComponent';
 
 export default class CuiImageComponentModel extends CuiImageComponentBase {
@@ -9,13 +9,11 @@ export default class CuiImageComponentModel extends CuiImageComponentBase {
   public fadeIn?: number;
   public itemId?: number;
   public skinId?: bigint;
-  readonly element: CuiElementModel;
 
   constructor(
     element: CuiElementModel,
   ) {
-    super(); // вызов конструктора базового класса
-    this.element = element;
+    super(element); // вызов конструктора базового класса
 
     makeObservable(this, {
       png: observable,

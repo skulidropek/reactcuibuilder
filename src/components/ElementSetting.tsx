@@ -4,7 +4,7 @@ import CuiElementModel from '../models/CuiElement/CuiElementModel';
 import CuiRectTransformModel from '../models/CuiComponent/CuiRectTransformModel';
 import CuiImageComponentModel from '../models/CuiComponent/CuiImageComponentModel';
 import { observer } from 'mobx-react-lite';
-import ICuiComponent from '@/models/CuiComponent/ICuiComponent';
+import CuiComponentBase from '@/models/CuiComponent/CuiComponentBase';
 import CuiImageComponent from './cui/CuiImageComponent';
 import { Button, Card } from 'react-bootstrap';
 import { FaMinus } from 'react-icons/fa';
@@ -22,7 +22,7 @@ interface ElementSettingProps {
 }
 
 const ElementSetting: React.FC<ElementSettingProps> = observer(({ element, onRemoveComponent }) => {
-  const handleComponentChange = <T extends ICuiComponent>(
+  const handleComponentChange = <T extends CuiComponentBase>(
     ComponentModel: new (...args: any[]) => T,
     key: keyof T,
     value: T[keyof T]
@@ -30,7 +30,7 @@ const ElementSetting: React.FC<ElementSettingProps> = observer(({ element, onRem
     element.updateComponent(ComponentModel, { [key]: value } as Partial<T>);
   };
 
-  const renderComponent = (component: ICuiComponent) => {
+  const renderComponent = (component: CuiComponentBase) => {
     if (component instanceof CuiRectTransformModel) {
       return (
         <CuiRectTransform

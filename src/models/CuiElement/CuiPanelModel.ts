@@ -10,8 +10,9 @@ import CuiNeedsKeyboardComponentModel from "../CuiComponent/CuiNeedsKeyboardComp
 export default class CuiPanelModel extends CuiElementModel {
 
     constructor(
+        id?: number,
     ) {
-      super('CuiPanel'); // Add the super() call here
+      super('CuiPanel', [], id); // Add the super() call here
 
       this.addComponent(new CuiImageComponentModel(this));
       this.addComponent(new CuiNeedsCursorComponentModel(this));
@@ -37,7 +38,7 @@ export default class CuiPanelModel extends CuiElementModel {
         {
             KeyboardEnabled = ${this.keyboardEnabled()},
             CursorEnabled = ${this.cursorEnabled()},
-            ${this.image().png ? `Image = null, RawImage = new CuiRawImageComponent() { Png = ImageLibrary.Instance.GetImage("${this.image().png}"), },` : `Image = ${this.image().ToCode(false)},`}
+            ${this.image().png ? `Image     = null, RawImage = new CuiRawImageComponent() { Png = ImageLibrary.Instance.GetImage("${this.image().png}"), },` : `Image = ${this.image().ToCode(false)},`}
             RectTransform = ${this.rectTransform().ToCode(false)},
         }, "${this?.parent instanceof GraphicEditorStore ? "Overlay" : this.parent?.id}", "${this.id}");
 

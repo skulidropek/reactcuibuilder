@@ -1,5 +1,6 @@
 import { makeObservable, observable, computed, action } from 'mobx';
-import ICuiComponent from "./ICuiComponent";
+import CuiComponentBase from "./CuiComponentBase";
+import CuiElementModel from '../CuiElement/CuiElementModel';
 
 export enum ImageType {
     Simple = "Simple",
@@ -8,16 +9,18 @@ export enum ImageType {
     Filled = "Filled",
 }
 
-export default abstract class CuiImageComponentBase implements ICuiComponent {
+export default abstract class CuiImageComponentBase extends CuiComponentBase {
     abstract type: string;
     abstract ToCode(typeClass?: boolean): string;
-    
+
     color: string = '0 0 0 0';
     imageType?: ImageType;
     sprite?: string;
     material?: string;
 
-    constructor() {
+    constructor(element: CuiElementModel) {
+        super(element)
+
         makeObservable(this, {
             imageType: observable,
             sprite: observable,
@@ -25,4 +28,5 @@ export default abstract class CuiImageComponentBase implements ICuiComponent {
             color: observable,
         });
     }
+
 }

@@ -7,8 +7,9 @@ import CuiTextComponentModel from "../CuiComponent/CuiTextComponentModel";
 export default class CuiButtonModel extends CuiElementModel {
 
     constructor(
+        id?: number,
     ) {
-      super('CuiButton'); // Add the super() call here
+      super('CuiButton', [], id);// Add the super() call here
 
       this.addComponent(new CuiButtonComponentModel(this));
       this.addComponent(new CuiTextComponentModel(this));
