@@ -140,14 +140,26 @@ const EditorControls: React.FC<EditorControlsProps> = ({ store }) => {
 
   return (
     <div className="bg-white p-4">
-       <Form.Group controlId="github" className="mb-3">
+      <Form.Group controlId="github" className="mb-3">
         <Form.Label>
-          <a href="https://github.com/skulidropek/reactcuibuilder" target="_blank" rel="noopener noreferrer">Github</a>
+          <a
+            href="https://github.com/skulidropek/reactcuibuilder"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Github
+          </a>
         </Form.Label>
       </Form.Group>
       <Form.Group controlId="discord" className="mb-3">
         <Form.Label>
-          <a href="https://discord.gg/jM3DPA5VSv" target="_blank" rel="noopener noreferrer">Discord</a>
+          <a
+            href="https://discord.gg/jM3DPA5VSv"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Discord
+          </a>
         </Form.Label>
       </Form.Group>
       <Form.Group controlId="editorWidth" className="mb-3">
@@ -155,7 +167,9 @@ const EditorControls: React.FC<EditorControlsProps> = ({ store }) => {
         <Form.Control
           type="number"
           value={store.size.width}
-          onChange={(e) => store.size = {...store.size, width: Number(e.target.value)}}
+          onChange={(e) =>
+            (store.size = { ...store.size, width: Number(e.target.value) })
+          }
         />
       </Form.Group>
       <Form.Group controlId="editorHeight" className="mb-3">
@@ -163,26 +177,43 @@ const EditorControls: React.FC<EditorControlsProps> = ({ store }) => {
         <Form.Control
           type="number"
           value={store.size.height}
-          onChange={(e) => store.size = {...store.size, height: Number(e.target.value)}}
+          onChange={(e) =>
+            (store.size = { ...store.size, height: Number(e.target.value) })
+          }
         />
       </Form.Group>
-      <div className="d-flex justify-content-between">
-        <Button variant="primary" onClick={() => store.pushChild(new CuiPanelModel())} className="mr-2 mb-2">
+      <Form.Group
+        controlId="buttons"
+        className="d-flex flex-wrap justify-content-between flex-grow-1"
+      >
+        <Button
+          variant="primary"
+          onClick={() => store.pushChild(new CuiPanelModel())}
+          className="mr-2 mb-2"
+        >
           <FaPlus className="mr-2" /> CuiPanel
         </Button>
-        <Button variant="primary" onClick={() => store.pushChild(new CuiButtonModel())} className="mr-2 mb-2">
+        <Button
+          variant="primary"
+          onClick={() => store.pushChild(new CuiButtonModel())}
+          className="mr-2 mb-2"
+        >
           <FaPlus className="mr-2" /> CuiButton
         </Button>
-        <Button variant="primary" onClick={() => store.pushChild(new CuiLabelModel())} className="mr-2 mb-2">
+        <Button
+          variant="primary"
+          onClick={() => store.pushChild(new CuiLabelModel())}
+          className="mr-2 mb-2"
+        >
           <FaPlus className="mr-2" /> CuiLabel
         </Button>
         {/* <Button variant="primary" onClick={() => store.pushNewElement('circle')} className="mr-2 mb-2">
-          <FaPlus className="mr-2" /> Circle
-        </Button> */}
+            <FaPlus className="mr-2" /> Circle
+          </Button> */}
         <Button variant="secondary" onClick={exportToPlugin} className="mb-2">
           Export to C#
         </Button>
-      </div>
+      </Form.Group>
     </div>
   );
 };
