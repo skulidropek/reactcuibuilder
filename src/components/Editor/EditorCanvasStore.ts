@@ -186,6 +186,9 @@ class EditorCanvasStore {
       const rectTransform = resizing.element.findComponentByType(CuiRectTransformModel);
       if (!rectTransform) return;
 
+      if(resizing.isOffset && this.graphicEditorStore.disableOffset) return;
+      else if(!resizing.isOffset && this.graphicEditorStore.disableAnchor) return;
+
       rectTransform.resize(resizing.handle, resizing.isOffset, resizing.isEdge, currentX, currentY);
     } else if (graphicEditorStore.draggingItem) {
       const rectTransform = graphicEditorStore.draggingItem.element.findComponentByType(CuiRectTransformModel);
