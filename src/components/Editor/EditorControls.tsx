@@ -140,6 +140,7 @@ const EditorControls: React.FC<EditorControlsProps> = ({ store }) => {
 
   return (
     <div className="bg-white p-4">
+      {/* Существующий код */}
       <Form.Group controlId="github" className="mb-3">
         <Form.Label>
           <a
@@ -162,6 +163,23 @@ const EditorControls: React.FC<EditorControlsProps> = ({ store }) => {
           </a>
         </Form.Label>
       </Form.Group>
+      <Form.Group controlId="disableAnchor" className="mb-3">
+        <Form.Check
+          type="checkbox"
+          label="Disable Anchor"
+          checked={store.disableAnchor}
+          onChange={(e) => store.disableAnchor =  e.target.checked}
+        />
+      </Form.Group>
+      <Form.Group controlId="disableOffset" className="mb-3">
+        <Form.Check
+          type="checkbox"
+          label="Disable Offset"
+          checked={store.disableOffset}
+          onChange={(e) => store.disableOffset = e.target.checked}
+        />
+      </Form.Group>
+      {/* Остальная часть формы */}
       <Form.Group controlId="editorWidth" className="mb-3">
         <Form.Label>Width:</Form.Label>
         <Form.Control
@@ -207,9 +225,6 @@ const EditorControls: React.FC<EditorControlsProps> = ({ store }) => {
         >
           <FaPlus className="mr-2" /> CuiLabel
         </Button>
-        {/* <Button variant="primary" onClick={() => store.pushNewElement('circle')} className="mr-2 mb-2">
-            <FaPlus className="mr-2" /> Circle
-          </Button> */}
         <Button variant="secondary" onClick={exportToPlugin} className="mb-2">
           Export to C#
         </Button>

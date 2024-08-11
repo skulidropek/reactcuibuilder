@@ -95,15 +95,21 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
       }
   
       if (shape.anchor && shape.markers) {
-        context.strokeStyle = 'blue';
-        context.setLineDash([5, 5]);
-        context.strokeRect(shape.anchor.x, shape.anchor.y, shape.anchor.width, shape.anchor.height);
-        context.setLineDash([]);
+
+        if(!store.disableAnchor) {
+          context.strokeStyle = 'blue';
+          context.setLineDash([5, 5]);
+          context.strokeRect(shape.anchor.x, shape.anchor.y, shape.anchor.width, shape.anchor.height);
+          context.setLineDash([]);
+
+          shape.markers.green.forEach(marker => drawMarker(context, marker.x, marker.y, 'green'));
+          shape.markers.blue.forEach(marker => drawMarker(context, marker.x, marker.y, 'blue'));
+        }
   
-        shape.markers.blue.forEach(marker => drawMarker(context, marker.x, marker.y, 'blue'));
-        shape.markers.red.forEach(marker => drawMarker(context, marker.x, marker.y, 'red'));
-        shape.markers.green.forEach(marker => drawMarker(context, marker.x, marker.y, 'green'));
-        shape.markers.yellow.forEach(marker => drawMarker(context, marker.x, marker.y, 'yellow'));
+        if(!store.disableOffset) {
+          shape.markers.red.forEach(marker => drawMarker(context, marker.x, marker.y, 'red'));
+          shape.markers.yellow.forEach(marker => drawMarker(context, marker.x, marker.y, 'yellow'));
+        }
       }
   
       element.children.forEach(drawShape);
