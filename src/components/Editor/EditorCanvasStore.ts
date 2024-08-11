@@ -153,7 +153,7 @@ class EditorCanvasStore {
     }
   }
 
-  handleMouseDown(e: React.MouseEvent<HTMLCanvasElement>, canvasBounds: DOMRect | undefined) {
+  handleMouseDown(e: {clientX: number, clientY: number}, canvasBounds: DOMRect | undefined) {
     if (!canvasBounds) return;
 
     const { graphicEditorStore } = this;
@@ -173,7 +173,7 @@ class EditorCanvasStore {
   }
 
   handleMouseMove(
-    e: React.MouseEvent<HTMLCanvasElement>,
+    e: {clientX: number, clientY: number},
     canvasBounds: DOMRect | undefined
   ) {
     const { graphicEditorStore, resizing } = this;
