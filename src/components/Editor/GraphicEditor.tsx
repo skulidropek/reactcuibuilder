@@ -6,6 +6,7 @@ import EditorCanvas from './EditorCanvas';
 import GraphicEditorStore from './GraphicEditorStore';
 import { observer } from 'mobx-react-lite';
 import CuiElementModel from '../../models/CuiElement/CuiElementModel';
+import EditorCanvasStore from './EditorCanvasStore';
 
 interface GraphicEditorProps {
   store: GraphicEditorStore;
@@ -27,6 +28,7 @@ const GraphicEditor: React.FC<GraphicEditorProps> = observer(({ store }) => {
         <Col xs={9}>
           <EditorCanvas
             store={store}
+            canvasStore={new EditorCanvasStore(store)}
           />
         </Col>
       </Row>
