@@ -21,6 +21,9 @@ export default class GraphicEditorStore extends TreeNodeModel {
     return array;
   }
 
+  public disableAnchor: boolean = false;
+  public disableOffset: boolean = false;
+
   public draggingItem: DragingModel | null = null;
   public selectedItem: CuiElementModel | null = null;
 
@@ -30,6 +33,8 @@ export default class GraphicEditorStore extends TreeNodeModel {
       size: observable,
       draggingItem: observable,
       selectedItem: observable,
+      disableAnchor: observable,
+      disableOffset: observable,
     });
   }
 
