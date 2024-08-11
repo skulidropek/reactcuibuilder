@@ -56,16 +56,6 @@ export default class CuiRectTransformModel extends CuiComponentBase {
     });
   }
   
-  getSerializableData(): any {
-    return {
-      type: this.type,
-      anchorMin: this.anchorMin,
-      anchorMax: this.anchorMax,
-      offsetMin: this.offsetMin,
-      offsetMax: this.offsetMax,
-    };
-  }
-
   ToCode(typeClass?: boolean): string {
 
     if(typeClass == null)
