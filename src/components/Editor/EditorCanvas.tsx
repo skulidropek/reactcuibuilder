@@ -80,9 +80,10 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({ store, canvasStore
               key={`image-${element.id}`}
               image={image}
               x={shape.x}
-              y={shape.y}
+              y={shape.y + shape.height}
               width={shape.width}
               height={shape.height}
+              scaleY={-1} // Отражение по вертикали
               fillPatternImage={image}
               fillPatternRepeat={cuiImageComponent.imageType === ImageType.Tiled ? 'repeat' : 'no-repeat'}
               id={`image-${element.id}`}
