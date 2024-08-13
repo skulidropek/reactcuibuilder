@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useCallback } from 'react';
+import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { Stage, Layer, Rect, Image, Text, Group } from 'react-konva';
 import Konva from 'konva';
@@ -237,15 +237,15 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({ store, canvasStore
         {childElements.map((child) => child && renderShape(child))}
       </MemoizedGroup>
     );
-  }, [canvasStore, store.disableAnchor, store.disableOffset, store.size.height]);
+  }, [canvasStore, store.disableAnchor, store.disableOffset, store.size.height, canvasStore.preloadedImages.values()]);
 
   useEffect(() => {
     const dispose = autorun(() => {
-      canvasStore.preloadImages(store.children);
+      canvasStore.preloadImages();
     });
 
     return () => dispose();
-  }, [canvasStore, store.children]);
+  }, [canvasStore, store.children, store.backgroundImageUrl]);
 
   const handleMouseDown = (e: Konva.KonvaEventObject<MouseEvent>) => {
     canvasStore.handleMouseDown(
@@ -275,6 +275,25 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({ store, canvasStore
     canvasStore.handleMouseUp();
   };
 
+  const renderBackgroundImage = useCallback(() => {
+    const backgroundImage = canvasStore.preloadedImages.get(store.backgroundImageUrl) as HTMLImageElement;
+
+    if (!backgroundImage) {
+      return null;
+    }
+
+    return (
+      <Image
+        image={backgroundImage}
+        x={0}
+        y={store.size.height}  // Установка y в значение высоты сцены
+        width={store.size.width}
+        height={store.size.height}
+        scaleY={-1}  // Отражение по вертикали
+      />
+    );
+  }, [canvasStore.preloadedImages, store.backgroundImageUrl, store.size.width, store.size.height]);
+
   return (
     <Stage
       width={store.size.width}
@@ -287,6 +306,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({ store, canvasStore
       style={{ border: '1px solid gray' }}
     >
       <Layer scaleY={-1} y={store.size.height}>
+        {renderBackgroundImage()}
         {store.children.map(renderShape)}
       </Layer>
     </Stage>

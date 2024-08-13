@@ -2,6 +2,7 @@ import React from "react";
 import { observer } from "mobx-react-lite";
 import projectStore from "./ProjectStore";
 import GraphicEditor from "./components/Editor/GraphicEditor";
+import EditorCanvasStore from "./components/Editor/EditorCanvasStore";
 
 const ProjectManager: React.FC = observer(() => {
   const {
@@ -77,7 +78,7 @@ const ProjectManager: React.FC = observer(() => {
             Вернуться к списку проектов
           </button>
           <h3 className="mb-0">Текущий проект: {currentProject.name}</h3>
-          <GraphicEditor store={currentProject.graphicEditorStore} />
+          <GraphicEditor store={currentProject.graphicEditorStore} canvasStore={new EditorCanvasStore(currentProject.graphicEditorStore)} />
         </div>
       )}
     </div>

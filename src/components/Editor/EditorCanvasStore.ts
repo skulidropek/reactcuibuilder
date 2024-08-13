@@ -1,5 +1,5 @@
 // EditorCanvasStore.ts
-import { observable, action } from 'mobx';
+import { observable, action, makeAutoObservable } from 'mobx';
 import CuiElementModel, { Marker } from '../../models/CuiElement/CuiElementModel';
 import CuiImageComponentModel from '../../models/CuiComponent/CuiImageComponentModel';
 import GraphicEditorStore from './GraphicEditorStore';
@@ -7,22 +7,42 @@ import CuiRectTransformModel, { ShapePosition } from '../../models/CuiComponent/
 
 class EditorCanvasStore {
   @observable resizing: Marker | null = null;
-  preloadedImages = new Map<string, HTMLImageElement>();
+  @observable preloadedImages = new Map<string, HTMLImageElement>();
 
-  constructor(private graphicEditorStore: GraphicEditorStore) {}
+  constructor(private graphicEditorStore: GraphicEditorStore) {
+    makeAutoObservable(this);
+  }
+
+  @action
+  addImage(key: string, image: HTMLImageElement) {
+    this.preloadedImages.set(key, image);
+  }
+
+  @action
+  removeImage(key: string) {
+    this.preloadedImages.delete(key);
+  }
 
   @action setResizing(marker: Marker | null) {
     this.resizing = marker;
   }
 
-  @action preloadImages(items: CuiElementModel[]) {
-    items.forEach((item) => {
+  @action preloadImages() {
+    if (this.graphicEditorStore?.backgroundImageUrl && !this.preloadedImages.has(this.graphicEditorStore?.backgroundImageUrl )) {
+      const image = new Image();
+      image.src = this.graphicEditorStore?.backgroundImageUrl;
+      image.onload = () => {
+        this.addImage(this.graphicEditorStore?.backgroundImageUrl as string, image)
+      };
+    }
+
+    this.graphicEditorStore.children.forEach((item) => {
       const cuiImageComponent = item.findComponentByType(CuiImageComponentModel);
       if (cuiImageComponent?.png && !this.preloadedImages.has(cuiImageComponent.png)) {
         const image = new Image();
         image.src = cuiImageComponent.png as string;
         image.onload = () => {
-          this.preloadedImages.set(cuiImageComponent.png as string, image);
+          this.addImage(cuiImageComponent.png as string, image);
         };
       }
     });

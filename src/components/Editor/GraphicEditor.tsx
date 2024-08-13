@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Container, Row, Col } from 'react-bootstrap';
 import EditorControls from './EditorControls';
 import ShapeHierarchy from './EditorHierarchy';
@@ -7,12 +7,16 @@ import GraphicEditorStore from './GraphicEditorStore';
 import { observer } from 'mobx-react-lite';
 import CuiElementModel from '../../models/CuiElement/CuiElementModel';
 import EditorCanvasStore from './EditorCanvasStore';
+import { autorun } from 'mobx';
 
 interface GraphicEditorProps {
   store: GraphicEditorStore;
+  canvasStore: EditorCanvasStore;
 }
 
-const GraphicEditor: React.FC<GraphicEditorProps> = observer(({ store }) => {
+const GraphicEditor: React.FC<GraphicEditorProps> = observer(({ store, canvasStore }) => {
+
+  canvasStore.preloadImages();
 
   return (
     <Container fluid className="bg-light p-4">
@@ -28,7 +32,7 @@ const GraphicEditor: React.FC<GraphicEditorProps> = observer(({ store }) => {
         <Col xs={9} style={{ width: store.size.width + 25, height: store.size.height }}>
           <EditorCanvas
             store={store}
-            canvasStore={new EditorCanvasStore(store)}
+            canvasStore={canvasStore}
           />
         </Col>
       </Row>
