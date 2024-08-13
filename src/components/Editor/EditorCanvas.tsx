@@ -1,362 +1,295 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useRef, useEffect, useCallback } from 'react';
 import { observer } from 'mobx-react-lite';
-import { autorun, observable } from 'mobx';
-import CuiElementModel, { Marker } from '../../models/CuiElement/CuiElementModel';
-import CuiRectTransformModel, { ShapePosition } from '../../models/CuiComponent/CuiRectTransformModel';
-import GraphicEditorStore from './GraphicEditorStore';
-import CuiImageComponentModel from '../../models/CuiComponent/CuiImageComponentModel';
-import ICuiImageComponent, { ImageType } from '../../models/CuiComponent/ICuiImageComponent';
-import CuiComponentBase from '@/models/CuiComponent/CuiComponentBase';
-import CuiButtonComponent from '../cui/CuiButtonComponent';
-import CuiButtonComponentModel from '../../models/CuiComponent/CuiButtonComponentModel';
+import { Stage, Layer, Rect, Image, Text, Group } from 'react-konva';
+import Konva from 'konva';
+import { autorun } from 'mobx';
 import { rustToRGBA } from '../../utils/colorUtils';
-import CuiTextComponentModel, { TextAnchor, TextPosition, VerticalWrapMode } from '../../models/CuiComponent/CuiTextComponentModel';
-import { text } from 'stream/consumers';
+
+import CuiElementModel from '../../models/CuiElement/CuiElementModel';
+import ICuiImageComponent, { ImageType } from '../../models/CuiComponent/ICuiImageComponent';
+import CuiImageComponentModel from '../../models/CuiComponent/CuiImageComponentModel';
+import CuiButtonComponentModel from '../../models/CuiComponent/CuiButtonComponentModel';
+import CuiTextComponentModel from '../../models/CuiComponent/CuiTextComponentModel';
+import GraphicEditorStore from './GraphicEditorStore';
+import EditorCanvasStore from './EditorCanvasStore';
 
 interface EditorCanvasProps {
   store: GraphicEditorStore;
+  canvasStore: EditorCanvasStore;
 }
 
-const EditorCanvas: React.FC<EditorCanvasProps> = observer(({
-  store,
-}) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [resizing, setResizing] = useState<Marker | null>(null);
-  const preloadedImages = useRef(new Map<string, HTMLImageElement>()).current;
-
-  const preloadImages = useCallback((items: CuiElementModel[]) => {
-    items.forEach((item) => {
-      const cuiImageComponent = item.findComponentByType(CuiImageComponentModel);
-      if (cuiImageComponent?.png && !preloadedImages.has(cuiImageComponent.png)) {
-          const image = new Image();
-          image.src = cuiImageComponent.png as string;
-          image.onload = () => {
-            preloadedImages.set(cuiImageComponent.png as string, image);
-          };
-      }
-    });
-  }, [preloadedImages, store.children]);
-
-  const drawShapes = useCallback((context: CanvasRenderingContext2D, items: CuiElementModel[]) => {
-
-    preloadImages(store.children);
-  
-    context.clearRect(0, 0, context.canvas.width, context.canvas.height);
-    context.save();
-    context.translate(0, context.canvas.height);
-    context.scale(1, -1);
-  
-    const drawShape = (element: CuiElementModel) => {
-
-      if(!element.visible) return;
-
-      const shape = element.rectTransform().generateShapePositions();
-  
-      const cuiImageComponent = element.findComponentByTypes<ICuiImageComponent>([CuiImageComponentModel, CuiButtonComponentModel]);
-      const cuiTextComponent = element.findComponentByType(CuiTextComponentModel);
-  
-      if (cuiImageComponent) {
-        if (cuiImageComponent.color) {
-          context.fillStyle = rustToRGBA(cuiImageComponent.color);
-        }
-  
-        context.globalAlpha = 1;
-  
-        if (cuiImageComponent instanceof CuiImageComponentModel && cuiImageComponent.png) {
-          const image = preloadedImages.get(cuiImageComponent.png as string) as HTMLImageElement;
-          if (image) {
-            context.save();
-            context.scale(1, -1);
-  
-            switch (cuiImageComponent.imageType) {
-              case ImageType.Sliced:
-                drawSlicedImage(context, image, shape);
-                break;
-              case ImageType.Tiled:
-                drawTiledImage(context, image, shape);
-                break;
-              case ImageType.Filled:
-                drawFilledImage(context, image, shape);
-                break;
-              default: //ImageType.Simple
-                context.drawImage(image, shape.x, -shape.y - shape.height, shape.width, shape.height);
-                break;
-            }
-  
-            context.restore();
-          }
-        } else {
-          context.fillRect(shape.x, shape.y, shape.width, shape.height);
-        }
-      }
-  
-      if (cuiTextComponent) {
-        drawTextComponent(context, cuiTextComponent.generateTextPosition(context, cuiTextComponent, shape));
-      }
-  
-      if (shape.anchor && shape.markers) {
-
-        if(!store.disableAnchor) {
-          context.strokeStyle = 'blue';
-          context.setLineDash([5, 5]);
-          context.strokeRect(shape.anchor.x, shape.anchor.y, shape.anchor.width, shape.anchor.height);
-          context.setLineDash([]);
-
-          shape.markers.green.forEach(marker => drawMarker(context, marker.x, marker.y, 'green'));
-          shape.markers.blue.forEach(marker => drawMarker(context, marker.x, marker.y, 'blue'));
-        }
-  
-        if(!store.disableOffset) {
-          shape.markers.red.forEach(marker => drawMarker(context, marker.x, marker.y, 'red'));
-          shape.markers.yellow.forEach(marker => drawMarker(context, marker.x, marker.y, 'yellow'));
-        }
-      }
-  
-      element.children.forEach(drawShape);
-    };
-  
-    const drawMarker = (context: CanvasRenderingContext2D, x: number, y: number, color: string) => {
-      context.fillStyle = color;
-      context.fillRect(x - 5, y - 5, 10, 10);
-    };
-
-    const drawTextComponent = (
-      context: CanvasRenderingContext2D,
-      renderModel: TextPosition
-    ) => {
-      context.save();
-      
-      // Отзеркаливаем контекст обратно для правильной отрисовки текста
-      context.translate(0, context.canvas.height);
-      context.scale(1, -1);
-    
-      if (renderModel.color) {
-        context.fillStyle = renderModel.color;
-      }
-      
-      context.textAlign = renderModel.textAlign;
-      context.textBaseline = 'alphabetic';
-      context.font = `${renderModel.fontSize}px Arial`;
-    
-      // Рисуем текст
-      renderModel.lines.forEach((line, index) => {
-        const lineY = renderModel.y - index * renderModel.lineHeight;
-        context.fillText(line, renderModel.x, lineY);
-      });
-    
-      context.restore();
-    };
-  
-    items.forEach(drawShape);
-  
-    context.restore();
-  }, [preloadedImages]);
-  
-  const drawSlicedImage = (context: CanvasRenderingContext2D, image: HTMLImageElement, shape: ShapePosition) => {
-    const { x, y, width, height } = shape;
-    const borderWidth = 20; // ширина границы
-    const borderHeight = 20; // высота границы
-    
-    // Центральная часть
-    context.drawImage(image, borderWidth, borderHeight, image.width - 2 * borderWidth, image.height - 2 * borderHeight,
-      x + borderWidth, y + borderHeight, width - 2 * borderWidth, height - 2 * borderHeight);
-    
-    // Четыре угла
-    context.drawImage(image, 0, 0, borderWidth, borderHeight, x, y, borderWidth, borderHeight);
-    context.drawImage(image, image.width - borderWidth, 0, borderWidth, borderHeight, x + width - borderWidth, y, borderWidth, borderHeight);
-    context.drawImage(image, 0, image.height - borderHeight, borderWidth, borderHeight, x, y + height - borderHeight, borderWidth, borderHeight);
-    context.drawImage(image, image.width - borderWidth, image.height - borderHeight, borderWidth, borderHeight, x + width - borderWidth, y + height - borderHeight, borderWidth, borderHeight);
-    
-    // Боковые стороны
-    context.drawImage(image, borderWidth, 0, image.width - 2 * borderWidth, borderHeight, x + borderWidth, y, width - 2 * borderWidth, borderHeight);
-    context.drawImage(image, borderWidth, image.height - borderHeight, image.width - 2 * borderWidth, borderHeight, x + borderWidth, y + height - borderHeight, width - 2 * borderWidth, borderHeight);
-    context.drawImage(image, 0, borderHeight, borderWidth, image.height - 2 * borderHeight, x, y + borderHeight, borderWidth, height - 2 * borderHeight);
-    context.drawImage(image, image.width - borderWidth, borderHeight, borderWidth, image.height - 2 * borderHeight, x + width - borderWidth, y + borderHeight, borderWidth, height - 2 * borderHeight);
-  };
-  
-  const drawTiledImage = (context: CanvasRenderingContext2D, image: HTMLImageElement, shape: ShapePosition) => {
-    const pattern = context.createPattern(image, 'repeat');
-    if (pattern) {
-      context.fillStyle = pattern;
-      context.fillRect(shape.x, -shape.y - shape.height, shape.width, shape.height);
-    }
-  };
-  
-  const drawFilledImage = (context: CanvasRenderingContext2D, image: HTMLImageElement, shape: ShapePosition) => {
-    const { x, y, width, height } = shape;
-    context.drawImage(image, x, y, width, height);
-  };
-  
-  
-  const getShapeAtCoordinates = useCallback(
-    (x: number, y: number, items: CuiElementModel[]): CuiElementModel | null => {
-      const findShape = (shapePosition: ShapePosition, shape: CuiElementModel): CuiElementModel | null => {
-        const { x: shapeX, y: shapeY, width, height } = shapePosition;
-
-        const withinX = x >= shapeX && x <= shapeX + width;
-        const withinY = y >= shapeY && y <= shapeY + height;
-
-        for (const child of shape.children) {
-          const foundChild = findShape(child.rectTransform().generateShapePositions(), shape.children.find(c => c.id === child.id)!);
-          if (foundChild) return foundChild;
-        }
-
-        if (withinX && withinY) {
-          return shape;
-        }
-
-        return null;
-      };
-
-      for (let i = items.length - 1; i >= 0; i--) {
-        const shapePosition = items[i].rectTransform().generateShapePositions();
-        if (!shapePosition) continue;
-
-        const foundShape = findShape(shapePosition, items[i]);
-        if (foundShape) return foundShape;
-      }
-      
-      return null;
-    },
-    []
+const MemoizedImage = React.memo(Image, (prevProps, nextProps) => {
+  return (
+    prevProps.image === nextProps.image &&
+    prevProps.x === nextProps.x &&
+    prevProps.y === nextProps.y &&
+    prevProps.width === nextProps.width &&
+    prevProps.height === nextProps.height &&
+    prevProps.fillPatternRepeat === nextProps.fillPatternRepeat
   );
+});
 
-  const getMarkerUnderMouse = useCallback(
-    (x: number, y: number, items: CuiElementModel[]): Marker | null => {
-      const isClose = (x1: number, y1: number, x2: number, y2: number) => Math.abs(x1 - x2) < 10 && Math.abs(y1 - y2) < 10;
+const MemoizedRect = React.memo(Rect, (prevProps, nextProps) => {
+  return (
+    prevProps.x === nextProps.x &&
+    prevProps.y === nextProps.y &&
+    prevProps.width === nextProps.width &&
+    prevProps.height === nextProps.height &&
+    prevProps.fill === nextProps.fill
+  );
+});
 
-      const findMarker = (shape: CuiElementModel): Marker | null => {
-        const { x: shapeX, y: shapeY, width: shapeWidth, height: shapeHeight, anchor, markers } = shape.rectTransform().generateShapePositions();
+const MemoizedText = React.memo(Text, (prevProps, nextProps) => {
+  return (
+    prevProps.x === nextProps.x &&
+    prevProps.y === nextProps.y &&
+    prevProps.text === nextProps.text &&
+    prevProps.fontSize === nextProps.fontSize &&
+    prevProps.fill === nextProps.fill &&
+    prevProps.align === nextProps.align
+  );
+});
 
-        if (anchor) {
-          const { x: anchorX, y: anchorY, width: anchorWidth, height: anchorHeight } = anchor;
+const MemoizedGroup = React.memo(Group);
 
-          if (isClose(x, y, anchorX, anchorY)) return { handle: 'topLeft', isOffset: false, isEdge: false, startX: x, startY: y, element: shape };
-          if (isClose(x, y, anchorX + anchorWidth, anchorY)) return { handle: 'topRight', isOffset: false, isEdge: false, startX: x, startY: y, element: shape };
-          if (isClose(x, y, anchorX, anchorY + anchorHeight)) return { handle: 'bottomLeft', isOffset: false, isEdge: false, startX: x, startY: y, element: shape };
-          if (isClose(x, y, anchorX + anchorWidth, anchorY + anchorHeight)) return { handle: 'bottomRight', isOffset: false, isEdge: false, startX: x, startY: y, element: shape };
+const EditorCanvas: React.FC<EditorCanvasProps> = observer(({ store, canvasStore }) => {
+  const stageRef = useRef<Konva.Stage>(null);
 
-          if (isClose(x, y, anchorX + anchorWidth / 2, anchorY)) return { handle: 'top', isOffset: false, isEdge: true, startX: x, startY: y, element: shape };
-          if (isClose(x, y, anchorX + anchorWidth, anchorY + anchorHeight / 2)) return { handle: 'right', isOffset: false, isEdge: true, startX: x, startY: y, element: shape };
-          if (isClose(x, y, anchorX + anchorWidth / 2, anchorY + anchorHeight)) return { handle: 'bottom', isOffset: false, isEdge: true, startX: x, startY: y, element: shape };
-          if (isClose(x, y, anchorX, anchorY + anchorHeight / 2)) return { handle: 'left', isOffset: false, isEdge: true, startX: x, startY: y, element: shape };
+  const renderShape = useCallback((element: CuiElementModel) => {
+    if (!element || !element.visible) {
+      console.warn('Skipping rendering for invisible or undefined element', element);
+      return null;
+    }
+
+    const shape = element.rectTransform().generateShapePositions();
+    const cuiImageComponent = element.findComponentByTypes<ICuiImageComponent>([
+      CuiImageComponentModel,
+      CuiButtonComponentModel,
+    ]);
+    const cuiTextComponent = element.findComponentByType(CuiTextComponentModel);
+
+    const children: JSX.Element[] = [];
+
+    if (cuiImageComponent) {
+      if (cuiImageComponent instanceof CuiImageComponentModel && cuiImageComponent.png) {
+        const image = canvasStore.preloadedImages.get(cuiImageComponent.png as string) as HTMLImageElement;
+        if (image) {
+          console.log(`Rendering image for element ${element.id}`);
+          children.push(
+            <MemoizedImage
+              key={`image-${element.id}`}
+              image={image}
+              x={shape.x}
+              y={shape.y + shape.height}
+              width={shape.width}
+              height={shape.height}
+              scaleY={-1} // Отражение по вертикали
+              fillPatternImage={image}
+              fillPatternRepeat={cuiImageComponent.imageType === ImageType.Tiled ? 'repeat' : 'no-repeat'}
+              id={`image-${element.id}`}
+              onLoad={() => {
+                const cachedImage = stageRef.current?.findOne(`#image-${element.id}`);
+                if (cachedImage) {
+                  cachedImage.cache();
+                }
+              }}
+            />
+          );
         }
+      } else {
+        console.log(`Rendering rectangle for element ${element.id}`);
+        children.push(
+          <MemoizedRect
+            key={`rect-${element.id}`}
+            x={shape.x}
+            y={shape.y}
+            width={shape.width}
+            height={shape.height}
+            fill={cuiImageComponent.color ? rustToRGBA(cuiImageComponent.color) : undefined}
+          />
+        );
+      }
+    }
 
-        if (isClose(x, y, shapeX, shapeY)) return { handle: 'topLeft', isOffset: true, isEdge: false, startX: x, startY: y, element: shape };
-        if (isClose(x, y, shapeX + shapeWidth, shapeY)) return { handle: 'topRight', isOffset: true, isEdge: false, startX: x, startY: y, element: shape };
-        if (isClose(x, y, shapeX, shapeY + shapeHeight)) return { handle: 'bottomLeft', isOffset: true, isEdge: false, startX: x, startY: y, element: shape };
-        if (isClose(x, y, shapeX + shapeWidth, shapeY + shapeHeight)) return { handle: 'bottomRight', isOffset: true, isEdge: false, startX: x, startY: y, element: shape };
+    // Рендеринг текста
+    if (cuiTextComponent && cuiTextComponent.text && cuiTextComponent.text.trim() !== '') {
+      console.log(`Rendering text for element ${element.id}: ${cuiTextComponent.text}`);
+      if (stageRef.current) {
 
-        if (isClose(x, y, shapeX + shapeWidth / 2, shapeY)) return { handle: 'top', isOffset: true, isEdge: true, startX: x, startY: y, element: shape };
-        if (isClose(x, y, shapeX + shapeWidth, shapeY + shapeHeight / 2)) return { handle: 'right', isOffset: true, isEdge: true, startX: x, startY: y, element: shape };
-        if (isClose(x, y, shapeX + shapeWidth / 2, shapeY + shapeHeight)) return { handle: 'bottom', isOffset: true, isEdge: true, startX: x, startY: y, element: shape };
-        if (isClose(x, y, shapeX, shapeY + shapeHeight / 2)) return { handle: 'left', isOffset: true, isEdge: true, startX: x, startY: y, element: shape };
+        const textPosition = cuiTextComponent.generateTextPosition(cuiTextComponent, shape);
 
-        if (markers) {
-          for (const markerType of ['blue', 'red', 'green', 'yellow'] as const) {
-            for (const marker of markers[markerType]) {
-              if (isClose(x, y, marker.x, marker.y)) {
-                return { handle: markerType as 'topLeft' | 'topRight' | 'bottomLeft' | 'bottomRight' | 'top' | 'right' | 'bottom' | 'left', isOffset: false, isEdge: false, startX: x, startY: y, element: shape };
-              }
-            }
-          }
-        }
+        children.push(
+          <MemoizedText
+            key={`text-${element.id}`}
+            x={textPosition.x}
+            y={textPosition.y}
+            text={textPosition.lines.join('\n')}
+            fontSize={textPosition.fontSize}
+            fill={textPosition.color}
+            align={textPosition.textAlign}
+            scaleY={-1} // Измените на 1, если переворот текста не требуется
+          />
+        );
 
-        for (const child of shape.children) {
-          const marker = findMarker(child);
-          if (marker) return marker;
-        }
+        // const canvasElement = stageRef.current.toCanvas();
+        // if (canvasElement) {
+        //   const context = canvasElement.getContext('2d');
+        //   if (context) {
+        //     children.push(
+        //       <MemoizedText
+        //         key={`text-${element.id}`}
+        //         x={textPosition.x}
+        //         y={store.size.height - textPosition.y - textPosition.fontSize / 2}
+        //         text={textPosition.lines.join('\n')}
+        //         fontSize={textPosition.fontSize}
+        //         fill={textPosition.color}
+        //         align={textPosition.textAlign}
+        //         // offsetY={0} // Установите offsetY в 0, если переворот текста не требуется
+        //         scaleY={-1} // Измените на 1, если переворот текста не требуется
+        //       />
+        //     );
+        //   } else {
+        //     console.error('Cannot get 2D context');
+        //   }
+        // } else {
+        //   console.error('toCanvas() returned undefined');
+        // }
+      } else {
+        console.error('stageRef.current is undefined');
+      }
+    }
 
-        return null;
-      };
-
-      for (let i = items.length - 1; i >= 0; i--) {
-        const marker = findMarker(items[i]);
-
-        if (marker?.element.selected && marker) return marker;
+    if (shape.anchor && shape.markers) {
+      if (!store.disableAnchor) {
+        console.log(`Rendering anchor for element ${element.id}`);
+        children.push(
+          <MemoizedRect
+            key={`anchor-${element.id}`}
+            x={shape.anchor.x}
+            y={shape.anchor.y}
+            width={shape.anchor.width}
+            height={shape.anchor.height}
+            stroke="blue"
+            dash={[5, 5]}
+          />
+        );
+        shape.markers.green.forEach((marker, index) => {
+          children.push(
+            <MemoizedRect
+              key={`green-marker-${element.id}-${index}`}
+              x={marker.x - 5}
+              y={marker.y - 5}
+              width={10}
+              height={10}
+              fill="green"
+            />
+          );
+        });
+        shape.markers.blue.forEach((marker, index) => {
+          children.push(
+            <MemoizedRect
+              key={`blue-marker-${element.id}-${index}`}
+              x={marker.x - 5}
+              y={marker.y - 5}
+              width={10}
+              height={10}
+              fill="blue"
+            />
+          );
+        });
       }
 
-      return null;
-    },
-    [store.children]
-  );
-
-  const handleMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    const canvasBounds = canvasRef.current?.getBoundingClientRect();
-    if (!canvasBounds) return;
-
-    const mouseX = e.clientX - canvasBounds.left;
-    const mouseY = e.clientY - canvasBounds.top;
-    const shape = getShapeAtCoordinates(mouseX, store.size.height - mouseY, store.children);
-    const marker = getMarkerUnderMouse(mouseX, store.size.height - mouseY, store.children);
-
-    if (marker) {
-      setResizing(marker);
-    } else if (shape) {
-      store.setSelected(shape);
-      store.setDragging({ element: shape, startX: e.clientX, startY: e.clientY });
-    } else {
-      store.desetSelected();
+      if (!store.disableOffset) {
+        console.log(`Rendering offset for element ${element.id}`);
+        shape.markers.red.forEach((marker, index) => {
+          children.push(
+            <MemoizedRect
+              key={`red-marker-${element.id}-${index}`}
+              x={marker.x - 5}
+              y={marker.y - 5}
+              width={10}
+              height={10}
+              fill="red"
+            />
+          );
+        });
+        shape.markers.yellow.forEach((marker, index) => {
+          children.push(
+            <MemoizedRect
+              key={`yellow-marker-${element.id}-${index}`}
+              x={marker.x - 5}
+              y={marker.y - 5}
+              width={10}
+              height={10}
+              fill="yellow"
+            />
+          );
+        });
+      }
     }
-  }, [getShapeAtCoordinates, getMarkerUnderMouse, store.children, store.size.height]);
 
-  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!store.selectedItem) return;
+    const childElements = element.children || [];
+    console.log(`Rendering group for element ${element.id} with ${childElements.length} children`);
 
-    const canvasBounds = canvasRef.current?.getBoundingClientRect();
-    if (!canvasBounds) return;
-
-    if (resizing) {
-      const currentX = e.clientX - canvasBounds.left;
-      const currentY = store.size.height - (e.clientY - canvasBounds.top);
-
-      const rectTransform = resizing.element.findComponentByType(CuiRectTransformModel);
-      if (!rectTransform) return;
-
-      rectTransform.resize(resizing.handle, resizing.isOffset, resizing.isEdge, currentX, currentY);
-    } else if (store.draggingItem) {
-      const rectTransform = store.draggingItem.element.findComponentByType(CuiRectTransformModel);
-      if (!rectTransform) return;
-
-      const dx = e.clientX - store.draggingItem.startX;
-      const dy = store.draggingItem.startY - e.clientY;
-
-      rectTransform.updatePosition(dx, dy);
-
-      store.setDragging({ element: store.draggingItem.element, startX: e.clientX, startY: e.clientY });
-    }
-  }, [resizing, store.draggingItem]);
-
-  const handleMouseUp = useCallback(() => {
-    store.desetDragging();
-    setResizing(null);
-  }, [store]);
+    return (
+      <MemoizedGroup key={element.id}>
+        {children}
+        {childElements.map((child) => child && renderShape(child))}
+      </MemoizedGroup>
+    );
+  }, [canvasStore, store.disableAnchor, store.disableOffset, store.size.height]);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
     const dispose = autorun(() => {
-      if (canvas) {
-        const context = canvas.getContext('2d');
-        if (context) {
-          drawShapes(context, store.children);
-        }
-      }
+      canvasStore.preloadImages(store.children);
     });
 
     return () => dispose();
-  }, [store.children, store.size, drawShapes, preloadedImages]);
+  }, [canvasStore, store.children]);
+
+  const handleMouseDown = (e: Konva.KonvaEventObject<MouseEvent>) => {
+    canvasStore.handleMouseDown(
+      {
+        clientX: e.evt.clientX,
+        clientY: e.evt.clientY,
+      },
+      e.target.getStage()?.container().getBoundingClientRect()
+    );
+  };
+
+  const handleMouseMove = (e: Konva.KonvaEventObject<MouseEvent>) => {
+    if (store.selectedItem) {
+      requestAnimationFrame(() => {
+        canvasStore.handleMouseMove(
+          {
+            clientX: e.evt.clientX,
+            clientY: e.evt.clientY,
+          },
+          e.target.getStage()?.container().getBoundingClientRect()
+        );
+      });
+    }
+  };
+
+  const handleMouseUp = () => {
+    canvasStore.handleMouseUp();
+  };
 
   return (
-    <canvas
-      ref={canvasRef}
+    <Stage
       width={store.size.width}
       height={store.size.height}
+      ref={stageRef}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
       style={{ border: '1px solid gray' }}
-    />
+    >
+      <Layer scaleY={-1} y={store.size.height}>
+        {store.children.map(renderShape)}
+      </Layer>
+    </Stage>
   );
 });
 
