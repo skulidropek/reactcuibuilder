@@ -25,7 +25,7 @@ const GraphicEditor: React.FC<GraphicEditorProps> = observer(({ store }) => {
             />
           </div>
         </Col>
-        <Col xs={9}>
+        <Col xs={9} style={{ width: store.size.width + 25, height: store.size.height }}>
           <EditorCanvas
             store={store}
             canvasStore={new EditorCanvasStore(store)}

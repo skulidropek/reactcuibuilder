@@ -2,6 +2,7 @@ import { makeObservable, observable, action } from "mobx";
 import CuiComponentBase from "./CuiComponentBase";
 import CuiElementModel from "../CuiElement/CuiElementModel";
 import { rustToRGBA } from "../../utils/colorUtils";
+import Konva from "konva";
 
 export enum TextAnchor {
   UpperLeft = "UpperLeft",
@@ -80,21 +81,19 @@ export default class CuiTextComponentModel extends CuiComponentBase {
   }
 
   generateTextPosition = (
-    context: CanvasRenderingContext2D,
     textComponent: CuiTextComponentModel,
     shape: { x: number; y: number; width: number; height: number }
   ): TextPosition => {
     let fontSize = textComponent.fontSize || 12;
-    const minFontSize = 1; // Минимальный размер шрифта
+    const minFontSize = 1;
     const padding = 5;
-    
-    // Определение выравнивания текста
-    let textAlign: CanvasTextAlign = 'left'; // Значение по умолчанию
-    let verticalAlign: 'top' | 'middle' | 'bottom' = 'bottom'; // Значение по умолчанию
+  
     let x = shape.x;
-    let y = context.canvas.height - shape.y - shape.height;
+    let y = shape.y;
     const width = shape.width;
     const height = shape.height;
+  
+    let textAlign: 'left' | 'center' | 'right' = 'left';
   
     switch (textComponent.align) {
       case TextAnchor.UpperLeft:
@@ -113,10 +112,11 @@ export default class CuiTextComponentModel extends CuiComponentBase {
       case TextAnchor.MiddleRight:
       case TextAnchor.LowerRight:
         textAlign = 'right';
-        x += width - padding;
+        x = shape.x + width - padding;
         break;
     }
   
+    let verticalAlign: 'top' | 'middle' | 'bottom' = 'bottom';
     switch (textComponent.align) {
       case TextAnchor.UpperLeft:
       case TextAnchor.UpperCenter:
@@ -135,7 +135,6 @@ export default class CuiTextComponentModel extends CuiComponentBase {
         break;
     }
   
-    // Функция для разбиения текста на строки
     const getLines = (text: string, maxWidth: number): string[] => {
       const words = text.split(' ');
       const lines: string[] = [];
@@ -143,9 +142,10 @@ export default class CuiTextComponentModel extends CuiComponentBase {
   
       for (let i = 1; i < words.length; i++) {
         const word = words[i];
-        const width = context.measureText(currentLine + " " + word).width;
-        if (width < maxWidth - 2 * padding) {
-          currentLine += " " + word;
+        const lineTest = currentLine + ' ' + word;
+        const textWidth = getTextWidth(lineTest, fontSize, textComponent.font);
+        if (textWidth < maxWidth - 2 * padding) {
+          currentLine = lineTest;
         } else {
           lines.push(currentLine);
           currentLine = word;
@@ -155,32 +155,56 @@ export default class CuiTextComponentModel extends CuiComponentBase {
       return lines;
     };
   
-    // Подбор оптимального размера шрифта
+    const getTextWidth = (text: string, fontSize: number, fontFamily: string): number => {
+      const tempText = new Konva.Text({
+        text: text,
+        fontSize: fontSize,
+        fontFamily: fontFamily,
+      });
+      return tempText.width();
+    };
+
+    const getTextHeight = (text: string, fontSize: number, fontFamily: string): number => {
+      const tempText = new Konva.Text({
+        text: text,
+        fontSize: fontSize,
+        fontFamily: fontFamily,
+        // Установите ширину, достаточную для отображения всего текста, чтобы высота была корректной
+        width: 1000
+      });
+      return tempText.height();
+    };
+  
     while (fontSize > minFontSize) {
-      context.font = `${fontSize}px ${textComponent.font}`;
       const lines = getLines(textComponent.text, width);
-      const totalHeight = lines.length * fontSize * 1.2;
-      
+      const totalHeight = lines.length * getTextHeight('M', fontSize, textComponent.font) * 1.2;
+  
       if (totalHeight <= height - 2 * padding) {
         break;
       }
-      
+  
       fontSize -= 1;
     }
   
-    context.font = `${fontSize}px ${textComponent.font}`;
     const lines = getLines(textComponent.text, width);
-    const lineHeight = fontSize * 1.2;
+    const lineHeight = getTextHeight('M', fontSize, textComponent.font) * 1.2;
   
-    // Вычисляем начальную позицию Y в зависимости от вертикального выравнивания
     let startY: number;
     const totalTextHeight = lines.length * lineHeight;
-    if (verticalAlign === 'top') {
-      startY = y + height - padding;
-    } else if (verticalAlign === 'middle') {
-      startY = y + height / 2 + totalTextHeight / 2;
-    } else { // 'bottom'
-      startY = y + padding + totalTextHeight;
+    switch (verticalAlign) {
+      case 'top':
+        startY = y + padding;
+        break;
+      case 'middle':
+        startY = y + (height / 2) - (totalTextHeight / 2);
+        break;
+      case 'bottom':
+        startY = y + height - totalTextHeight - padding;
+        break;
+    }
+  
+    if (textAlign === 'right') {
+      x -= getTextWidth(lines[0], fontSize, textComponent.font);
     }
   
     return {
@@ -193,4 +217,5 @@ export default class CuiTextComponentModel extends CuiComponentBase {
       color: textComponent.color ? rustToRGBA(textComponent.color) : undefined,
     };
   };
+  
 }

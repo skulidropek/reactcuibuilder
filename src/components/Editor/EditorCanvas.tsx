@@ -115,31 +115,45 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({ store, canvasStore
     if (cuiTextComponent && cuiTextComponent.text && cuiTextComponent.text.trim() !== '') {
       console.log(`Rendering text for element ${element.id}: ${cuiTextComponent.text}`);
       if (stageRef.current) {
-        const canvasElement = stageRef.current.toCanvas();
-        if (canvasElement) {
-          const context = canvasElement.getContext('2d');
-          if (context) {
-            const textPosition = cuiTextComponent.generateTextPosition(context, cuiTextComponent, shape);
-            children.push(
-              <MemoizedText
-                key={`text-${element.id}`}
-                x={textPosition.x}
-                y={store.size.height - textPosition.y - textPosition.fontSize / 2}
-                text={textPosition.lines.join('\n')}
-                fontSize={textPosition.fontSize}
-                fill={textPosition.color}
-                align={textPosition.textAlign}
-                offsetY={-textPosition.fontSize / 2}
-                scaleX={1}
-                scaleY={-1}
-              />
-            );
-          } else {
-            console.error('Cannot get 2D context');
-          }
-        } else {
-          console.error('toCanvas() returned undefined');
-        }
+
+        const textPosition = cuiTextComponent.generateTextPosition(cuiTextComponent, shape);
+
+        children.push(
+          <MemoizedText
+            key={`text-${element.id}`}
+            x={textPosition.x}
+            y={textPosition.y}
+            text={textPosition.lines.join('\n')}
+            fontSize={textPosition.fontSize}
+            fill={textPosition.color}
+            align={textPosition.textAlign}
+            scaleY={-1} // Измените на 1, если переворот текста не требуется
+          />
+        );
+
+        // const canvasElement = stageRef.current.toCanvas();
+        // if (canvasElement) {
+        //   const context = canvasElement.getContext('2d');
+        //   if (context) {
+        //     children.push(
+        //       <MemoizedText
+        //         key={`text-${element.id}`}
+        //         x={textPosition.x}
+        //         y={store.size.height - textPosition.y - textPosition.fontSize / 2}
+        //         text={textPosition.lines.join('\n')}
+        //         fontSize={textPosition.fontSize}
+        //         fill={textPosition.color}
+        //         align={textPosition.textAlign}
+        //         // offsetY={0} // Установите offsetY в 0, если переворот текста не требуется
+        //         scaleY={-1} // Измените на 1, если переворот текста не требуется
+        //       />
+        //     );
+        //   } else {
+        //     console.error('Cannot get 2D context');
+        //   }
+        // } else {
+        //   console.error('toCanvas() returned undefined');
+        // }
       } else {
         console.error('stageRef.current is undefined');
       }
