@@ -30,6 +30,10 @@ class EditorCanvasStore {
 
   findShapeAtCoordinates(x: number, y: number): CuiElementModel | null {
     const findShape = (shapePosition: ShapePosition, shape: CuiElementModel): CuiElementModel | null => {
+
+      if(!shape.visible)
+        return null;
+
       const { x: shapeX, y: shapeY, width, height } = shapePosition;
 
       const withinX = x >= shapeX && x <= shapeX + width;
@@ -44,7 +48,7 @@ class EditorCanvasStore {
       }
 
       if (withinX && withinY) {
-        return shape;
+          return shape;
       }
 
       return null;
@@ -65,6 +69,9 @@ class EditorCanvasStore {
     const isClose = (x1: number, y1: number, x2: number, y2: number) => Math.abs(x1 - x2) < 10 && Math.abs(y1 - y2) < 10;
 
     const findMarker = (shape: CuiElementModel): Marker | null => {
+      if(!shape.visible)
+        return null;
+
       const { x: shapeX, y: shapeY, width: shapeWidth, height: shapeHeight, anchor, markers } =
         shape.rectTransform().generateShapePositions();
 
@@ -180,6 +187,8 @@ class EditorCanvasStore {
     if (!graphicEditorStore.selectedItem || !canvasBounds) return;
 
     if (resizing) {
+      if(!resizing.element.visible) return;
+
       const currentX = e.clientX - canvasBounds.left;
       const currentY = graphicEditorStore.size.height - (e.clientY - canvasBounds.top);
 
@@ -191,6 +200,8 @@ class EditorCanvasStore {
 
       rectTransform.resize(resizing.handle, resizing.isOffset, resizing.isEdge, currentX, currentY);
     } else if (graphicEditorStore.draggingItem) {
+      if(!graphicEditorStore.draggingItem.element.visible) return;
+
       const rectTransform = graphicEditorStore.draggingItem.element.findComponentByType(CuiRectTransformModel);
       if (!rectTransform) return;
 
