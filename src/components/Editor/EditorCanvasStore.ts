@@ -7,7 +7,7 @@ import CuiRectTransformModel, { ShapePosition } from '../../models/CuiComponent/
 
 class EditorCanvasStore {
   @observable resizing: Marker | null = null;
-  preloadedImages = new Map<string, HTMLImageElement>();
+  @observable preloadedImages = new Map<string, HTMLImageElement>();
 
   constructor(private graphicEditorStore: GraphicEditorStore) {}
 
@@ -15,8 +15,7 @@ class EditorCanvasStore {
     this.resizing = marker;
   }
 
-  @action preloadImages(items: CuiElementModel[]) {
-
+  @action preloadImages() {
     if (this.graphicEditorStore?.backgroundImageUrl && !this.preloadedImages.has(this.graphicEditorStore?.backgroundImageUrl )) {
       const image = new Image();
       image.src = this.graphicEditorStore?.backgroundImageUrl;
@@ -25,7 +24,7 @@ class EditorCanvasStore {
       };
     }
 
-    items.forEach((item) => {
+    this.graphicEditorStore.children.forEach((item) => {
       const cuiImageComponent = item.findComponentByType(CuiImageComponentModel);
       if (cuiImageComponent?.png && !this.preloadedImages.has(cuiImageComponent.png)) {
         const image = new Image();

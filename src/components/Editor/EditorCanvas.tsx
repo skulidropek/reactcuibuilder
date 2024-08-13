@@ -241,11 +241,11 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({ store, canvasStore
 
   useEffect(() => {
     const dispose = autorun(() => {
-      canvasStore.preloadImages(store.children);
+      canvasStore.preloadImages();
     });
 
     return () => dispose();
-  }, [canvasStore, store.children]);
+  }, [canvasStore, store.children, store.backgroundImageUrl]);
 
   const handleMouseDown = (e: Konva.KonvaEventObject<MouseEvent>) => {
     canvasStore.handleMouseDown(

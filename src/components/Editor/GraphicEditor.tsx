@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Container, Row, Col } from 'react-bootstrap';
 import EditorControls from './EditorControls';
 import ShapeHierarchy from './EditorHierarchy';
@@ -7,6 +7,7 @@ import GraphicEditorStore from './GraphicEditorStore';
 import { observer } from 'mobx-react-lite';
 import CuiElementModel from '../../models/CuiElement/CuiElementModel';
 import EditorCanvasStore from './EditorCanvasStore';
+import { autorun } from 'mobx';
 
 interface GraphicEditorProps {
   store: GraphicEditorStore;
@@ -14,6 +15,8 @@ interface GraphicEditorProps {
 }
 
 const GraphicEditor: React.FC<GraphicEditorProps> = observer(({ store, canvasStore }) => {
+
+  canvasStore.preloadImages();
 
   return (
     <Container fluid className="bg-light p-4">
