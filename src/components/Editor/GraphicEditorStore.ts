@@ -27,6 +27,9 @@ export default class GraphicEditorStore extends TreeNodeModel {
   public draggingItem: DragingModel | null = null;
   public selectedItem: CuiElementModel | null = null;
 
+  // Новое свойство для хранения URL изображения фона
+  public backgroundImageUrl: string = 'https://media.discordapp.net/attachments/1090543151464333342/1272933956807037031/maxresdefault.jpg?ex=66bcc7a1&is=66bb7621&hm=2a12fca0edd18cc93b660060fff456110bbb5a425dcce3b8cf425adcbfa36815&=&format=webp&width=1193&height=671';
+
   constructor(public size: Size, children: CuiElementModel[], parent?: TreeNodeModel) {
     super(children, parent);
     makeObservable(this, {
@@ -35,6 +38,7 @@ export default class GraphicEditorStore extends TreeNodeModel {
       selectedItem: observable,
       disableAnchor: observable,
       disableOffset: observable,
+      backgroundImageUrl: observable, // Добавляем наблюдаемое свойство
     });
   }
 
@@ -74,7 +78,6 @@ export default class GraphicEditorStore extends TreeNodeModel {
     this.draggingItem = dragging;
   };
 
-  
   desetDragging = () => {
     this.forEach(el => {
       if (el instanceof CuiElementModel) {

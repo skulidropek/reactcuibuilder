@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useCallback } from 'react';
+import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { Stage, Layer, Rect, Image, Text, Group } from 'react-konva';
 import Konva from 'konva';
@@ -275,6 +275,8 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({ store, canvasStore
     canvasStore.handleMouseUp();
   };
 
+  const backgroundImage = canvasStore.preloadedImages.get(store.backgroundImageUrl) as HTMLImageElement;
+
   return (
     <Stage
       width={store.size.width}
@@ -287,6 +289,16 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({ store, canvasStore
       style={{ border: '1px solid gray' }}
     >
       <Layer scaleY={-1} y={store.size.height}>
+        {backgroundImage && (
+         <Image
+            image={backgroundImage}
+            x={0}
+            y={store.size.height}  // Установка y в значение высоты сцены
+            width={store.size.width}
+            height={store.size.height}
+            scaleY={-1}  // Отражение по вертикали
+          />
+        )}
         {store.children.map(renderShape)}
       </Layer>
     </Stage>

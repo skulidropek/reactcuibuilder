@@ -140,7 +140,6 @@ const EditorControls: React.FC<EditorControlsProps> = ({ store }) => {
 
   return (
     <div className="bg-white p-4">
-      {/* Существующий код */}
       <Form.Group controlId="github" className="mb-3">
         <Form.Label>
           <a
@@ -179,7 +178,15 @@ const EditorControls: React.FC<EditorControlsProps> = ({ store }) => {
           onChange={(e) => store.disableOffset = e.target.checked}
         />
       </Form.Group>
-      {/* Остальная часть формы */}
+      <Form.Group controlId="backgroundImageUrl" className="mb-3">
+        <Form.Label>Background Image URL:</Form.Label>
+        <Form.Control
+          type="text"
+          placeholder="Enter image URL"
+          value={store.backgroundImageUrl || ''}
+          onChange={(e) => (store.backgroundImageUrl = e.target.value)}
+        />
+      </Form.Group>
       <Form.Group controlId="editorWidth" className="mb-3">
         <Form.Label>Width:</Form.Label>
         <Form.Control

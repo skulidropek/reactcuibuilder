@@ -16,6 +16,15 @@ class EditorCanvasStore {
   }
 
   @action preloadImages(items: CuiElementModel[]) {
+
+    if (this.graphicEditorStore?.backgroundImageUrl && !this.preloadedImages.has(this.graphicEditorStore?.backgroundImageUrl )) {
+      const image = new Image();
+      image.src = this.graphicEditorStore?.backgroundImageUrl;
+      image.onload = () => {
+        this.preloadedImages.set(this.graphicEditorStore?.backgroundImageUrl as string, image);
+      };
+    }
+
     items.forEach((item) => {
       const cuiImageComponent = item.findComponentByType(CuiImageComponentModel);
       if (cuiImageComponent?.png && !this.preloadedImages.has(cuiImageComponent.png)) {

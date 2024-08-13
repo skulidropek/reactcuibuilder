@@ -49,6 +49,7 @@ class ProjectStore {
     const savedProjects = JSON.parse(localStorage.getItem("projects") || "[]");
     this.projects = savedProjects.map((project: any) => {
       let graphicEditorStore = new GraphicEditorStore(project.size, []);
+      graphicEditorStore.backgroundImageUrl = project.backgroundImageUrl;
       graphicEditorStore = this.fromJSON(graphicEditorStore, project.children);
       return { ...project, graphicEditorStore: graphicEditorStore };
     });
@@ -83,6 +84,7 @@ class ProjectStore {
     const projectsToSave = this.projects.map(({ graphicEditorStore, ...project }) => ({
       ...project,
       size: graphicEditorStore.size,
+      backgroundImageUrl: graphicEditorStore.backgroundImageUrl,
       children: graphicEditorStore.toRustFormat(),
     }));
     localStorage.setItem("projects", JSON.stringify(projectsToSave));
