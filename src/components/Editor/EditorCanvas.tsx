@@ -237,7 +237,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({ store, canvasStore
         {childElements.map((child) => child && renderShape(child))}
       </MemoizedGroup>
     );
-  }, [canvasStore, store.disableAnchor, store.disableOffset, store.size.height]);
+  }, [canvasStore, store.disableAnchor, store.disableOffset, store.size.height, canvasStore.preloadedImages.values()]);
 
   useEffect(() => {
     const dispose = autorun(() => {
@@ -275,7 +275,24 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({ store, canvasStore
     canvasStore.handleMouseUp();
   };
 
-  const backgroundImage = canvasStore.preloadedImages.get(store.backgroundImageUrl) as HTMLImageElement;
+  const renderBackgroundImage = useCallback(() => {
+    const backgroundImage = canvasStore.preloadedImages.get(store.backgroundImageUrl) as HTMLImageElement;
+
+    if (!backgroundImage) {
+      return null;
+    }
+
+    return (
+      <Image
+        image={backgroundImage}
+        x={0}
+        y={store.size.height}  // Установка y в значение высоты сцены
+        width={store.size.width}
+        height={store.size.height}
+        scaleY={-1}  // Отражение по вертикали
+      />
+    );
+  }, [canvasStore.preloadedImages, store.backgroundImageUrl, store.size.width, store.size.height]);
 
   return (
     <Stage
@@ -289,16 +306,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = observer(({ store, canvasStore
       style={{ border: '1px solid gray' }}
     >
       <Layer scaleY={-1} y={store.size.height}>
-        {backgroundImage && (
-         <Image
-            image={backgroundImage}
-            x={0}
-            y={store.size.height}  // Установка y в значение высоты сцены
-            width={store.size.width}
-            height={store.size.height}
-            scaleY={-1}  // Отражение по вертикали
-          />
-        )}
+        {renderBackgroundImage()}
         {store.children.map(renderShape)}
       </Layer>
     </Stage>
