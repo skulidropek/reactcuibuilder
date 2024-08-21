@@ -85,75 +85,14 @@ export default class CuiTextComponentModel extends CuiComponentBase {
     shape: { x: number; y: number; width: number; height: number }
   ): TextPosition => {
     let fontSize = textComponent.fontSize || 12;
-    const minFontSize = 1;
-    const padding = 5;
+    const padding = 0;
   
-    let x = shape.x;
-    let y = shape.y;
+    let x = shape.x + padding;
+    let y = shape.y + padding;
     const width = shape.width;
     const height = shape.height;
   
-    let textAlign: 'left' | 'center' | 'right' = 'left';
-  
-    switch (textComponent.align) {
-      case TextAnchor.UpperLeft:
-      case TextAnchor.MiddleLeft:
-      case TextAnchor.LowerLeft:
-        textAlign = 'left';
-        x += padding;
-        break;
-      case TextAnchor.UpperCenter:
-      case TextAnchor.MiddleCenter:
-      case TextAnchor.LowerCenter:
-        textAlign = 'center';
-        x += width / 2;
-        break;
-      case TextAnchor.UpperRight:
-      case TextAnchor.MiddleRight:
-      case TextAnchor.LowerRight:
-        textAlign = 'right';
-        x = shape.x + width - padding;
-        break;
-    }
-  
-    let verticalAlign: 'top' | 'middle' | 'bottom' = 'bottom';
-    switch (textComponent.align) {
-      case TextAnchor.UpperLeft:
-      case TextAnchor.UpperCenter:
-      case TextAnchor.UpperRight:
-        verticalAlign = 'bottom';
-        break;
-      case TextAnchor.MiddleLeft:
-      case TextAnchor.MiddleCenter:
-      case TextAnchor.MiddleRight:
-        verticalAlign = 'middle';
-        break;
-      case TextAnchor.LowerLeft:
-      case TextAnchor.LowerCenter:
-      case TextAnchor.LowerRight:
-        verticalAlign = 'top';
-        break;
-    }
-  
-    const getLines = (text: string, maxWidth: number): string[] => {
-      const words = text.split(' ');
-      const lines: string[] = [];
-      let currentLine = words[0];
-  
-      for (let i = 1; i < words.length; i++) {
-        const word = words[i];
-        const lineTest = currentLine + ' ' + word;
-        const textWidth = getTextWidth(lineTest, fontSize, textComponent.font);
-        if (textWidth < maxWidth - 2 * padding) {
-          currentLine = lineTest;
-        } else {
-          lines.push(currentLine);
-          currentLine = word;
-        }
-      }
-      lines.push(currentLine);
-      return lines;
-    };
+    const textAlign: CanvasTextAlign = 'left';
   
     const getTextWidth = (text: string, fontSize: number, fontFamily: string): number => {
       const tempText = new Konva.Text({
@@ -163,59 +102,68 @@ export default class CuiTextComponentModel extends CuiComponentBase {
       });
       return tempText.width();
     };
-
+  
     const getTextHeight = (text: string, fontSize: number, fontFamily: string): number => {
       const tempText = new Konva.Text({
         text: text,
         fontSize: fontSize,
         fontFamily: fontFamily,
-        // Установите ширину, достаточную для отображения всего текста, чтобы высота была корректной
-        width: 1000
+        width: 1000,
       });
       return tempText.height();
     };
   
-    while (fontSize > minFontSize) {
-      const lines = getLines(textComponent.text, width);
-      const totalHeight = lines.length * getTextHeight('M', fontSize, textComponent.font) * 1.2;
+    const textWidth = getTextWidth(textComponent.text, fontSize, textComponent.font);
+    const textHeight = getTextHeight(textComponent.text, fontSize, textComponent.font);
   
-      if (totalHeight <= height - 2 * padding) {
+    // Поменяем местами Lower и Upper логики
+    switch (textComponent.align) {
+      case TextAnchor.UpperRight: 
+        x += width - textWidth;
+        y += height;
         break;
-      }
-  
-      fontSize -= 1;
-    }
-  
-    const lines = getLines(textComponent.text, width);
-    const lineHeight = getTextHeight('M', fontSize, textComponent.font) * 1.2;
-  
-    let startY: number;
-    const totalTextHeight = lines.length * lineHeight;
-    switch (verticalAlign) {
-      case 'top':
-        startY = y + padding;
+      case TextAnchor.LowerLeft: 
+        y += textHeight;
         break;
-      case 'middle':
-        startY = y + (height / 2) - (totalTextHeight / 2);
+      case TextAnchor.LowerRight:
+        x += width - textWidth;
+        y += textHeight;
         break;
-      case 'bottom':
-        startY = y + height - totalTextHeight - padding;
+      case TextAnchor.UpperLeft:
+        y += height;
         break;
-    }
-  
-    if (textAlign === 'right') {
-      x -= getTextWidth(lines[0], fontSize, textComponent.font);
+      case TextAnchor.MiddleCenter:
+        x += (width - textWidth) * 0.5;
+        y += (height + textHeight) * 0.5 - textHeight * 0.6;
+        break;
+      case TextAnchor.MiddleLeft:
+        y += (height + textHeight) * 0.5 - textHeight * 0.6;
+        break;
+      case TextAnchor.MiddleRight:
+        x += width - textWidth;
+        y += (height + textHeight) * 0.5 - textHeight * 0.6;
+        break;
+      case TextAnchor.UpperCenter:
+        x += (width - textWidth) * 0.5;
+        y += height;
+        break;
+      case TextAnchor.LowerCenter:
+        x += (width - textWidth) * 0.5;
+        y += textHeight;
+        break;
+      default:
+        y += textHeight;
+        break;
     }
   
     return {
       textAlign,
       x,
-      y: startY,
+      y,
       fontSize,
-      lines,
-      lineHeight,
+      lines: [textComponent.text],
+      lineHeight: textHeight,
       color: textComponent.color ? rustToRGBA(textComponent.color) : undefined,
     };
   };
-  
 }
